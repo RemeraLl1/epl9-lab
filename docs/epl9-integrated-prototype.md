@@ -75,3 +75,32 @@ The grid does not exhaust every job field, mode or combination of effect flags. 
 Use a new ignored output directory and keep assertions enabled. Retained runs are `local/offline-prototype-20261102-v4/results.json` and `local/integrated-probe-20261102-v2/results.json`. Six new ABI tests plus the ten existing subset tests pass; they validate the implemented conventions against synthetic inputs, not the hardware CPU.
 
 Next: resolve the allocator/fill dependencies or add explicitly labeled, independently checked software models; continue native request creation/submission until the actual external processing boundary is understood. Then trace where each retained optimized path obtains color, connect a recipe table with its native ownership/flag contract, and test pixels. Do not bypass errors or report a mocked success as a complete cycle.
+
+## Follow-up: explicit software contracts and deeper native execution
+
+The subsequent `--software-models` run advances beyond the earlier memory dependencies. It does **not** complete image processing. `mn103_calls.py` still stops at absent code by default. Opt-in models cannot shadow decoded native code; every use has a separate `modeled_call` event rather than appearing as a native instruction execution.
+
+The actual allocator front at `0x60402373..0x604023b2` is now executed. Its 14552-byte request selects pool ID `0x10004` (16384-byte size class), then calls `0x60402595`. The host model supplies exactly one predeclared 16 KiB block, initially filled with `0xa5`, or an explicit null allocation. It rejects a second allocation, another pool ID and an ABI mismatch; it is not a simulated heap or RTOS pool implementation.
+
+The assumed byte-fill helper at `0x4700111e` validates its entire destination before changing memory and rejects writes outside a writable region or into its pending call frame. It records each address, count and byte. Its assumed volatile effects advance a0 by count, zero d1 and preserve d0/a1/flags; the missing E-PL9 implementation's actual clobbers are not established. The allocation model sets a0 and otherwise retains volatile registers/flags. These explicit assumptions limit the conclusions even when caller stacks and memory checks pass.
+
+Both keys, with synthetic task-byte values 0 and 7 at the read-only cell `0x8050`, now execute the constructor through **11 fills**, 32-byte parameter copying, mode-key caching and task-byte assignment. All expected cleared spans, copied parameters and the unused allocation tail are checked. Execution stops at `0x6074e066 → 0x6073e562`. Separate disassembly identifies that callee as another constructor requesting **5764 bytes** and calling an initializer at `0x6073e588`; this second object and its lifetime are not yet modeled or integrated. The forced first-allocation failure returns zero, writes error `0x9ec3`, restores SP and touches neither the job block nor the fill helper.
+
+The executor additionally runs native buffer-slot lookup (`0x6074acf9`), dimension selection (`0x6075088e` / `0x607509b0`) and type classification (`0x607a3c9e`). Current exact stopping points, identical for Gold and Portra in the synthetic grid:
+
+| Type / selector | Stop at call site → absent callee | Executed instructions |
+| --- | --- | ---: |
+| `0x0200` / 0 | `0x607508bd → 0x60749187` | 214 |
+| `0x0100` / 0 | `0x607508bd → 0x60749187` | 231 |
+| `0x0040` / 0 | `0x60750942 → 0x607491d5` | 238 |
+| All three / 2 | `0x6074f2ab → 0x60750498` | 1434 |
+
+These are **software coverage boundaries**, not identified ISP/DMA boundaries. Only initialization completes as a worklist entry. The executor still starts from a separately seeded job with mostly zero fields; buffer descriptors and owner state are not measured camera state. More executed instructions do not demonstrate a valid submitted request, a connected constructor/executor, optimized-path COLOR consumption, a finished pixel frame or a JPEG.
+
+Revalidated: 120 complete-builder pairs, both 5200-byte COLOR results, 12 pre-cancellation paths and all 11 bounded service checks. Five additional synthetic model tests check range rejection before mutation, zero-length fill, canaries, preserved saved registers/stack, allocation failure/exhaustion and ABI rejection. No unknown image-processing call returns automatic success.
+
+```powershell
+.\.venv\Scripts\python.exe scripts/epl9_integrated_probe.py --software-models --out local/new-modeled-probe
+```
+
+Retained final follow-up run: `local/integrated-probe-20261102-v5/results.json`. Next connect the real descriptor/dimension/owner inputs and the second object's lifetime, then continue to the request consumer. Keep `full_pixel_cycle_passed` false until there is actual pixel output with independently checked behavior.

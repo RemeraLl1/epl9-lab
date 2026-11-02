@@ -1,0 +1,45 @@
+{
+  "reviewed_on": "2026-11-02",
+  "requested_source_type": "digital film-simulation recipes",
+  "not_epl9_outputs": true,
+  "photos_bundled": false,
+  "redistribution_permission": "Not established; links for selection only",
+  "candidates": [
+    {
+      "slot": "Watercolor I -> Gold 200 inspired",
+      "rank": "first choice",
+      "title": "Boy in Spring",
+      "author": "Ritchie Roesch",
+      "camera": "Fujifilm X-T30",
+      "recipe": "Kodak Gold 200",
+      "source": "https://fujixweekly.com/2020/04/16/my-fujifilm-x-t30-kodak-gold-200-film-simulation-recipe/",
+      "image": "https://i0.wp.com/fujixweekly.com/wp-content/uploads/2020/04/49771649027_62e6539412_c.jpg?resize=799%2C533&ssl=1",
+      "visually_reviewed": true,
+      "crop_proposal": "Central 4:3 crop; retain face, blossoms and red grips"
+    },
+    {
+      "slot": "Watercolor II -> Portra 400 inspired",
+      "rank": "first choice",
+      "title": "Julien Jarry with RED Camera",
+      "author": "Ritchie Roesch",
+      "camera": "Fujifilm X100V",
+      "recipe": "Kodak Portra 400 v2",
+      "source": "https://fujixweekly.com/2020/12/30/fujifilm-x100v-film-simulation-recipe-kodak-portra-400-v2/",
+      "image": "https://i0.wp.com/fujixweekly.com/wp-content/uploads/2020/12/50380047082_338e776d47_c.jpg?resize=799%2C533&ssl=1",
+      "visually_reviewed": true,
+      "crop_proposal": "Slightly right of center 4:3 crop; retain person and camera"
+    },
+    {
+      "slot": "Watercolor II -> Portra 400 inspired",
+      "rank": "alternative, less useful for comparison",
+      "title": "Sage Sunset",
+      "author": "Ritchie Roesch",
+      "camera": "Fujifilm X100V",
+      "recipe": "Kodak Portra 400 v2",
+      "source": "https://fujixweekly.com/2020/12/30/fujifilm-x100v-film-simulation-recipe-kodak-portra-400-v2/",
+      "image": "https://i0.wp.com/fujixweekly.com/wp-content/uploads/2020/12/50379690401_9cc787979a_c.jpg?resize=799%2C533&ssl=1",
+      "visually_reviewed": true,
+      "selection_note": "Dramatic sunset illumination dominates; lacks skin and neutral tones"
+    }
+  ]
+}

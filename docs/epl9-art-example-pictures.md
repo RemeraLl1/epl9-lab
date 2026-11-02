@@ -45,3 +45,18 @@ The replacement writer is not implemented: allocation size, encoding, pointer ad
 ```
 
 The runner verifies the exact picture component before extraction and requires a new ignored output directory. Firmware and extracted vendor photographs are not published in the repository.
+
+## Digital-recipe photo shortlist, 2026-11-02
+
+The owner explicitly selected digital recipe examples. Both first choices below were visually inspected in the browser. The author identifies them as camera-made JPEGs using the named recipe; neither is an E-PL9 image or a prediction of our final rendering. Camera-specific settings should not be copied numerically into Olympus tables.
+
+| Slot | First choice and author source | Why this frame |
+| --- | --- | --- |
+| Gold 200 | Ritchie Roesch, **Boy in Spring**, Fujifilm X-T30, [Kodak Gold 200 recipe](https://fujixweekly.com/2020/04/16/my-fujifilm-x-t30-kodak-gold-200-film-simulation-recipe/) | Daylight portrait with blossoms, blue sky, red scooter grips and green grass. Broad color range; central subject remains legible at menu size. |
+| Portra 400 | Ritchie Roesch, **Julien Jarry with RED Camera**, Fujifilm X100V, [Kodak Portra 400 v2 recipe](https://fujixweekly.com/2020/12/30/fujifilm-x100v-film-simulation-recipe-kodak-portra-400-v2/) | Adult environmental portrait with muted sky, beige vegetation and skin tones. Prefer this over a sunset for a portrait-oriented recipe. |
+
+**Sage Sunset**, from the same Portra article, was also inspected: striking orange clouds and dark vegetation, but the light dominates its appearance and gives little information about skin or neutral colors. Keep it as an alternative, not the primary comparison.
+
+The first choices are approximately 3:2; the existing candidate resources are 4:3. A future 4:3 crop should retain the central subject in Gold and shift slightly right in Portra to retain both the person and camera. This is a visual proposal, not an exported or validated crop. Recompress and check the actual 256×192 result against the verified target allocation only after resolving the runtime photo binding.
+
+Direct media links, provenance and review status are recorded in [the source manifest](../assets/film-menu/photo-sources.json). Only links and metadata are stored. No open redistribution permission was identified on these author pages; embedding the photos in a public asset package still needs an appropriate permission or replacement source. No request has been sent to the author.

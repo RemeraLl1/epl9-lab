@@ -68,7 +68,7 @@ Create project-authored Gold 200/Portra 400 artwork in the existing dimensions, 
 
 Preserve menu structure, navigation and unrelated ART assets. Generic badges require a screen-specific decision after tracing their users; the existence of variant-specific slots does not guarantee every screen already distinguishes variants.
 
-No replacement assets, modified update file or on-camera write were produced. All original artwork and extracted catalogs remain ignored local files.
+The initial audit produced no replacement assets or firmware writes. Standalone candidate artwork was subsequently added below. All original artwork and extracted catalogs remain ignored local files.
 
 ## Reproduce
 
@@ -78,3 +78,23 @@ No replacement assets, modified update file or on-camera write were produced. Al
 ```
 
 The **five synthetic tests** cover a known tiny stream, malformed/truncated/overrun/padded streams, mismatched dimensions, input/decoder identity rejection and invalid label input. The exact-image audit independently checks all bitmap/symbol decodes and 12 target label rows. Retained output: `local/osd-audit-20261102-v2/audit.json`. These checks establish extraction and associations, not patch bootability or rendering on the camera.
+
+## Standalone replacement artwork, 2026-11-02
+
+Two original pixel-grid cassette badges now distinguish **G200** and **P400**. Their geometry and tiny glyphs were authored for this project; no vendor artwork or third-party SVG was copied. Reviewable sources: [G200.svg](../assets/film-menu/G200.svg), [P400.svg](../assets/film-menu/P400.svg). These are draft icons, not installed changes or an owner-approved final design.
+
+An external alternative is [Camera film roll by donchico](https://commons.wikimedia.org/wiki/File:Camera_film_roll.svg), listed as CC0 on Commons. The project badges were chosen for their simpler shape, distinct labels and fit in the existing 44×32 slots; the external file was not imported.
+
+`scripts/epl9_film_icons.py` creates monochrome candidates in each native size, encodes the actual RLE formats, pads to the original allocation and decodes with the pinned independent decoder. All 10 outputs reconstruct exactly and fit without changing resource pointers:
+
+| Resources | Size / mode | New bytes, G200 / P400 | Existing allocation |
+| --- | --- | --- | --- |
+| 4387 / 4388 | 50×38 / 11 | 484 / 481 | 1118 / 1140 |
+| 4420 / 4421 | 64×48 / 11 | 634 / 634 | 1742 / 1748 |
+| 4458 / 4459 | 50×38 / 11 | 484 / 481 | 1118 / 1140 |
+| 4556 / 4557 | 44×32 / 11 | 377 / 377 | 548 / 570 |
+| A076 / A077 | 44×32 / 1 | 230 / 231 | 268 / 272 |
+
+The local preview uses candidate palette `0x6151b980`: index 4 for white, 22 for the small gray badges and 103 for selected yellow-green badges; inline symbols use level 3. Runtime palette selection is still unverified. The artwork was visually reviewed at native sizes. Shared Roman numerals A054/A055, generic ART12 resources, menu strings and the firmware remain untouched.
+
+Reproduce with `python scripts/epl9_film_icons.py --out local/new-film-icons`. Retained report and preview: `local/film-icons-20261102-v1/results.json` and `film-icons.png`. Outputs are standalone RLE candidates; fit/round-trip success does not prove that the camera accepts a rebuilt component or container.

@@ -18,6 +18,8 @@ The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → 
 
 The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.
 
+The follow-up adds explicit bounded memory models and deeper native request preparation, with allocation failure checked. [G200/P400 icon candidates](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) round-trip in all 10 target allocations. [Digital-recipe photo references](docs/epl9-art-example-pictures.md#digital-recipe-photo-shortlist-2026-11-02) are linked with provenance; third-party photos are not bundled.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:
