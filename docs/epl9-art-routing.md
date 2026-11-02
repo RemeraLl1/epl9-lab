@@ -109,6 +109,8 @@ Other processing stages (tone, matrix, detail and flags) also depend on the effe
 
 This is the next implementation experiment, not a set of approved binary patch offsets. No stub, modified firmware, on-camera command or installation procedure was produced in this investigation.
 
+Follow-up: the [first bounded offline prototype](epl9-offline-prototype.md) now executes selected decoded sections with synthetic state. It passes component checks but exposes four already-ordinary cases whose worklist changes under key substitution. This supersedes the no-execution status only for the explicitly tested sections; a native hook and integrated processing remain unvalidated.
+
 ## Reproduction and validation
 
 Build the [GNU-based reader](mn103-tooling.md), then:

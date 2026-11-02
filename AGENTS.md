@@ -8,4 +8,5 @@
 - Keep firmware, captures, original media, serial numbers, Wi-Fi credentials and machine-specific configuration in ignored local directories. Review staged files before every public push.
 - Keep external projects as ignored checkouts under `references/`. Record upstream URLs and commit IDs. Do not republish their source under this project's name.
 - Validate diagnostic scripts with synthetic/local inputs. Camera-dependent behavior must remain explicitly unverified until tested on the camera.
+- Before continuing the offline ART prototype, read `docs/epl9-offline-prototype.md`. The decoded-instruction subset stops at CALL/RET boundaries; its passing component tests are not a complete emulator or a validated patch. Preserve the finding about four already-ordinary worklist changes.
 - Do not assume 4K60, open-gate recording, raw gyro access, complete USB tethering or full firmware recovery are available.
