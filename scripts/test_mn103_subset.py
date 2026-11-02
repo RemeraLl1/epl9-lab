@@ -81,6 +81,40 @@ class SubsetTests(unittest.TestCase):
         with self.assertRaisesRegex(Fault, 'unaligned'):
             m.run(0x2000)
 
+    def test_unsigned_divide_64bit_inputs_and_flags(self):
+        for dividend, divisor in [(0,3),(17,5),(0x100000000,3),
+                                  (0x7fffffffffffffff,0xffffffff),(0xfffffffe00000000,0xffffffff)]:
+            m,end=mini([('f274','divu\td1,d0')],
+                       {'d0':dividend & MASK,'mdr':dividend >> 32,'d1':divisor})
+            m.c=m.v=True
+            m.run(0x2000,[end])
+            q,r=divmod(dividend,divisor)
+            self.assertEqual((m.r['d0'],m.r['mdr']),(q,r))
+            self.assertEqual((m.z,m.n,m.c,m.v),(q==0,bool(q & 0x80000000),False,False))
+        for high,divisor in [(0,0),(1,1)]:
+            m,_=mini([('f274','divu\td1,d0')],{'d0':17,'mdr':high,'d1':divisor})
+            before=dict(m.r)
+            with self.assertRaises(Fault):
+                m.run(0x2000)
+            self.assertEqual(m.r,before)
+
+    def test_unsigned_register_product_and_not(self):
+        for left,right in [(0,0xffffffff),(0xffffffff,0xffffffff),(0x80000000,3),(17,23)]:
+            m,end=mini([('f614','udf01\td1,d0')],{'d0':right,'d1':left})
+            m.c=m.v=True
+            m.run(0x2000,[end])
+            product=left*right
+            self.assertEqual((m.r['d0'],m.r['mdrq']),(product & MASK,product >> 32))
+            self.assertEqual((m.z,m.n,m.c,m.v),
+                             ((product & MASK)==0,bool(product & 0x80000000),False,False))
+        for value in (0,MASK,0x7fffffff,0x80000000):
+            m,end=mini([('f230','not\td0')],{'d0':value})
+            m.c=m.v=True
+            m.run(0x2000,[end])
+            expected=value ^ MASK
+            self.assertEqual(m.r['d0'],expected)
+            self.assertEqual((m.z,m.n,m.c,m.v),(expected==0,bool(expected & 0x80000000),False,False))
+
     def test_little_endian_and_signed_load(self):
         region = Region(0x1000, bytearray(b'\xfe\xff\x34\x12'))
         m, end = mini([('70', 'mov\t(a0),d0')], {'a0': 0x1000}, [region])

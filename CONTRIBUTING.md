@@ -35,4 +35,6 @@ python -m unittest discover -s scripts -p test_epl9_art_routing_probe.py -v
 
 The [integrated prototype report](docs/epl9-integrated-prototype.md) records additional interpreter checks and exact-image runs. Its Windows build prerequisites and ignored dependencies must be supplied separately; a clean clone is not a ready-to-flash setup.
 
+For each meaningful change, update [CHANGELOG.md](CHANGELOG.md) with what changed, why, checks actually performed and remaining limitations, and link the detailed evidence. Keep intended behavior separate from verified behavior. Review the [installation plan](docs/firmware-installation-plan.md) before making any future release claim; documentation does not authorize camera writes.
+
 Before pausing an investigation, leave a report with input identity, commands, observed results, remaining uncertainty and the next concrete offline experiment. For another camera or firmware build, open a separate model/build note using the [porting template](docs/porting-guide.md#new-model-or-build-report-template). Preserve the E-PL9 baseline and its exact-input guards.

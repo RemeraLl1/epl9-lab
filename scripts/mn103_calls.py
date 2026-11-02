@@ -1,15 +1,18 @@
 """Opt-in CALL/RET layer for the bounded subset, following pinned GNU igen.
 
-Only d2/d3/a2/a3 save masks are supported. No external-call success stubs.
-Missing code, memory and unsupported ABI forms stop execution explicitly.
+Only d2/d3/a2/a3 save masks are supported. External calls stop by default.
+Optional software models must declare and validate their specific contracts.
 """
 from mn103_subset import Machine, Fault, MASK
 
 
 class CallMachine(Machine):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, models=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.events = []
+        self.models = dict(models or {})
+        if self.models.keys() & self.code.keys():
+            raise ValueError('a model may not shadow loaded native code')
 
     @staticmethod
     def saved(mask):
@@ -51,6 +54,26 @@ class CallMachine(Machine):
                         raise Fault('unsupported CALLS encoding')
                 self.saved(mask)
                 if target not in self.code:
+                    if target in self.models:
+                        model = self.models[target]
+                        model.validate(self, mask, frame)
+                        original_sp = self.r['sp']
+                        self.enter(target, nxt, mask, frame)
+                        detail = model.apply(self)
+                        if self.r['sp'] != (original_sp-frame) & MASK:
+                            raise Fault('software model changed SP')
+                        # Model return uses the same stack convention as RET.
+                        values = [self.memory.read(original_sp-4*i, 4)
+                                  for i in range(1, len(self.saved(mask))+1)]
+                        self.r.update(zip(self.saved(mask), values))
+                        self.r['sp'] = original_sp
+                        pc = self.memory.read(original_sp, 4)
+                        if pc != nxt:
+                            raise Fault('software model overwrote return address')
+                        self.events.append(dict(op='modeled_call', target=target,
+                                                pc=nxt-len(raw), model=model.name, **detail))
+                        self.trace.append(nxt-len(raw))
+                        continue
                     return {'status': 'external_call', 'pc': pc, 'target': target,
                             'instructions': len(self.trace)}
                 self.events.append({'op': op, 'pc': pc, 'target': target})

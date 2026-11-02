@@ -6,7 +6,7 @@ This is a guide to continuing research, not a firmware-installation procedure. N
 
 ## Reading order and current handoff
 
-This snapshot describes the research documented on 2026-11-02. Detailed reports take precedence over this navigation summary when later evidence changes a conclusion.
+This snapshot incorporates the published connected-job and icon follow-ups available on 2026-11-02. Detailed reports take precedence over this navigation summary when later evidence changes a conclusion.
 
 | Read | Purpose / current result |
 | --- | --- |
@@ -16,10 +16,12 @@ This snapshot describes the research documented on 2026-11-02. Detailed reports 
 | [Routing](epl9-art-routing.md) | Mode propagation, worklists, ordinary versus late COLOR paths |
 | [Service dependencies](epl9-service-dependencies.md) | Completion, callbacks, ownership and reference counts that must survive |
 | [First offline prototype](epl9-offline-prototype.md), then [revised integration](epl9-integrated-prototype.md) | Historical schedule regressions, scoped correction, native call chains and explicit execution stops |
-| [Icons](epl9-watercolor-icons.md) and [example pictures](epl9-art-example-pictures.md) | Resource candidates; complete runtime bindings and replacement artwork remain open |
+| [Icons](epl9-watercolor-icons.md) and [example pictures](epl9-art-example-pictures.md) | Draft G200/P400 artwork round-trips; runtime rendering and example-picture bindings remain open |
 | [Tooling](mn103-tooling.md) and [sources](sources.md) | Build prerequisites, pinned dependencies, licenses and upstream research |
 
-The revised offline harness executes selected scheduling and COLOR chains with synthetic state. It has not completed pixel processing or produced an installable patch. The documented next step is to resolve the allocator/fill dependencies or supply independently checked, explicitly labeled software models, then follow actual request creation/submission to the processing boundary. Native recipe-object ownership, optimized-path color use, preview/capture callers, pixels and calibration remain open. Keep missing services and unsupported instructions as visible failures.
+The connected offline probe now joins native job/cache construction, frame start, worklist execution, request creation and consumer configuration with explicit host resources. Separate COLOR tests and original draft icon round trips also pass within their reported scope. No full pixel cycle, JPEG or installable package exists. Current connected execution stops at two absent configuration callees or an undeclared caller buffer; native recipe-object/cache invalidation, completion, image output, preview/capture coverage and calibration remain open. See the connected-job follow-up in the integrated report before extending the earlier, narrower experiments. Keep missing services and unsupported instructions as visible failures.
+
+The [illustrated change plan](planned-changes.md) explains processing and UI integration; the [future installation plan](firmware-installation-plan.md) separates stock USB updates from the unverified E-PL9 SD route. Track subsequent findings in [CHANGELOG.md](../CHANGELOG.md).
 
 ## What can be reused
 

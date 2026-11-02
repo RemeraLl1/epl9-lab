@@ -33,3 +33,5 @@ The current phase permits workstation setup, offline analysis and read-only came
 Offsets and structure layouts apply only to the exact input identified in the associated report. A displayed version alone is insufficient. Do not remove a hash check to make a probe accept another file; establish and document a separate model/build investigation.
 
 4K60, full-field video, gyro access, complete USB tethering and full recovery remain unproven goals. Public access and open-source licensing enable inspection and continuation; they are not safety certification. See the [handoff](porting-guide.md) before extending the work.
+
+The [future installation and recovery plan](firmware-installation-plan.md) explains preparation and candidate routes. Its SD filename, physical entry, signals and recovery coverage are not validated E-PL9 instructions. The [illustrations](planned-changes.md) are concepts, not on-camera screenshots or recipe output.

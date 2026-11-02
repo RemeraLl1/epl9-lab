@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="940" viewBox="0 0 1400 940" role="img" aria-labelledby="title desc">
+<title id="title">Two ART slots, two planned film recipes</title><desc id="desc">Concept diagram, not installed firmware: Watercolor I maps to Gold 200 and Watercolor II maps to Portra 400. Processing, names, small icons and menu examples must be integrated together.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M 0 0 L 9 5 L 0 10 z" fill="#506273"/></marker></defs>
+<rect width="1400" height="940" fill="#f5f3ed"/>
+<text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
+<tspan x="54" dy="0">E-PL9 LAB / CHANGE PLAN</tspan>
+</text>
+<text x="54" y="103" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="700" fill="#14283c">
+<tspan x="54" dy="0">Two ART slots. Two separate film looks.</tspan>
+</text>
+<text x="54" y="141" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#506273">
+<tspan x="54" dy="0">Illustrative mapping only. No calibrated recipe or installable modification exists yet.</tspan>
+</text>
+<rect x="54" y="175" width="164" height="34" rx="8" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="67" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="67" dy="0">CURRENT INPUT</tspan>
+</text>
+<rect x="783" y="175" width="242" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="796" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="796" dy="0">PLANNED OUTCOME</tspan>
+</text>
+<rect x="54" y="238" width="555" height="133" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="80" y="283" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#14283c">
+<tspan x="80" dy="0">Watercolor I</tspan>
+</text>
+<text x="80" y="324" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="80" dy="0">Candidate processing key: 0x01010078</tspan>
+</text>
+<path d="M638 305 L748 305" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="783" y="238" width="563" height="133" rx="18" fill="white" stroke="#d5a536" stroke-width="2"/>
+<rect x="807" y="262" width="89" height="34" rx="8" fill="#d5a536" stroke="none" stroke-width="2"/>
+<text x="820" y="286" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="820" dy="0">G200</tspan>
+</text>
+<text x="915" y="286" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="915" dy="0">Gold 200-inspired</tspan>
+</text>
+<text x="807" y="337" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="807" dy="0">Independent recipe identity and parameters</tspan>
+</text>
+<rect x="54" y="403" width="555" height="133" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="80" y="448" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="#14283c">
+<tspan x="80" dy="0">Watercolor II</tspan>
+</text>
+<text x="80" y="489" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="80" dy="0">Candidate processing key: 0x01020078</tspan>
+</text>
+<path d="M638 470 L748 470" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="783" y="403" width="563" height="133" rx="18" fill="white" stroke="#2c7d79" stroke-width="2"/>
+<rect x="807" y="427" width="89" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="820" y="451" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="820" dy="0">P400</tspan>
+</text>
+<text x="915" y="451" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="915" dy="0">Portra 400-inspired</tspan>
+</text>
+<text x="807" y="502" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="807" dy="0">Independent recipe identity and parameters</tspan>
+</text>
+<text x="54" y="600" font-family="DejaVu Sans, Arial, sans-serif" font-size="27" font-weight="700" fill="#14283c">
+<tspan x="54" dy="0">A complete change has four linked parts</tspan>
+</text>
+<rect x="54" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="74" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
+<tspan x="74" dy="0">01 / PROCESSING</tspan>
+</text>
+<text x="74" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
+<tspan x="74" dy="0">Ordinary development route</tspan>
+<tspan x="74" dy="31">Recipe-specific color and tone</tspan>
+<tspan x="74" dy="31">Preview and JPEG validation</tspan>
+</text>
+<rect x="382" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="402" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
+<tspan x="402" dy="0">02 / NAME</tspan>
+</text>
+<text x="402" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
+<tspan x="402" dy="0">Correct recipe labels</tspan>
+<tspan x="402" dy="31">Targeted resource changes</tspan>
+<tspan x="402" dy="31">No global string replacement</tspan>
+</text>
+<rect x="710" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="730" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
+<tspan x="730" dy="0">03 / SMALL ICON</tspan>
+</text>
+<text x="730" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
+<tspan x="730" dy="0">G200 and P400 draft badges</tspan>
+<tspan x="730" dy="31">Native sizes / RLE encoding</tspan>
+<tspan x="730" dy="31">Palettes and screens to verify</tspan>
+</text>
+<rect x="1038" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="1058" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
+<tspan x="1058" dy="0">04 / MENU EXAMPLE</tspan>
+</text>
+<text x="1058" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
+<tspan x="1058" dy="0">Correct runtime resource</tspan>
+<tspan x="1058" dy="31">Authorized sample image</tspan>
+<tspan x="1058" dy="31">No invented output preview</tspan>
+</text>
+<rect x="54" y="839" width="1292" height="58" rx="18" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="78" y="875" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="white">
+<tspan x="78" dy="0">Baseline intent: retain existing navigation and unrelated modes. Broader catalog work is separate.</tspan>
+</text>
+</svg>
