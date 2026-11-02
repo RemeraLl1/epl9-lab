@@ -2,7 +2,7 @@
 import struct
 import unittest
 
-from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock,
+from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal,
                             JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT)
 from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
@@ -31,6 +31,65 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_event_signal_requires_allocated_token_and_never_produces_pixels(self):
+        m=fixture(); pool=FixtureEventBits(); signal=FixtureSignal(pool)
+        m.r.update(d0=0,d1=1)
+        with self.assertRaises(Fault): signal.validate(m,0xc0,12)
+        pool.validate(m,0xe0,16); pool.apply(m)
+        m.r.update(d0=0,d1=1)
+        signal.validate(m,0xc0,12); detail=signal.apply(m)
+        self.assertEqual(signal.signalled,1)
+        self.assertFalse(detail['pixels_completed'])
+        with self.assertRaises(Fault): signal.validate(m,0xc0,12)
+
+    def test_owner_slots_allocate_once_then_activate(self):
+        owner=FixtureOwner(provide_slot=True); m=fixture(owner)
+        for identifier,offset in [(0xff07,4960),(0xff0b,5200)]:
+            m.memory.write(JOB+offset+8,0x302,2)
+            for field in (10,12,14):
+                m.memory.write(JOB+offset+field,4,2)
+            m.memory.write(SP+64,JOB+36,4); m.memory.write(SP+68,identifier,2)
+            with self.assertRaises(Fault):
+                callback(m,23,SP+64)
+            callback(m,14,SP+64)
+            address=m.memory.read(JOB+offset,4)
+            callback(m,14,SP+64)
+            self.assertEqual(m.memory.read(JOB+offset,4),address)
+            callback(m,23,SP+64)
+            with self.assertRaises(Fault):
+                callback(m,23,SP+64)
+        self.assertEqual(len(owner.buffers),2)
+        self.assertEqual(owner.active_slots,{0xff07,0xff0b})
+
+    def test_owner_borrowed_slot_and_invalid_dimensions(self):
+        owner=FixtureOwner(provide_slot=True); m=fixture(owner)
+        m.memory.write(SP+64,JOB+36,4); m.memory.write(SP+68,0xff07,2)
+        m.memory.write(JOB+4968,0x302,2)
+        before=[bytes(r.data) for r in m.memory.regions]
+        with self.assertRaises(Fault):
+            callback(m,14,SP+64)
+        self.assertEqual(before,[bytes(r.data) for r in m.memory.regions])
+        m.memory.write(JOB+4960,OUTPUT,4)
+        for field in (10,12,14):
+            m.memory.write(JOB+4960+field,4,2)
+        callback(m,23,SP+64)
+        self.assertEqual(owner.buffers,[])
+        self.assertEqual(m.memory.read(JOB+4960,4),OUTPUT)
+
+    def test_workspace_release_requires_live_slot_and_does_not_complete_frame(self):
+        m=fixture(); ids=FixtureConsumerSlot('id'); workspace=FixtureConsumerSlot('workspace',ids)
+        release=FixtureConsumerSlot('release',workspace)
+        m.r['a0']=SCRATCH
+        with self.assertRaises(Fault):
+            release.validate(m,0xf0,24)
+        ids.validate(m,0xf0,20); ids.apply(m)
+        workspace.validate(m,0xf0,36); workspace.apply(m)
+        release.validate(m,0xf0,24); detail=release.apply(m)
+        self.assertFalse(detail['completed'])
+        self.assertEqual(m.memory.read(SCRATCH+9592,1),2)
+        with self.assertRaises(Fault):
+            release.validate(m,0xf0,24)
+
     def test_coefficient_notification_preserves_all_nine_native_values(self):
         m=fixture()
         m.events.append(dict(op='call',pc=0x6079c026,target=0x6073eab3))

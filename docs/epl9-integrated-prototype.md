@@ -4,7 +4,7 @@
 
 The revised host experiment removes the four schedule regressions found in the first prototype. It also runs the worklist builder from its actual entry, preserving earlier optimized paths that the original branch-only experiment did not reach. Both recipe slots execute native COLOR selection, table packing and returns with a complete 5200-byte output comparison.
 
-**The complete image-processing cycle has not passed.** The latest [hardware-boundary follow-up](#native-parameter-object-color-and-hardware-boundary-2026-11-02) connects job creation, frame start, native parameter-object construction, cache comparison and COLOR execution. Eight cases with attached diagnostic tables reach the first unmapped peripheral write. Four other baseline cases still require an owner buffer. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
+**The complete image-processing cycle has not passed.** The [hardware-boundary follow-up](#native-parameter-object-color-and-hardware-boundary-2026-11-02) connects job creation, frame start, native parameter-object construction, cache comparison and COLOR execution. Eight cases with attached diagnostic tables reach the first unmapped peripheral write. The later owner-slot follow-up below supplies the missing outputs for four further cases and traces their configuration rejection through consumer cleanup to an OS event wait. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
 
 ## Inputs and execution boundary
 
@@ -239,3 +239,28 @@ Native service routines map descriptor `0xff07` to the first slot at `job+4960`;
 Retained result: `local/job-probe-20261102-hardware-v1/results.json`, **63 decode anchors**, exact input/source hashes, native and modeled calls, and unchanged destination guards. Twelve job-fixture unit tests pass, including new owner-coefficient, lock and packing-oracle rejection checks. Full workspace discovery passed 77 tests, of which 53 cover this ART/tooling lineage; independent Wi-Fi/video/color-audit tests are separate work. The original prototype again passes 30 route pairs, 180 saturation cases, two full tables and 1050 flag-route cases with zero new ordinary-schedule changes. The integrated regression again passes 120 full-builder pairs, both COLOR results, 12 pre-cancellation paths and 11 service checks.
 
 Reproduce with the connected-job command above and a new ignored output directory. No source firmware bytes or camera state were changed. `full_pixel_cycle_passed` remains **false**. Further work must establish the remaining caller contracts and actual ISP/DMA/interrupt/completion behavior; extending the CPU instruction subset alone does not produce a pixel cycle.
+
+## Owner output slots and failure completion, 2026-11-02
+
+The owner has directed further work toward the software chain; update/install risk assessment belongs to the separate risk discussion. This follow-up makes no new firmware-installation or recovery claim.
+
+The type-`0x0040` stop was not solved by acknowledging descriptor `0xff07`: without caller outputs, its requested dimensions are zero. Native `0x60762916…0x6076296b` examines five optional output descriptors beginning at **job+3984**, with 56-byte stride. Their IDs are `0xff00…0xff04` in the exact ROM table at `0x608f20bc`. The new opt-in fixture supplies the first descriptor with a bounded 640×480, two-byte-per-pixel output and format `0x0302`. This is synthetic caller data, not a measured capture format or proof that type `0x0040` is a camera preview mode.
+
+Native code then distinguishes two cases, both now exercised for both recipe identities:
+
+| Selector | Native output-slot behavior | Host-owned allocation requests |
+| --- | --- | --- |
+| 0 | Copies the provided output into slot `job+4960`, ID `0xff07`, then notifies owner event 23 | Borrows the existing destination; additional slot `job+5200`, ID `0xff0b`, requires 2560 bytes |
+| 2 | Calls `0x6074fbed` to build slot `0xff07` with aligned dimensions | Allocates 614400 bytes for `0xff07`, then 2560 bytes for `0xff0b` |
+
+The second slot is built through `0x6074fc57`, with dimensions reduced by the native caller and stride aligned to 32. Payload meaning remains unverified. The owner model accepts only these declared formats/IDs, checks the full writable range, rejects zero dimensions, overlap, changed payloads and activation before allocation, and allocates disjoint poisoned regions with guards. Borrowed output is not added to its owned allocations. Event 23 activation is tracked independently; repeated activation is outside this finite fixture. Other owner events are not blanket successes.
+
+All four runs proceed into the request consumer. The current synthetic input format then returns **`0x9e40`**, recorded directly before native processor return at `0x6072fdd3`. This is a configuration rejection, not a completed image. The native cleanup at `0x6073f566` executes the cache update and calls the workspace release front. A bounded model for `0x607a06d2` requires the previously allocated live workspace and changes its +9592 state from 1 to 2, matching the inspected front's state transition. It does not free the consumer ID or complete pixels; native pool-lock scanning is not emulated.
+
+The native submission error path invokes `0x6074af81`. Its external event front `0x6074af2c` has a finite host model which accepts only one allocated, previously unsignalled bit for task 0. It records the signal and returns zero; this models a notification of an already failed request, **not successful processing**. The native caller retains its failure status and enters pending-request cleanup `0x6074edd9 → 0x6074b125 → 0x6074b068 → 0x6074af9e`.
+
+The new exact boundary is **`0x6074b02f → 0x60418b31`**, the OS event-wait call. No success result is supplied there. Pending owner/request/consumer-ID/token fields remain intact. Event clearing, token release, consumer-ID release, owner event 22 and final record clearing lie after this wait and have **not** executed. Owned output slots also remain allocated. The current evidence must not be described as complete request cleanup.
+
+Retained report: `local/job-probe-20261102-slots-final/results.json`. It contains the old 12 baseline cases (retained without extra outputs), eight attached COLOR cases, ten negative controls, and four new `owner_slot_cases`. All expected boundaries, processor error codes, workspace states, activation IDs, allocation sizes and unchanged pixel guards passed. Sixteen job-fixture unit tests pass, including four new tests for allocation/activation, borrowed buffers, release preconditions and event signalling. Full workspace discovery passed 90 tests after placing test temporary files in ignored `local/test-temp`; the initial discovery hit a sandbox temporary-directory permission error in an unrelated OSD test. No shared engine semantics were changed.
+
+Next software work is the event-wait/clear/release contract and a valid input-format fixture for the type-`0x0040` path. Preserve the native error result and do not clear pending ownership before the corresponding wait outcome is known. Neither the failure-path progress nor the eight unchanged COLOR cases establishes normal frame completion.

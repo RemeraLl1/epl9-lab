@@ -31,7 +31,8 @@ JOB_WINDOWS = {
     'buffer_release_and_reset': (0x6074abc7, 0x6074acf9),
     'job_pending_reset': (0x6074ed70, 0x6074edac),
     'buffer_available_slot': (0x6074ae89, 0x6074aea9),
-    'start_callback_bodies': (0x607503e6, 0x60750478),
+    'start_callback_bodies': (0x607503e6, 0x60750498),
+    'pending_wait_wrapper': (0x6074b125, 0x6074b143),
     'processing_classifier': (0x60792399, 0x60792510),
     'processing_classifier_support': (0x607925d2, 0x60792764),
     'early_processing_classifier': (0x6078e83f, 0x6078e890),
@@ -53,6 +54,8 @@ JOB_WINDOWS = {
     'pending_callback': (0x607504f6, 0x60750638),
     'descriptor_comparisons': (0x60749fb6, 0x6074a061),
     'consumer_outputs': (0x6073f60c, 0x6073f678),
+    'consumer_cleanup': (0x6073f33d, 0x6073f74f),
+    'pending_signal_wrapper': (0x6074af81, 0x6074af9e),
     'request_type_helpers': (0x607a3bed, 0x607a3df6),
     'processing_dispatch': (0x60734068, 0x60734302),
     'processing_configuration_start': (0x6073af53, 0x6073b603),
@@ -108,8 +111,11 @@ class FixtureOwner:
     """Declared host descriptors and bounded buffers, never an ISP model."""
     name = 'synthetic-frame-owner'
 
-    def __init__(self, continue_processing=True, accept_request=True):
+    def __init__(self, continue_processing=True, accept_request=True, provide_slot=False):
         self.buffers = []
+        self.provide_slot = provide_slot
+        self.slot_buffers = {}
+        self.active_slots = set()
         self.continue_processing = continue_processing
         self.accept_request = accept_request
 
@@ -125,9 +131,15 @@ class FixtureOwner:
                 raise Fault('undeclared coefficient callback caller')
         elif event == 14:
             descriptor_id = m.memory.read(arg+4,2)
-            if m.memory.read(arg,4) != JOB+36 or descriptor_id not in (1,2,0xff12):
+            if descriptor_id in (0xff07,0xff0b) and self.provide_slot:
+                self.validate_slot(m,arg,descriptor_id)
+                return
+            offsets={1:36,2:100,0xff12:4264}
+            if self.provide_slot:
+                offsets[0xff00]=3984
+            if m.memory.read(arg,4) != JOB+36 or descriptor_id not in offsets:
                 raise Fault(f'owner descriptor {descriptor_id:#x} not declared by fixture')
-            offset = {1:36,2:100,0xff12:4264}[descriptor_id]
+            offset = offsets[descriptor_id]
             pointer = m.memory.read(JOB+offset,4)
             if pointer != (SOURCE if descriptor_id == 1 else OUTPUT):
                 raise Fault('fixture descriptor points outside its assigned payload')
@@ -158,8 +170,42 @@ class FixtureOwner:
             if (arg != JOB+10440 or m.memory.read(arg+16,1) != 0
                     or m.memory.read(arg+1484,4) != CACHE):
                 raise Fault('unexpected development request notification')
+        elif event == 23 and self.provide_slot:
+            identifier=m.memory.read(arg+4,2)
+            if identifier not in (0xff07,0xff0b) or identifier in self.active_slots:
+                raise Fault('unexpected slot activation')
+            if not m.memory.read(JOB+{0xff07:4960,0xff0b:5200}[identifier],4):
+                raise Fault('activation requires an allocated or borrowed payload')
+            self.validate_slot(m,arg,identifier)
+        elif event == 22 and self.provide_slot:
+            if arg != 0:
+                raise Fault('unexpected finished-request notification')
         else:
             raise Fault(f'unmodeled owner event {event}')
+
+    def validate_slot(self,m,arg,identifier):
+        offset={0xff07:4960,0xff0b:5200}[identifier]
+        if m.memory.read(arg,4) != JOB+36 or m.memory.read(JOB+offset+8,2) != 0x302:
+            raise Fault('slot descriptor context or format mismatch')
+        stride,width,height=[m.memory.read(JOB+offset+n,2) for n in (10,12,14)]
+        if not (0 < width <= stride <= 4608 and 0 < height <= 3456):
+            raise Fault(f'invalid slot dimensions: stride={stride}, width={width}, height={height}')
+        size=stride*height*2
+        pointer=m.memory.read(JOB+offset,4)
+        if identifier==0xff07 and pointer==OUTPUT:
+            if not any(r.writable and r.address<=pointer and pointer+size<=r.address+len(r.data) for r in m.memory.regions):
+                raise Fault('borrowed slot exceeds output payload')
+            return
+        slot=self.slot_buffers.get(identifier)
+        if slot is None:
+            if pointer or size > 32*1024*1024:
+                raise Fault('unexpected slot payload or size')
+            m.memory.region(JOB+offset,4,True)
+            address=0x1b000000 if identifier==0xff07 else 0x1c000000
+            if any(address < r.address+len(r.data) and r.address < address+size+16 for r in m.memory.regions):
+                raise Fault('slot allocation overlaps memory')
+        elif pointer != slot['address'] or size != slot['size']:
+            raise Fault('slot payload changed during use')
 
     def apply(self,m):
         event,arg = m.r['d0'],m.r['a0']
@@ -176,6 +222,22 @@ class FixtureOwner:
             detail.update(self.buffers[-1])
         elif event == 14:
             detail['descriptor_id'] = m.memory.read(arg+4,2)
+            identifier=detail['descriptor_id']
+            if identifier in (0xff07,0xff0b) and m.memory.read(JOB+{0xff07:4960,0xff0b:5200}[identifier],4) != OUTPUT:
+                offset={0xff07:4960,0xff0b:5200}[identifier]
+                if identifier not in self.slot_buffers:
+                    size=m.memory.read(JOB+offset+10,2)*m.memory.read(JOB+offset+14,2)*2
+                    address=0x1b000000 if identifier==0xff07 else 0x1c000000
+                    region=Region(address,bytearray([0xcd])*size+bytearray([0xa5])*16,True,'owner slot payload')
+                    m.memory=Memory([*m.memory.regions,region])
+                    m.memory.write(JOB+offset,region.address,4)
+                    self.slot_buffers[identifier]=dict(address=region.address,size=size,id=identifier)
+                    self.buffers.append(self.slot_buffers[identifier])
+                detail.update(self.slot_buffers[identifier])
+        elif event == 23:
+            identifier=m.memory.read(arg+4,2)
+            self.active_slots.add(identifier)
+            detail.update(slot_active=True,descriptor_id=identifier)
         # Native 6074f035 treats a zero event-13 response as cancellation.
         m.r['d0'] = int(self.continue_processing) if event == 13 else 1
         if event == 21:
@@ -231,13 +293,13 @@ class FixtureConsumerSlot:
     name = 'fixture-consumer-slot'
 
     def __init__(self, kind, identity=None):
-        if kind not in ('id','workspace'):
+        if kind not in ('id','workspace','release'):
             raise ValueError('unknown consumer fixture kind')
         self.kind, self.used = kind, False
         self.identity = identity
 
     def validate(self,m,mask,frame):
-        expected = (0xf0,20) if self.kind == 'id' else (0xf0,36)
+        expected = {'id':(0xf0,20),'workspace':(0xf0,36),'release':(0xf0,24)}[self.kind]
         if (mask,frame) != expected or self.used:
             raise Fault('consumer slot ABI or capacity mismatch')
         if self.kind == 'workspace':
@@ -246,9 +308,16 @@ class FixtureConsumerSlot:
                 raise Fault('workspace requires the declared live consumer ID')
             if not any(r.address == SCRATCH and len(r.data) == 9596 and r.writable for r in m.memory.regions):
                 raise Fault('missing declared consumer workspace')
+        if self.kind == 'release':
+            if (m.r['a0'] != SCRATCH or self.identity is None or self.identity.kind != 'workspace'
+                    or not self.identity.used or m.memory.read(SCRATCH+9592,1) != 1):
+                raise Fault('release requires a live declared workspace')
 
     def apply(self,m):
         self.used = True
+        if self.kind == 'release':
+            m.memory.write(SCRATCH+9592,2,1)
+            return dict(address=hex(SCRATCH),state=2,completed=False)
         if self.kind == 'id':
             m.r['d0'] = 0x8000
             return dict(request_id='0x8000',completed=False)
@@ -257,6 +326,25 @@ class FixtureConsumerSlot:
         m.memory.write(SCRATCH+9592,1,1)
         m.r['a0'] = SCRATCH
         return dict(address=hex(SCRATCH),size=9596,completed=False)
+
+
+class FixtureSignal:
+    """Signal an allocated host event token; no image completion is implied."""
+    name='fixture-event-signal'
+
+    def __init__(self,pool):
+        self.pool=pool
+        self.signalled=0
+
+    def validate(self,m,mask,frame):
+        bit=m.r['d1']
+        if ((mask,frame,m.r['d0']) != (0xc0,12,0) or bit == 0 or
+                bit & (bit-1) or not self.pool.allocated & bit or self.signalled & bit):
+            raise Fault('event signal requires one live unsignalled token')
+
+    def apply(self,m):
+        bit=m.r['d1']; self.signalled|=bit; m.r['d0']=0
+        return dict(bit=bit,signalled=self.signalled,pixels_completed=False)
 
 
 class FixtureLock:
@@ -301,7 +389,10 @@ def load():
 
 def resume(m, pc, stops=()):
     try:
-        result = m.run(pc, [RETURN,*stops],limit=500000)
+        result = m.run(pc, [RETURN,*stops,0x6072fdd3],limit=500000)
+        if result.get('pc') == 0x6072fdd3:
+            m.processor_return=m.r['d0']
+            result=m.run(0x6072fdd3,[RETURN,*stops],limit=500000)
     except Fault as error:
         result = dict(status='fault',error=str(error))
     return result | dict(registers={k:hex(v) for k,v in m.r.items()},
@@ -360,7 +451,7 @@ def cache_experiment(image,code):
 
 def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
-               attach_table=False, provide_reference_dimensions=True):
+               attach_table=False, provide_reference_dimensions=True, provide_slot=False):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -370,9 +461,12 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     params[19] = 1  # Explicit ROM dimension-table selector, not a null entry.
     params[21] = selector
     struct.pack_into('<2I',params,0,OWNER_CALLBACK,OWNER_CONTEXT)
-    owner = FixtureOwner(continue_processing,accept_request)
+    owner = FixtureOwner(continue_processing,accept_request,provide_slot)
     pool = FixturePool()
     consumer_id = FixtureConsumerSlot('id')
+    workspace = FixtureConsumerSlot('workspace',consumer_id)
+    event_pool=FixtureEventBits()
+    signal=FixtureSignal(event_pool)
     memory = Memory([Region(BASE,image),Region(JOB,job,True,'job'),Region(CACHE,cache,True,'cache'),
                      Region(PARAMS,params),Region(ERROR,bytearray(4),True),
                      Region(STACK,bytearray(16384),True,'stack'),Region(0x8050,bytearray(4)),
@@ -381,9 +475,11 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
                     models={0x60402595:pool,0x4700111e:FillModel(),OWNER_CALLBACK:owner,
-                            0x6074aea9:FixtureEventBits(),
+                            0x6074aea9:event_pool,
+                            0x6074af2c:signal,
                             0x607490c8:consumer_id,
-                            0x607a038d:FixtureConsumerSlot('workspace',consumer_id),
+                            0x607a038d:workspace,
+                            0x607a06d2:FixtureConsumerSlot('release',workspace),
                             0x607a17b7:FixtureLock(16,0xa0,12),
                             0x607a1841:FixtureLock(8,0xc0,16)})
     # Host redirects only the Watercolor-specific branch and retains early paths.
@@ -418,6 +514,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     width,height = (640,480) if kind == 0x40 else (4608,3456)
     # Buffer layout/format are a synthetic caller fixture, not decoded sensor data.
     descriptors = [(36,SOURCE,kind),(100,OUTPUT,0x0302)]
+    if provide_slot:
+        descriptors.append((3984,OUTPUT,0x0302))
     if provide_long_output:
         descriptors.append((4264,OUTPUT,0x0302))
     for offset,address,fmt in descriptors:
@@ -491,6 +589,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             lifetime='host-owned readonly object/table retained through the stopped native request')
         execution=resume(m,return_pc)
     report['executor'] = execution
+    report['processor_return']=hex(m.processor_return) if hasattr(m,'processor_return') else None
     if m.trace[-1] == 0x60795691:
         pointer=m.memory.read(m.r['sp']+164,4)
         report['dimension_fault']=dict(pointer=hex(pointer),request_offset=pointer-(JOB+10440),
@@ -499,6 +598,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['executor_index'] = memory.read(JOB+10388,2)
     report['events'] = m.events
     report['fixture_buffers'] = owner.buffers
+    report['active_owner_slots'] = sorted(owner.active_slots)
+    report['workspace_state'] = m.memory.read(SCRATCH+9592,1)
+    report['event_bits_signalled']=signal.signalled
     report['request_words'] = {str(o):hex(m.memory.read(JOB+10440+o,4))
                                for o in (0,4,8,12,16,20,84,212,276,340,404,916,972,1196,1252,1484,1524,1640)}
     report['cache_compare_executed'] = 0x6073e6ac in m.trace and 0x6073e950 in m.trace
@@ -551,6 +653,17 @@ def main():
         assert case['parameter_construction']['result']['registers']['d0'] == '0x0'
     for kind in ('0x200','0x100'):
         assert len({c['connected_color']['output_sha256'] for c in connected if c['kind']==kind}) == 2
+    slot_cases=[experiment(image,code,k,0x40,s,provide_slot=True) for k in RECIPES for s in (0,2)]
+    for case in slot_cases:
+        assert case['executor']['status']=='external_call' and case['executor']['target']==0x60418b31
+        assert case['executor']['pc']==0x6074b02f and case['event_bits_signalled']==1
+        assert case['processor_return']=='0x9e40'
+        assert case['workspace_state']==2 and case['active_owner_slots']==[0xff07,0xff0b]
+        assert not case['output_changed'] and case['allocation_canaries_intact']
+        expected=[dict(address=0x1c000000,size=2560,id=0xff0b,payload_changed=False)]
+        if case['selector']==2:
+            expected.insert(0,dict(address=0x1b000000,size=614400,id=0xff07,payload_changed=False))
+        assert case['fixture_buffers']==expected
     controls = []
     for key in RECIPES:
         for name,options,selector in [('no_frame_start',{'start_frame':False},0),
@@ -591,6 +704,7 @@ def main():
                 reader_sha256='e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae',
                 synthetic_inputs=True,camera_accessed=False,firmware_modified=False,
                 full_pixel_cycle_passed=False,cases=cases,connected_color_cases=connected,
+                owner_slot_cases=slot_cases,
                 controls=controls,cache_audit=cache_experiment(image,code),
                 source_sha256=source_hashes,decode_anchors=len({**EXPECTED,**JOB_ANCHORS}),
                 new_windows={k:[hex(a),hex(b)] for k,(a,b) in JOB_WINDOWS.items()},
@@ -598,7 +712,7 @@ def main():
                              'no RTOS scheduling, DMA, ISP, request completion or camera measurement',
                              'attached tables use diagnostic saturation markers, not calibrated film recipes',
                              'parameter owner lifetime/comparison-token production not integrated',
-                             'type 0x40 owner buffer 0xff07 remains undeclared'])
+                             'type 0x40 explicit outputs reach configuration rejection and completion signalling boundary'])
     args.out.mkdir(parents=True)
     (args.out/'results.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     def brief(v):
