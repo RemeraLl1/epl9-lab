@@ -19,6 +19,12 @@ $wiresharkPath = $wiresharkCandidates | Where-Object { Test-Path -LiteralPath $_
 $usbTreePath = Join-Path $projectRoot 'tools\UsbTreeView\UsbTreeView.exe'
 $usbPcapService = Get-Service -Name USBPcap -ErrorAction SilentlyContinue
 $npcapService = Get-Service -Name npcap -ErrorAction SilentlyContinue
+$workspaceCandidates = @(
+    'C:\Program Files (x86)\OMDS\OM Workspace\OM Workspace.exe',
+    'C:\Program Files\OMDS\OM Workspace\OM Workspace.exe',
+    'C:\Program Files (x86)\OLYMPUS\Olympus Workspace\Olympus Workspace.exe'
+)
+$workspacePath = $workspaceCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 $report = [ordered]@{
     python = $pythonPath
     pythonVersion = if ($pythonPath) { (& $pythonPath --version 2>&1 | Out-String).Trim() } else { $null }
@@ -26,6 +32,7 @@ $report = [ordered]@{
     usbTreeView = if (Test-Path -LiteralPath $usbTreePath) { $usbTreePath } else { $null }
     usbPcapDriver = if ($usbPcapService) { [string]$usbPcapService.Status } else { 'NotInstalled' }
     npcapDriver = if ($npcapService) { [string]$npcapService.Status } else { 'NotInstalled' }
+    omWorkspace = $workspacePath
     cameraTesting = 'Pending'
 }
 $json = $report | ConvertTo-Json

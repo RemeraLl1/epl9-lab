@@ -10,6 +10,10 @@
 
 Run `scripts/doctor.ps1` to inspect this machine's current readiness. Downloaded installers and installation records remain local.
 
+The initial download set includes Wireshark 4.6.9, USB Device Tree Viewer 4.8.0, USBPcap 1.5.4.0, Npcap 1.90 and OM Workspace installer 2.5.0.11. The Wireshark MSI matches the publisher's SHA-256. Windows validates the signatures of the Wireshark, USBPcap, Npcap and OM Workspace installers.
+
+The prepared Wireshark and TShark executables both pass a version invocation. Their extraction does not register a system-wide installation. Windows Installer service access and the legacy USBPcap installer launch are blocked inside the agent's isolated terminal; system installers must be completed from the user's normal Windows session.
+
 ## Capture drivers
 
 Wireshark can inspect saved capture files without capture drivers. Live network capture requires Npcap; USB capture requires USBPcap. Their signed official installers are in `downloads/`. Installing these kernel drivers requires Windows administrator consent and may require a restart. Do not restart the computer automatically.

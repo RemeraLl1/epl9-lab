@@ -36,7 +36,7 @@ Run the workstation check from PowerShell:
 For an offline file identity report, use Python 3.12 or newer:
 
 ```powershell
-python .\scripts\firmware_info.py .\firmware\camera-update.BIN --output .\local\firmware-info.json
+.\.venv\Scripts\python.exe .\scripts\firmware_info.py .\firmware\camera-update.BIN --output .\local\firmware-info.json
 ```
 
 The inspector reads a local file and reports its size, SHA-256 and initial bytes. It does not decode, modify or flash firmware.
