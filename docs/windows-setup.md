@@ -14,6 +14,8 @@ The initial download set includes Wireshark 4.6.9, USB Device Tree Viewer 4.8.0,
 
 The prepared Wireshark and TShark executables both pass a version invocation. Their extraction does not register a system-wide installation. Windows Installer service access and the legacy USBPcap installer launch are blocked inside the agent's isolated terminal; system installers must be completed from the user's normal Windows session.
 
+On 2026-11-02 the owner completed those system installations. Npcap 1.90 and USBPcap 1.5.4.0 are registered and their driver files are present; OM Workspace 2.5.0.11 is present. Wireshark's dumpcap reports Npcap 1.90 and successfully lists capture interfaces. USBPcapCMD accepts a help invocation. Service-control access from the agent's isolated terminal is denied, so `doctor.ps1` distinguishes installed drivers with an unavailable service status from missing drivers. Capture from the actual camera remains untested.
+
 ## Capture drivers
 
 Wireshark can inspect saved capture files without capture drivers. Live network capture requires Npcap; USB capture requires USBPcap. Their signed official installers are in `downloads/`. Installing these kernel drivers requires Windows administrator consent and may require a restart. Do not restart the computer automatically.

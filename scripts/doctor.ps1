@@ -17,8 +17,22 @@ $wiresharkCandidates = @(
 )
 $wiresharkPath = $wiresharkCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 $usbTreePath = Join-Path $projectRoot 'tools\UsbTreeView\UsbTreeView.exe'
-$usbPcapService = Get-Service -Name USBPcap -ErrorAction SilentlyContinue
-$npcapService = Get-Service -Name npcap -ErrorAction SilentlyContinue
+function Get-CaptureDriverStatus {
+    param([string]$Name)
+    $driverKey = 'HKLM:\SYSTEM\CurrentControlSet\Services\' + $Name
+    try {
+        $null = Get-Item -LiteralPath $driverKey -ErrorAction Stop
+    } catch [System.Management.Automation.ItemNotFoundException] {
+        return 'NotInstalled'
+    } catch {
+        return 'Unknown (driver registration inaccessible)'
+    }
+    try {
+        return [string](Get-Service -Name $Name -ErrorAction Stop).Status
+    } catch {
+        return 'Installed (service status unavailable)'
+    }
+}
 $workspaceCandidates = @(
     'C:\Program Files (x86)\OMDS\OM Workspace\OM Workspace.exe',
     'C:\Program Files\OMDS\OM Workspace\OM Workspace.exe',
@@ -30,8 +44,8 @@ $report = [ordered]@{
     pythonVersion = if ($pythonPath) { (& $pythonPath --version 2>&1 | Out-String).Trim() } else { $null }
     wireshark = $wiresharkPath
     usbTreeView = if (Test-Path -LiteralPath $usbTreePath) { $usbTreePath } else { $null }
-    usbPcapDriver = if ($usbPcapService) { [string]$usbPcapService.Status } else { 'NotInstalled' }
-    npcapDriver = if ($npcapService) { [string]$npcapService.Status } else { 'NotInstalled' }
+    usbPcapDriver = Get-CaptureDriverStatus -Name USBPcap
+    npcapDriver = Get-CaptureDriverStatus -Name npcap
     omWorkspace = $workspacePath
     cameraTesting = 'Pending'
 }
