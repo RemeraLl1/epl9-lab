@@ -19,6 +19,8 @@ OWNER_CALLBACK, OWNER_CONTEXT, SOURCE, OUTPUT = 0x0f000000, 0x10040000, 0x120000
 SCRATCH = 0x18000000
 PARAMETER_OBJECT, RECIPE_TABLE = 0x19000000, 0x19010000
 JOB_WINDOWS = {
+    'event_clear_wrapper': (0x6074b0ce, 0x6074b10d),
+    'consumer_id_cleanup_wrapper': (0x6072fac5, 0x6072fb1b),
     'cache_constructor': (0x6073e562, 0x6073e6ac),
     'cache_descriptor_init': (0x60749fa5, 0x60749fb6),
     'job_services': (0x6074eca0, 0x6074ed70),
@@ -116,6 +118,9 @@ class FixtureOwner:
         self.provide_slot = provide_slot
         self.slot_buffers = {}
         self.active_slots = set()
+        # Caller supplies ff00 before dispatch; selector 2 releases this
+        # reference without fetching it through event 14 first.
+        self.descriptor_refs = {0xff00:1} if provide_slot else {}
         self.continue_processing = continue_processing
         self.accept_request = accept_request
 
@@ -180,6 +185,10 @@ class FixtureOwner:
         elif event == 22 and self.provide_slot:
             if arg != 0:
                 raise Fault('unexpected finished-request notification')
+        elif event == 16 and self.provide_slot:
+            identifier=m.memory.read(arg+4,2)
+            if m.memory.read(arg,4)!=JOB+36 or not self.descriptor_refs.get(identifier,0):
+                raise Fault(f'undeclared descriptor release {identifier:#x}')
         else:
             raise Fault(f'unmodeled owner event {event}')
 
@@ -223,6 +232,7 @@ class FixtureOwner:
         elif event == 14:
             detail['descriptor_id'] = m.memory.read(arg+4,2)
             identifier=detail['descriptor_id']
+            self.descriptor_refs[identifier]=self.descriptor_refs.get(identifier,0)+1
             if identifier in (0xff07,0xff0b) and m.memory.read(JOB+{0xff07:4960,0xff0b:5200}[identifier],4) != OUTPUT:
                 offset={0xff07:4960,0xff0b:5200}[identifier]
                 if identifier not in self.slot_buffers:
@@ -238,6 +248,11 @@ class FixtureOwner:
             identifier=m.memory.read(arg+4,2)
             self.active_slots.add(identifier)
             detail.update(slot_active=True,descriptor_id=identifier)
+        elif event == 16:
+            identifier=m.memory.read(arg+4,2)
+            self.descriptor_refs[identifier]-=1
+            self.active_slots.discard(identifier)
+            detail.update(descriptor_id=identifier,slot_active=False,payload_retained_for_audit=True)
         # Native 6074f035 treats a zero event-13 response as cancellation.
         m.r['d0'] = int(self.continue_processing) if event == 13 else 1
         if event == 21:
@@ -347,6 +362,63 @@ class FixtureSignal:
         return dict(bit=bit,signalled=self.signalled,pixels_completed=False)
 
 
+class FixtureCompletion:
+    """Finite host event/pool contracts; native request cleanup stays executable.
+
+    Non-autoclearing event and one idle consumer are explicit assumptions.
+    An unsignalled wait stops; it never fabricates scheduler progress.
+    """
+    name='fixture-completion-resources'
+
+    def __init__(self,kind,signal,identity,workspace):
+        self.kind,self.signal,self.identity,self.workspace=kind,signal,identity,workspace
+
+    def validate(self,m,mask,frame):
+        expected={'wait':(0xf0,40),'clear':(0xf0,20),'token':(0xe0,16),
+                  'consumer':(0xf0,28),'workspace':(0x80,8),'id':(0xc0,12)}
+        if (mask,frame)!=expected[self.kind]:
+            raise Fault('completion resource ABI mismatch')
+        if self.kind=='wait':
+            if (m.r['d0'],m.r['a1'],m.memory.read(m.r['sp']+4,4))!=(0xe3,1,1000):
+                raise Fault('undeclared event wait ID/mode/timeout')
+            if not m.r['d1'] or m.r['d1'] & ~self.signal.pool.allocated or not m.r['d1'] & self.signal.signalled:
+                raise Fault('wait requires an allocated already-signalled event')
+            if not m.r['sp']+8 <= m.r['a0'] <= STACK+16384-4:
+                raise Fault('wait result overlaps call frame or exceeds stack')
+            m.memory.region(m.r['a0'],4,True)
+        elif self.kind=='clear':
+            removed=self.signal.signalled & ~m.r['d1']
+            if m.r['d0']!=0xe3 or not removed or removed & ~self.signal.pool.allocated:
+                raise Fault('event clear requires a live signalled token')
+        elif self.kind=='token':
+            bit=m.r['d0']
+            if not bit or bit & (bit-1) or not self.signal.pool.allocated & bit or self.signal.signalled & bit:
+                raise Fault('token release requires a live cleared token')
+        else:
+            if m.r['d0']!=0x8000 or not self.identity.used or not self.workspace.used:
+                raise Fault('cleanup requires the declared live consumer')
+            if getattr(m,'processor_return',None)!=0x9e40:
+                raise Fault('consumer teardown only declared for configuration rejection')
+            state=m.memory.read(SCRATCH+9592,1)
+            if state != (0 if self.kind=='id' else 2):
+                raise Fault('consumer cleanup order mismatch')
+
+    def apply(self,m):
+        if self.kind=='wait':
+            m.memory.write(m.r['a0'],self.signal.signalled,4)
+        elif self.kind=='clear':
+            self.signal.signalled &= m.r['d1']
+        elif self.kind=='token':
+            self.signal.pool.allocated &= ~m.r['d0']
+        elif self.kind=='workspace':
+            for offset,size in ((9584,4),(9588,4),(9592,1)):
+                m.memory.write(SCRATCH+offset,0,size)
+        elif self.kind=='id':
+            self.identity.used=False
+        m.r['d0']=0
+        return dict(resource_operation=self.kind,pixels_completed=False)
+
+
 class FixtureLock:
     """One uncontended single-thread acquisition; no IRQ or device emulation."""
     name = 'fixture-uncontended-lock'
@@ -451,7 +523,8 @@ def cache_experiment(image,code):
 
 def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
-               attach_table=False, provide_reference_dimensions=True, provide_slot=False):
+               attach_table=False, provide_reference_dimensions=True, provide_slot=False,
+               input_format=None):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -467,6 +540,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     workspace = FixtureConsumerSlot('workspace',consumer_id)
     event_pool=FixtureEventBits()
     signal=FixtureSignal(event_pool)
+    completion={address:FixtureCompletion(operation,signal,consumer_id,workspace) for address,operation in
+        [(0x60418b31,'wait'),(0x60410a51,'clear'),(0x6074aef3,'token'),
+         (0x60740038,'consumer'),(0x607a08aa,'workspace'),(0x60749116,'id')]}
     memory = Memory([Region(BASE,image),Region(JOB,job,True,'job'),Region(CACHE,cache,True,'cache'),
                      Region(PARAMS,params),Region(ERROR,bytearray(4),True),
                      Region(STACK,bytearray(16384),True,'stack'),Region(0x8050,bytearray(4)),
@@ -474,13 +550,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
-                    models={0x60402595:pool,0x4700111e:FillModel(),OWNER_CALLBACK:owner,
+                    models={**completion,0x60402595:pool,0x4700111e:FillModel(),OWNER_CALLBACK:owner,
                             0x6074aea9:event_pool,
                             0x6074af2c:signal,
                             0x607490c8:consumer_id,
                             0x607a038d:workspace,
                             0x607a06d2:FixtureConsumerSlot('release',workspace),
-                            0x607a17b7:FixtureLock(16,0xa0,12),
+                            0x607a17b7:FixtureLock(32 if kind==0x40 else 16,0xa0,12),
                             0x607a1841:FixtureLock(8,0xc0,16)})
     # Host redirects only the Watercolor-specific branch and retains early paths.
     result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
@@ -513,7 +589,11 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             struct.pack_into('<4H',job,offset,640,480,640,480)
     width,height = (640,480) if kind == 0x40 else (4608,3456)
     # Buffer layout/format are a synthetic caller fixture, not decoded sensor data.
-    descriptors = [(36,SOURCE,kind),(100,OUTPUT,0x0302)]
+    input_format=kind if input_format is None else input_format
+    if input_format not in (0x40,0x100,0x200):
+        raise ValueError('undeclared synthetic input format')
+    report['input_format']=hex(input_format)
+    descriptors = [(36,SOURCE,input_format),(100,OUTPUT,0x0302)]
     if provide_slot:
         descriptors.append((3984,OUTPUT,0x0302))
     if provide_long_output:
@@ -599,14 +679,18 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['events'] = m.events
     report['fixture_buffers'] = owner.buffers
     report['active_owner_slots'] = sorted(owner.active_slots)
+    report['descriptor_refs'] = {hex(k):v for k,v in owner.descriptor_refs.items()}
     report['workspace_state'] = m.memory.read(SCRATCH+9592,1)
     report['event_bits_signalled']=signal.signalled
+    report['event_bits_allocated']=event_pool.allocated
+    report['consumer_id_live']=consumer_id.used
     report['request_words'] = {str(o):hex(m.memory.read(JOB+10440+o,4))
                                for o in (0,4,8,12,16,20,84,212,276,340,404,916,972,1196,1252,1484,1524,1640)}
     report['cache_compare_executed'] = 0x6073e6ac in m.trace and 0x6073e950 in m.trace
     report['processor_entered'] = 0x60734068 in m.trace
     report['native_color_entered'] = 0x6079ebcc in m.trace
     report['pending_record'] = {str(o):hex(m.memory.read(JOB+13640+o,4)) for o in (0,8,12,16)}
+    report['pending_record_zero']=not any(job[13640:13640+56])
     report['cancelled'] = memory.read(JOB+10394,2)
     report['worklist_calls'] = [hex(e['target']) for e in m.events
         if e['op'] in ('call','calls') and e.get('target') in {row[0] for row in report['entries']}]
@@ -655,15 +739,25 @@ def main():
         assert len({c['connected_color']['output_sha256'] for c in connected if c['kind']==kind}) == 2
     slot_cases=[experiment(image,code,k,0x40,s,provide_slot=True) for k in RECIPES for s in (0,2)]
     for case in slot_cases:
-        assert case['executor']['status']=='external_call' and case['executor']['target']==0x60418b31
-        assert case['executor']['pc']==0x6074b02f and case['event_bits_signalled']==1
+        assert case['executor'].get('pc')==RETURN and case['executor']['registers']['sp']==hex(SP)
+        assert case['executor']['registers']['d0']=='0x9e40'
+        assert case['event_bits_signalled']==case['event_bits_allocated']==0
+        assert not case['consumer_id_live'] and case['pending_record_zero']
         assert case['processor_return']=='0x9e40'
-        assert case['workspace_state']==2 and case['active_owner_slots']==[0xff07,0xff0b]
+        assert case['workspace_state']==0 and case['active_owner_slots']==[0xff07,0xff0b]
         assert not case['output_changed'] and case['allocation_canaries_intact']
         expected=[dict(address=0x1c000000,size=2560,id=0xff0b,payload_changed=False)]
         if case['selector']==2:
             expected.insert(0,dict(address=0x1b000000,size=614400,id=0xff07,payload_changed=False))
         assert case['fixture_buffers']==expected
+    short_inputs=[experiment(image,code,k,0x40,s,provide_slot=True,input_format=f)
+                  for k in RECIPES for s in (0,2) for f in (0x100,0x200)]
+    for case in short_inputs:
+        if case['input_format']=='0x200':
+            assert_hardware_boundary(case)
+        else:
+            assert case['executor'].get('target')==0x604bbfac and case['executor']['pc']==0x6073920e
+        assert case['processor_return'] is None and not case['output_changed']
     controls = []
     for key in RECIPES:
         for name,options,selector in [('no_frame_start',{'start_frame':False},0),
@@ -705,14 +799,15 @@ def main():
                 synthetic_inputs=True,camera_accessed=False,firmware_modified=False,
                 full_pixel_cycle_passed=False,cases=cases,connected_color_cases=connected,
                 owner_slot_cases=slot_cases,
+                short_input_cases=short_inputs,
                 controls=controls,cache_audit=cache_experiment(image,code),
                 source_sha256=source_hashes,decode_anchors=len({**EXPECTED,**JOB_ANCHORS}),
                 new_windows={k:[hex(a),hex(b)] for k,(a,b) in JOB_WINDOWS.items()},
                 limitations=['synthetic descriptors and software resource contracts',
-                             'no RTOS scheduling, DMA, ISP, request completion or camera measurement',
+                             'no RTOS scheduling, DMA, ISP or camera measurement; error cleanup uses finite host resources',
                              'attached tables use diagnostic saturation markers, not calibrated film recipes',
                              'parameter owner lifetime/comparison-token production not integrated',
-                             'type 0x40 explicit outputs reach configuration rejection and completion signalling boundary'])
+                             'short route input 0x200 reaches hardware boundary; pixel packing remains unverified'])
     args.out.mkdir(parents=True)
     (args.out/'results.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     def brief(v):

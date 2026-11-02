@@ -264,3 +264,31 @@ The new exact boundary is **`0x6074b02f → 0x60418b31`**, the OS event-wait cal
 Retained report: `local/job-probe-20261102-slots-final/results.json`. It contains the old 12 baseline cases (retained without extra outputs), eight attached COLOR cases, ten negative controls, and four new `owner_slot_cases`. All expected boundaries, processor error codes, workspace states, activation IDs, allocation sizes and unchanged pixel guards passed. Sixteen job-fixture unit tests pass, including four new tests for allocation/activation, borrowed buffers, release preconditions and event signalling. Full workspace discovery passed 90 tests after placing test temporary files in ignored `local/test-temp`; the initial discovery hit a sandbox temporary-directory permission error in an unrelated OSD test. No shared engine semantics were changed.
 
 Next software work is the event-wait/clear/release contract and a valid input-format fixture for the type-`0x0040` path. Preserve the native error result and do not clear pending ownership before the corresponding wait outcome is known. Neither the failure-path progress nor the eight unchanged COLOR cases establishes normal frame completion.
+
+## Failed-request teardown and independent short input format, 2026-11-02
+
+This follow-up supersedes the preceding event-wait boundary. Exact E-PL9 1.1/build 1101 inputs and hashes are unchanged. Reproduction: `python scripts/epl9_job_probe.py --out local/<new-directory>`. Retained report: `local/job-probe-completion-20261102/results.json`.
+
+The native wait/cleanup wrappers now execute through the final return in all four short-route configuration-rejection cases. The OS and finite pool fronts are explicit host models, not an emulated RTOS:
+
+- `0x60418b31` waits for event ID `0xe3`, OR mode 1, timeout argument 1000. The inspected native immediate-success branch writes the full event word. The fixture declares a non-autoclearing event and only accepts an already-signalled allocated bit; an unsignalled wait stops rather than inventing scheduler progress or elapsed time.
+- Native `0x6074b125` invokes `0x6074b0f5 → 0x6074b0ce`, supplying the complemented token to `0x60410a51`. That OS front ANDs the current bits with the supplied mask (`0x60410afd…0x60410b02`). The bounded model clears only a live signalled token.
+- The `0x6074aef3` front returns the cleared token to the fixture pool. Double release and release before event clearing fail. The real critical section and global pool bitmap are not emulated.
+- Native `0x6072fac5` calls consumer teardown `0x60740038`, workspace unlink `0x607a08aa`, then ID free `0x60749116`. These finite models accept only ID `0x8000`, the declared live workspace, and the measured processor result `0x9e40`. They do not claim hardware teardown after successful processing. Workspace task/ID/state fields +9584/+9588/+9592 become zero, matching native `0x607a091f…0x607a0925`; the ID becomes available only afterward.
+- Native pending cleanup delivers owner event 22, releases its stored descriptor reference through event 16 (`0x6074ae70`), then clears the full 56-byte record through the fill front. The fixture tracks reference returns separately from slot activation. A supplied `0xff00` reference exists before dispatch: selector 2 returns it without a preceding event-14 fetch. This initial ownership is a declared caller assumption, not proof of the camera owner's complete refcount scheme.
+
+All four cases return **`0x9e40`**, preserve the caller stack, have no allocated/signalled event bits or live consumer ID, and leave all 56 bytes of the pending record zero. **This completes this failed-request path under the declared host contracts only.** Output slots `0xff07`/`0xff0b` remain active and retained by the job/owner; final job destruction and full buffer lifecycle are not established. No payload bytes change. Neither owner event 22 nor the return is evidence of successful image processing.
+
+### Short path: route selector is not a pixel format
+
+The fixture previously used routing kind `0x0040` as the input descriptor format too. These are now independently selectable. Native `0x60799f63…0x60799f71` reads **request+28**, shifts the format by eight bits, and for request kinds 0/16 selects family 1 (`0x607a01b1`) or family 2 (`0x607a02dc`). A format of `0x0040` has family zero and takes the rejection branch. This is a concrete fixture error, not evidence that the short schedule itself cannot work.
+
+| Short routing kind | Independent input format | Both identities × both selectors |
+| --- | --- | --- |
+| `0x0040` | `0x0040` | Native configuration rejection followed by complete failed-request teardown |
+| `0x0040` | `0x0100` | Passes input-family dispatch; stops at unmodeled helper `0x6073920e → 0x604bbfac` |
+| `0x0040` | `0x0200` | Passes configuration and reaches the same peripheral write at `0x6073eafa → 0x9880014c` as the long paths |
+
+The short family-2 route requests resource mask 32 rather than the long fixture's 16. Its host lock accepts only that one exact uncontended acquisition; no scheduler/MMIO completion is added. Source remains a synthetic 640×480 two-byte allocation, destination format `0x0302`. **Actual pixel packing, channel order, bit depth, planes and camera-buffer provenance remain unverified**; successful configuration cannot establish them. These new short cases use stock configuration, not the attached diagnostic table oracle.
+
+Validation: the full job probe passes the previous 12 baseline cases, eight attached COLOR comparisons, ten negative controls, four revised failure-cleanup cases, eight independent-input comparisons and cache audit. All 93 workspace unit tests pass, including three new tests for absent signals/invalid output pointers, event-clear/release ordering/double release, and consumer teardown preconditions. `full_pixel_cycle_passed` remains false. Next work is the remaining format-specific helper and actual buffer layout/ISP contract, followed by successful completion and job-owned buffer release; those cannot be inferred from error cleanup.

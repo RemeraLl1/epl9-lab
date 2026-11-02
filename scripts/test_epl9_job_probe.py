@@ -2,7 +2,7 @@
 import struct
 import unittest
 
-from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal,
+from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal, FixtureCompletion,
                             JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT)
 from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
@@ -31,6 +31,52 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_completion_wait_never_invents_signal_and_checks_output(self):
+        m=fixture(); pool=FixtureEventBits(); signal=FixtureSignal(pool)
+        wait=FixtureCompletion('wait',signal,None,None)
+        pool.allocated=1
+        m.r.update(d0=0xe3,d1=1,a1=1,a0=SP+32)
+        m.memory.write(SP+4,1000,4)
+        with self.assertRaises(Fault): wait.validate(m,0xf0,40)
+        signal.signalled=1
+        m.r['a0']=SP
+        with self.assertRaises(Fault): wait.validate(m,0xf0,40)
+        m.r['a0']=SP+32
+        wait.validate(m,0xf0,40); wait.apply(m)
+        self.assertEqual(m.memory.read(SP+32,4),1)
+        self.assertEqual(signal.signalled,1)
+
+    def test_event_clear_before_release_and_double_release_rejected(self):
+        m=fixture(); pool=FixtureEventBits(); signal=FixtureSignal(pool)
+        pool.allocated=signal.signalled=1
+        clear=FixtureCompletion('clear',signal,None,None)
+        release=FixtureCompletion('token',signal,None,None)
+        m.r['d0']=1
+        with self.assertRaises(Fault): release.validate(m,0xe0,16)
+        m.r.update(d0=0xe3,d1=0xfffffffe)
+        clear.validate(m,0xf0,20); clear.apply(m)
+        m.r['d0']=1
+        release.validate(m,0xe0,16); release.apply(m)
+        self.assertEqual(pool.allocated,0)
+        m.r['d0']=1
+        with self.assertRaises(Fault): release.validate(m,0xe0,16)
+
+    def test_cleanup_rejects_live_processing_and_preserves_order(self):
+        m=fixture(); ids=FixtureConsumerSlot('id'); workspace=FixtureConsumerSlot('workspace',ids)
+        ids.used=workspace.used=True
+        release=FixtureCompletion('workspace',None,ids,workspace)
+        free=FixtureCompletion('id',None,ids,workspace)
+        m.r['d0']=0x8000; m.memory.write(SCRATCH+9592,2,1)
+        with self.assertRaises(Fault): release.validate(m,0x80,8)
+        m.processor_return=0x9e40
+        with self.assertRaises(Fault): free.validate(m,0xc0,12)
+        release.validate(m,0x80,8); release.apply(m)
+        m.r['d0']=0x8000
+        free.validate(m,0xc0,12); free.apply(m)
+        self.assertFalse(ids.used)
+        m.r['d0']=0x8000
+        with self.assertRaises(Fault): free.validate(m,0xc0,12)
+
     def test_event_signal_requires_allocated_token_and_never_produces_pixels(self):
         m=fixture(); pool=FixtureEventBits(); signal=FixtureSignal(pool)
         m.r.update(d0=0,d1=1)
