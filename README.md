@@ -20,6 +20,8 @@ The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tes
 
 The follow-up adds explicit bounded memory models and deeper native request preparation, with allocation failure checked. [G200/P400 icon candidates](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) round-trip in all 10 target allocations. [Digital-recipe photo references](docs/epl9-art-example-pictures.md#digital-recipe-photo-shortlist-2026-11-02) are linked with provenance; third-party photos are not bundled.
 
+The [connected-job probe](docs/epl9-integrated-prototype.md#connected-constructor-frame-start-and-consumer-2026-11-02) now completes native construction/frame start and reaches request-consumer configuration with explicit host resource models. It identifies cache invalidation fields needed for future film-table switching and rejects misleading no-op success. Full pixel processing remains incomplete.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:

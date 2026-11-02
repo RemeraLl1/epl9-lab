@@ -178,6 +178,11 @@ class Machine:
                     self.c = self.v = False
                     if op != 'btst':
                         self.write(args[1], value)
+                elif op == 'not':
+                    value = ~self.read(args[0]) & MASK
+                    self.write(args[0],value)
+                    self.nz(value)
+                    self.c = self.v = False
                 elif op in ('asl', 'asr', 'lsr', 'asl2'):
                     count, dest = (2, args[0]) if op == 'asl2' else (self.read(args[0]), args[1])
                     if not 0 <= count < 32:
@@ -190,10 +195,13 @@ class Machine:
                     value = value << count if op in ('asl', 'asl2') else signed(value) >> count if op == 'asr' else value >> count
                     self.nz(value)
                     self.write(dest, value)
-                elif op in ('udf00', 'udfu01'):
+                elif op in ('udf00', 'udf01', 'udfu01'):
                     left, right = map(self.read, args)
                     if op == 'udf00':
                         left, right = signed(left), signed(right)
+                    elif op == 'udf01' and (len(raw) != 2 or raw[0] != 0xf6 or raw[1] >> 4 != 1
+                                          or any(arg not in ('d0','d1','d2','d3') for arg in args)):
+                        raise Fault('unsupported unsigned register multiply encoding')
                     elif args[0] not in self.r and left >= (1 << (8 * (len(raw)-2)-1)):
                         raise Fault('ambiguous GNU unsigned multiply immediate')
                     product = left * right
@@ -210,6 +218,18 @@ class Machine:
                     if not -(1 << 31) <= quotient < 1 << 31:
                         raise Fault('division overflow outside supported subset')
                     self.r['mdr'] = (dividend - quotient * divisor) & MASK
+                    self.write(args[1], quotient)
+                    self.nz(quotient)
+                    self.c = self.v = False
+                elif op == 'divu':
+                    divisor = self.read(args[0])
+                    dividend = (self.r['mdr'] << 32) | self.read(args[1])
+                    if not divisor:
+                        raise Fault('unsigned division by zero')
+                    quotient, remainder = divmod(dividend, divisor)
+                    if quotient > MASK:
+                        raise Fault('unsigned division overflow outside supported subset')
+                    self.r['mdr'] = remainder
                     self.write(args[1], quotient)
                     self.nz(quotient)
                     self.c = self.v = False
