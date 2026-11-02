@@ -1,10 +1,12 @@
-# Watercolor I → Kodak Gold 200
+# Watercolor I → Kodak Gold 200; Watercolor II → Kodak Portra 400
 
-The owner selected **Watercolor I (Акварель I)** as the first ART slot to replace on 2026-11-02. The first intended look is **Kodak Gold 200**. Preserve Watercolor II and the other ART modes. This is an accepted implementation target, not a working patch.
+The owner selected **Watercolor I (Акварель I) → Kodak Gold 200** and subsequently added **Watercolor II (Акварель II) → Kodak Portra 400** on 2026-11-02. The second decision supersedes the earlier requirement to preserve Watercolor II. Preserve the other ART modes. These are accepted implementation targets, not working patches or calibrated film recipes.
 
 ## Image target
 
 Start with a Gold 200-inspired daylight rendering: warm color, recognizable skin tones, detailed foliage, natural edges and controlled highlights. Tune color and tone before investigating grain. These are initial design choices, not measured film equivalence or calibrated firmware values.
+
+Portra 400 is the accepted second recipe name. Its numerical color/tone parameters have not been chosen; keep it a separate recipe from Gold 200. Neither recipe implies forcing the camera ISO to the number in the film name.
 
 [Kodak's E-7022 technical data](https://www.kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/E7022%20Gold%20tech%20sheet.pdf) describes a daylight-balanced color negative film with fine grain, sharpness and color saturation. Its film response curves are not a ready-made digital-camera LUT; a developed/scanned reference and its rendering conditions are needed for a meaningful match. The name “200” does not mean forcing the camera to ISO 200 at all times.
 
@@ -13,10 +15,10 @@ The [E-PL9 manual](https://learnandsupport.getolympus.com/sites/default/files/me
 ## Investigation order
 
 1. Locate this exact E-PL9 build's Watercolor identifiers, type-I/type-II distinction and processing dispatch.
-2. Trace live-view and still-JPEG routes independently. Find where Watercolor's native passes are selected and how normal color processing could replace them for type I alone.
+2. Trace live-view and still-JPEG routes independently. Find where Watercolor's native passes are selected and how normal color processing could replace them for both types, retaining the I/II distinction for recipe selection.
 3. Establish a neutral, detailed replacement before introducing the film recipe. Ensure shared parameters are not changed globally.
 4. Tune a first Gold 200 candidate against fixed-exposure, fixed-white-balance RAW/JPEG samples covering skin, red/yellow objects, foliage, blue sky, gray and highlights.
-5. Validate saved settings, live view, captured JPEGs, type II and other ART modes. Rename the slot after the processing route is established.
+5. Validate saved settings, live view, captured JPEGs, both replacement recipes and unaffected ART modes. Rename the slots after the processing route is established.
 
 No camera writes or flashing are part of the current offline investigation.
 
@@ -49,7 +51,7 @@ The Watercolor names below still come from the E-P7 reference. The E-PL9 observa
 
 The last observation advances the earlier literal-only finding: the shared table has a native code consumer. It still does **not** prove that a user-selectable COLOR mode or a safe Watercolor-to-COLOR replacement exists. The custom instructions shown by GNU as `udf00` have not been emulated here.
 
-Practical consequence: changing a shared table could affect type II or other consumers. The next step is to trace the callers and processing-job construction for the selected type-I key, including live view and captured JPEG paths, and identify an isolated replacement route. No patch locations are approved by these observations.
+Practical consequence: changing a shared table could affect other consumers and would not provide two independent recipes. Follow-up [routing analysis](epl9-art-routing.md) now identifies the common Watercolor worklist, request-header propagation, and separate ordinary/late color paths. It establishes a concrete replacement design to test offline; live-view/capture coverage and a functioning replacement remain unverified. No patch locations are approved by these observations.
 
 ## Reproduce
 

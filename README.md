@@ -12,7 +12,7 @@ Tools and research notes for an Olympus PEN E-PL9 camera.
 
 These are research goals. A working E-PL9 firmware modification has not been produced by this project.
 
-The first selected target is [Watercolor I → Kodak Gold 200](docs/watercolor-gold200.md): replace this ART slot's processing with a film-inspired look while retaining the other modes.
+The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
 
 ## Local workspace
 
