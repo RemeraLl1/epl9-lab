@@ -111,6 +111,8 @@ This is the next implementation experiment, not a set of approved binary patch o
 
 Follow-up: the [first bounded offline prototype](epl9-offline-prototype.md) now executes selected decoded sections with synthetic state. It passes component checks but exposes four already-ordinary cases whose worklist changes under key substitution. This supersedes the no-execution status only for the explicitly tested sections; a native hook and integrated processing remain unvalidated.
 
+The subsequent [service-dependency audit](epl9-service-dependencies.md) identifies pending-request completion, owner notification 31 and balanced parameter-object references. It calls for retaining the compatible short schedules rather than applying key-11 substitution indiscriminately. [Icon extraction](epl9-watercolor-icons.md) separately identifies existing I/II artwork and UI values; the conversion between UI values and processing keys remains untraced.
+
 ## Reproduction and validation
 
 Build the [GNU-based reader](mn103-tooling.md), then:

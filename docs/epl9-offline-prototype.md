@@ -77,6 +77,8 @@ This is evidence about request/buffer orchestration, not additional visible ART 
 
 Local evidence: `local/art-routing/extra-ops-prefix.tsv` (`0x607511db..0x60751319`), `extra-ops-tail.tsv` (`0x607518c5..0x6075199d`), `extra-ops-workers.tsv` (`0x607638cf..0x60763a80`), and `extra-ops-copy.tsv` (`0x6074bae2..0x6074bb75`). This follow-up is static only and does not extend the prototype's execution coverage.
 
+Further [service analysis and 11 bounded component checks](epl9-service-dependencies.md) now resolve the handle functions to balanced reference-count operations and service 31 to an owner callback. The latter returns owner state in one inspected handler; other callers can provide different handlers. This refines the unknown meanings above, without executing the integrated job or solving every caller context. The next routing design must retain the four compatible short schedules.
+
 ## Recipe and image limits
 
 The harness retains the original mode key and selects `gold200` or `portra400` in Python, then changes the simulated job's header and cached key to 11. No native hook implements this yet. Request-header copying, color selection and coefficient construction are separately checked components; the actual processing requests and callbacks are not run as an integrated job.

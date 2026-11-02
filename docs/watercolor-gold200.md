@@ -26,7 +26,7 @@ No camera writes or flashing are part of the current offline investigation.
 
 The owner explicitly requested embedded film-recipe icons on 2026-11-02. Gold 200 and Portra 400 should replace the corresponding Watercolor artwork in the existing selection UI, with the same treatment for future explicitly accepted recipes. Preserve the surrounding menus, navigation, controls and unrelated behavior. This is a focused resource/selection change, not an interface redesign.
 
-Before creating binary resources, locate the E-PL9 icon assets and their selection references, establish dimensions, format, palette/transparency and compression, and check whether I/II share an asset or can select separate assets. Independent icons for both recipes are a target, not yet a proven firmware capability. The original resources stay local; eventual replacement assets should be project-authored. No icon assets or modified firmware have been produced yet.
+The [icon-resource audit](epl9-watercolor-icons.md) now identifies separate I/II bitmaps in four pairs, corresponding inline symbols and matched label tables in this E-PL9. All 5417 bitmap streams decode. Some other contexts still use generic ART12 artwork; complete screen/palette selection remains to be traced. Original resources stay local; eventual replacement artwork should be project-authored. No replacement assets or modified firmware have been produced yet.
 
 The owner will copy original test media from the SD card separately when required. Camera USB Storage troubleshooting does not block this investigation; no sample transfer has yet been verified by this project.
 

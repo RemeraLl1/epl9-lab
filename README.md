@@ -14,6 +14,8 @@ These are research goals. A working E-PL9 firmware modification has not been pro
 
 The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
 
+[Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:
