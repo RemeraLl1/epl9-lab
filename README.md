@@ -1,5 +1,11 @@
 # E-PL9 Lab
 
+[Русское введение](README.ru.md) · [Risks and limitations](docs/risks-and-limitations.md) · [Continue or port the research](docs/porting-guide.md)
+
+> **Experimental amateur research — use entirely at your own risk.** The owner is learning as they go, has no specialist camera-firmware expertise, and uses AI assistance. Code, analysis and documentation may be wrong, incomplete or misleading, even when tests pass. This is not an official Olympus/OM System project or a supported firmware product. There is no installable firmware modification, validated recovery procedure or guarantee of compatibility. Experimental camera changes can cause permanent damage, an unusable camera or lost files. See the [full limitations](docs/risks-and-limitations.md).
+
+This public repository is intended to let anyone inspect, question, reproduce and continue the investigation, including for other cameras. The reusable starting point is the research method and evidence, not transferable E-PL9 patch addresses.
+
 Tools and research notes for an Olympus PEN E-PL9 camera.
 
 ## Research goals
@@ -52,3 +58,11 @@ The first camera session will record firmware versions, USB Storage/MTP descript
 See [research scope](docs/research-scope.md) and [sources](docs/sources.md).
 
 The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an exact shared COLOR table in the stock firmware. The [offline browser-client note](docs/offline-browser-client.md) separates cached interface behavior from camera transport requirements.
+
+## Continue the project
+
+Start with the [handoff and porting guide](docs/porting-guide.md) for the reading order, current blockers and a new-model checklist. [CONTRIBUTING.md](CONTRIBUTING.md) defines how to report evidence, corrections and reproduction steps. An unsupported instruction or missing dependency is an unresolved result, not a successful camera feature.
+
+## License and reuse
+
+Original project material is available under the [MIT License](LICENSE), except the MN103 reader's C/header files, which retain **GPL-3.0-or-later**. See [licensing and third-party notices](docs/licensing.md) and the [GPL text](LICENSES/GPL-3.0-or-later.txt). Firmware, manufacturer assets and independent upstream projects are not relicensed by this repository. Forks and ports are welcome; preserve applicable notices and describe what was actually verified.

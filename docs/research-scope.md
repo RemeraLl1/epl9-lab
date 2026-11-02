@@ -34,3 +34,9 @@ On 2026-11-02 the owner confirmed they can copy files from the SD card separatel
 7. Inspect original MOV metadata and compare photo/video fields of view.
 
 The owner confirms displayed body version 1.1. Exact stock input identification, a shared COLOR table match and MTP enumeration are recorded in `epl9-1.1-initial-findings.md`. Runtime color changes and reliable original-file transfers remain unverified. Setup or offline matches must not be reported as proof that a camera feature works.
+
+## Public research and continuity
+
+The owner requests a publicly readable project with a prominent amateur, AI-assisted and at-your-own-risk explanation. Do not present the owner as a firmware expert or imply safety, support or a finished product. Preserve the [limitations](risks-and-limitations.md) and both README introductions as the research evolves.
+
+Publish enough methods, input identities, source provenance, reproduction steps, negative results and open questions for someone else to continue without private chat history or the original author's involvement. The [handoff and porting guide](porting-guide.md) explains how to establish independent evidence for another model/build; shared offsets are not a compatibility promise. Original work is reusable under the [documented licenses](licensing.md), preserving the reader's GPL notices and third-party rights.
