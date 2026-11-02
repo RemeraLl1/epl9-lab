@@ -127,7 +127,7 @@ class Machine:
             raise Fault(f'unsupported condition {suffix}')
         return conditions[suffix]
 
-    def run(self, start, stops=(), limit=20000):
+    def run(self, start, stops=(), limit=20000, single_step=False):
         pc = start
         for _ in range(limit):
             if pc in stops:
@@ -233,4 +233,6 @@ class Machine:
             except (ValueError, KeyError, Fault) as error:
                 raise Fault(f'{pc:#x} {op} {args}: {error}') from error
             pc = nxt
+            if single_step:
+                return {'status': 'step', 'pc': pc, 'instructions': len(self.trace)}
         raise Fault(f'instruction limit {limit} at {pc:#x}')

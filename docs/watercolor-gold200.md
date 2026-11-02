@@ -30,6 +30,8 @@ The [icon-resource audit](epl9-watercolor-icons.md) now identifies separate I/II
 
 The owner will copy original test media from the SD card separately when required. Camera USB Storage troubleshooting does not block this investigation; no sample transfer has yet been verified by this project.
 
+The owner subsequently included the large photographs shown as ART examples. These are separate from the small badges and inline symbols. [The picture audit](epl9-art-example-pictures.md) extracts the picture bank and identifies a visual Watercolor pair, with exact screen bindings still unresolved. Final examples may be film cards, owner images rendered through the eventual recipes, or suitable existing photographs. The choice has not been made; no stock or third-party photo is being presented as our recipe output.
+
 ## Reference material
 
 The external E-P7 project at commit `7d42c1f258737b7196c6b17cec5d643b5080ece6` documents a Water Color base ID `0x78` and type-I key `0x01010078`. It also contains a `lib2_gold` recipe. Both are search/comparison references, not E-PL9 implementation evidence or calibrated Kodak values:

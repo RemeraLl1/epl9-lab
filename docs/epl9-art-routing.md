@@ -113,6 +113,8 @@ Follow-up: the [first bounded offline prototype](epl9-offline-prototype.md) now 
 
 The subsequent [service-dependency audit](epl9-service-dependencies.md) identifies pending-request completion, owner notification 31 and balanced parameter-object references. It calls for retaining the compatible short schedules rather than applying key-11 substitution indiscriminately. [Icon extraction](epl9-watercolor-icons.md) separately identifies existing I/II artwork and UI values; the conversion between UI values and processing keys remains untraced.
 
+The [revised prototype](epl9-integrated-prototype.md) now intervenes only at the actual Watercolor-pass branch, retains the earlier optimized paths, and hands off a consistent header/cache afterward. This supersedes the blanket pre-worklist rewrite as an experiment design. Full worklist execution passes for the documented synthetic states, but full job construction/execution and actual image output remain incomplete.
+
 ## Reproduction and validation
 
 Build the [GNU-based reader](mn103-tooling.md), then:

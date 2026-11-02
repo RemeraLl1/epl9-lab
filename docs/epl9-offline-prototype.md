@@ -1,5 +1,7 @@
 # First bounded offline prototype: E-PL9 ART replacement
 
+**Historical baseline and current follow-up:** the first run below is retained as evidence. The revised runner now fixes the four schedule regressions in its tested states and adds 1050 flag cases. The [integrated follow-up](epl9-integrated-prototype.md) executes 120 complete worklist comparisons and both COLOR call chains, including returns. It also records failed full-job attempts; no complete pixel pipeline has passed. The v3 results below must not be confused with the current v4 runner.
+
 ## Result, 2026-11-02
 
 The first component-level prototype passes its scoped checks. For synthetic states entering the main ART lookup, converting either Watercolor candidate key to native COLOR key `11` removes the selected Watercolor worklist entries and matches the corresponding stock key-11 worklist. The original I/II choice remains available to the host harness as separate Gold 200 / Portra 400 recipe IDs.

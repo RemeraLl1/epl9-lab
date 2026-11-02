@@ -25,30 +25,43 @@ def machine(image, code, regions, registers=None):
                    {'sp': SP, **(registers or {})})
 
 
-def route(image, code, key, job_type=0x0200, selector=0, replacement=False):
+def route(image, code, key, job_type=0x0200, selector=0, replacement=False,
+          flags=0, legacy=False, return_job=False):
     recipe = RECIPES.get(key) if replacement else None
     effective = 11 if recipe else key
     job = bytearray(14552)
-    job[12:16] = header(effective)
+    routing_key = effective if legacy else key
+    job[12:16] = header(routing_key)
+    struct.pack_into('<I', job, 16, flags)
     struct.pack_into('<H', job, 20, job_type)
     job[25] = selector
-    struct.pack_into('<I', job, 10384, effective)
+    struct.pack_into('<I', job, 10384, routing_key)
     struct.pack_into('<I', job, 10060, 0x6075199d)
     m = machine(image, code, [Region(JOB, job, True, 'job')],
                 {'d2': 1, 'a3': JOB + 10060})
     for offset, value in [(4, JOB), (8, JOB+16), (12, JOB+4), (16, JOB+10384)]:
         m.memory.write(SP+offset, value, 4)
-    result = m.run(0x60751eb2)
+    # Keep the original mode through its type checks. Intervene only at the
+    # first actual Watercolor pass, never in the already-short continuation.
+    result = m.run(0x60751eb2, [0x60752202] if recipe and not legacy else [])
+    redirected = result['status'] == 'stop'
+    if redirected:
+        result = m.run(0x607523a5)
     if result['status'] != 'ret_boundary' or result['pc'] != 0x60752912:
         raise ValueError(f'worklist did not reach its return: {result}')
     count = m.memory.read(JOB + 10390, 2)
     if not 0 < count <= 16:
         raise ValueError('invalid worklist count')
     entries = [list(struct.unpack_from('<3I', job, 10060 + i*12)) for i in range(count)]
-    return {'key': hex(key), 'effective_key': hex(effective), 'recipe': recipe,
+    # Host-only handoff: do not expose mismatched header/cache to a consumer.
+    job[12:16] = header(effective)
+    struct.pack_into('<I', job, 10384, effective)
+    report = {'key': hex(key), 'effective_key': hex(effective), 'recipe': recipe,
+            'flags': hex(flags), 'redirected': redirected, 'legacy': legacy,
             'job_type': hex(job_type), 'selector': selector, 'entries': entries,
             'entry_functions': [hex(e[0]) for e in entries], **result,
             'trace': [hex(pc) for pc in m.trace]}
+    return (report, job) if return_job else report
 
 
 def copy_header(image, code, key):
@@ -130,7 +143,7 @@ def run_experiments(image, code, fixture):
                 stock = route(image, code, key, kind, selector)
                 proposed = route(image, code, key, kind, selector, True)
                 if key in RECIPES:
-                    reference = route(image, code, 11, kind, selector)
+                    reference = route(image, code, 11, kind, selector) if kind == 0x0200 else stock
                     assert proposed['entries'] == reference['entries']
                     assert not watercolor_functions.intersection(e[0] for e in proposed['entries'])
                     assert proposed['recipe'] == RECIPES[key]
@@ -148,6 +161,28 @@ def run_experiments(image, code, fixture):
         if item['prototype']['recipe'] and
         not watercolor_functions.intersection(e[0] for e in item['stock']['entries']) and
         item['stock']['entries'] != item['prototype']['entries']]
+    assert not results['already_ordinary_schedule_changes']
+    results['legacy_already_ordinary_schedule_changes'] = [
+        {'key': hex(key), 'job_type': hex(kind), 'selector': selector}
+        for key in RECIPES for kind in (0x0100, 0x0040) for selector in (0, 2)
+        if route(image, code, key, kind, selector)['entries'] !=
+        route(image, code, key, kind, selector, True, legacy=True)['entries']]
+    assert len(results['legacy_already_ordinary_schedule_changes']) == 4
+    flag_cases = []
+    for flags in [0] + [1 << bit for bit in range(32)] + [0x30000, 0x60000]:
+        for key in [*RECIPES, 1, 11, 0x01030078]:
+            for kind in (0x0200, 0x0100, 0x0040):
+                for selector in (0, 2):
+                    stock = route(image, code, key, kind, selector, flags=flags)
+                    proposed = route(image, code, key, kind, selector, True, flags)
+                    expected = (route(image, code, 11, kind, selector, flags=flags)
+                                if proposed['redirected'] else stock)
+                    assert proposed['entries'] == expected['entries'], (key, kind, selector, flags)
+                    assert not proposed['recipe'] or not watercolor_functions.intersection(
+                        e[0] for e in proposed['entries'])
+                    flag_cases.append({k: proposed[k] for k in ('key', 'job_type', 'selector',
+                                      'flags', 'redirected', 'entries')})
+    results['flag_route_cases'] = flag_cases
     results['header_copy'] = [copy_header(image, code, k) for k in (0x01010078, 0x01020078, 11)]
     selection = {
         'ordinary_color': select_color(image, code, 11),
@@ -234,7 +269,8 @@ def main():
                           for name in ('mn103_subset.py', 'epl9_offline_prototype.py')},
         'reference_commit': '539fcf1fa9eda5fdef8ede4deeab94a4691d94c3'}
     result['limits'] = ['Decoded-instruction subset, not GNU libsim or complete CPU.',
-        'Synthetic branch-entry state; early worklist paths and inherited nonzero flags excluded.',
+        'Synthetic branch-entry state; early worklist paths before 0x60751eb2 excluded.',
+        'Single-bit flags and two combinations checked; not all effect combinations.',
         'CALL/RET boundaries are not executed; isolated components are not an integrated pipeline.',
         'Recipe selection/rewrite occurs in host harness, not a firmware hook.',
         'Numeric fixtures are external predictions; no E-PL9 silicon/pixel validation.',
@@ -246,6 +282,7 @@ def main():
     print(json.dumps({'out': str(args.out), 'route_pairs': len(result['routes']),
                       'saturation_cases': len(result['saturation_cases']),
                       'full_table_cases': len(result['full_table_cases']),
+                      'flag_route_cases': len(result['flag_route_cases']),
                       'already_ordinary_schedule_changes': len(result['already_ordinary_schedule_changes']),
                       'scoped_checks_passed': True, 'ready_for_patch': False}))
 

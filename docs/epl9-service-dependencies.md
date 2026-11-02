@@ -1,5 +1,7 @@
 # E-PL9 ART replacement: service dependencies
 
+Follow-up: the [integrated prototype](epl9-integrated-prototype.md) now preserves complete worklist records on the tested short/early paths and exercises native calls and returns. All 11 component checks below are rerun. Full job execution still stops at unmodeled software dependencies; this does not extend the lifetime/ISP claims below.
+
 ## Decision, 2026-11-02
 
 Preserve the stock service contracts of the chosen processing path: request submission, pending-request completion, owner callbacks and their result handling, buffer descriptors/ownership, output handoff, and balanced parameter-object references. None of these has been established as dispensable Watercolor styling.

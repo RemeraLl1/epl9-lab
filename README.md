@@ -16,6 +16,8 @@ The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → 
 
 [Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
 
+The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:
