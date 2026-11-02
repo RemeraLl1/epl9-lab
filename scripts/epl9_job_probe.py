@@ -19,6 +19,9 @@ OWNER_CALLBACK, OWNER_CONTEXT, SOURCE, OUTPUT = 0x0f000000, 0x10040000, 0x120000
 SCRATCH = 0x18000000
 PARAMETER_OBJECT, RECIPE_TABLE = 0x19000000, 0x19010000
 JOB_WINDOWS = {
+    'job_destructor': (0x6074e2fd, 0x6074e33b),
+    'cache_destructor': (0x6073e57a, 0x6073e588),
+    'owner_buffer_free': (0x6074ad9f, 0x6074adbe),
     'event_clear_wrapper': (0x6074b0ce, 0x6074b10d),
     'consumer_id_cleanup_wrapper': (0x6072fac5, 0x6072fb1b),
     'cache_constructor': (0x6073e562, 0x6073e6ac),
@@ -115,6 +118,7 @@ class FixtureOwner:
 
     def __init__(self, continue_processing=True, accept_request=True, provide_slot=False):
         self.buffers = []
+        self.released_buffers = set()
         self.provide_slot = provide_slot
         self.slot_buffers = {}
         self.active_slots = set()
@@ -165,6 +169,14 @@ class FixtureOwner:
             address = 0x20000000+len(self.buffers)*0x03000000
             if any(address < r.address+len(r.data) and r.address < address+size+16 for r in m.memory.regions):
                 raise Fault('fixture buffer address overlaps existing memory')
+        elif event == 20:
+            if not JOB+5668 <= arg < JOB+9892 or (arg-JOB-5668)%88:
+                raise Fault('buffer release outside native buffer table')
+            pointer=m.memory.read(arg+64,4)
+            if pointer in self.released_buffers or not any(b['address']==pointer and
+                    b['size']==m.memory.read(arg+72,4) and b['id']==m.memory.read(arg+76,4)
+                    for b in self.buffers):
+                raise Fault('buffer release requires matching live owned allocation')
         elif event == 12:
             if arg != JOB+10398:
                 raise Fault('unexpected crop notification pointer')
@@ -244,6 +256,10 @@ class FixtureOwner:
                     self.slot_buffers[identifier]=dict(address=region.address,size=size,id=identifier)
                     self.buffers.append(self.slot_buffers[identifier])
                 detail.update(self.slot_buffers[identifier])
+        elif event == 20:
+            pointer=m.memory.read(arg+64,4)
+            self.released_buffers.add(pointer)
+            detail.update(released=hex(pointer),bytes_retained_for_audit=True)
         elif event == 23:
             identifier=m.memory.read(arg+4,2)
             self.active_slots.add(identifier)
@@ -281,6 +297,24 @@ class FixturePool:
         self.live.append(address)
         m.r['a0'] = address
         return dict(pool='0x10004',returned=hex(address),capacity=16384)
+
+
+class FixturePoolFree:
+    """Release a declared pool slot once; retain bytes only for audit."""
+    name='fixture-pool-free'
+
+    def __init__(self,pool):
+        self.pool=pool
+
+    def validate(self,m,mask,frame):
+        if (mask,frame)!=(0,4) or m.r['a0'] not in self.pool.live:
+            raise Fault('pool free requires a live declared slot')
+        if any(m.memory.read(JOB+13640+n,4) for n in range(0,56,4)):
+            raise Fault('pool free with pending request')
+
+    def apply(self,m):
+        address=m.r['a0']; self.pool.live.remove(address)
+        return dict(released=hex(address),bytes_retained_for_audit=True)
 
 
 class FixtureEventBits:
@@ -524,7 +558,7 @@ def cache_experiment(image,code):
 def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
-               input_format=None):
+               input_format=None, input_stride=None, destroy_job=False):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -550,7 +584,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
-                    models={**completion,0x60402595:pool,0x4700111e:FillModel(),OWNER_CALLBACK:owner,
+                    models={**completion,0x60402595:pool,0x604023b2:FixturePoolFree(pool),
+                            0x4700111e:FillModel(),OWNER_CALLBACK:owner,
                             0x6074aea9:event_pool,
                             0x6074af2c:signal,
                             0x607490c8:consumer_id,
@@ -566,7 +601,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report = dict(key=hex(key),kind=hex(kind),selector=selector,constructor=result,
                   redirected=redirected,events=list(m.events),
                   cache_pointer=hex(memory.read(JOB+12316,4)),
-                  error=hex(memory.read(ERROR,2)),allocations=pool.live)
+                  error=hex(memory.read(ERROR,2)),allocations=list(pool.live))
     if result.get('pc') != RETURN:
         return report
     assert m.r['sp'] == SP and m.r['d0'] == JOB
@@ -601,7 +636,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     for offset,address,fmt in descriptors:
         struct.pack_into('<I',job,offset,address)
         struct.pack_into('<6H',job,offset+8,fmt,width,width,height,width,height)
-    m.memory = Memory([*m.memory.regions,Region(SOURCE,bytearray(width*height*2),False,'synthetic source'),
+    stride=width if input_stride is None else input_stride
+    if not width<=stride<=4608 or stride%64:
+        raise ValueError('input fixture requires a bounded 64-unit aligned stride')
+    struct.pack_into('<H',job,46,stride)
+    source_bytes=stride*height*2
+    report['source_allocation_bytes']=source_bytes
+    m.memory = Memory([*m.memory.regions,Region(SOURCE,bytearray(source_bytes),False,'synthetic source'),
                        Region(OUTPUT,bytearray([0xcd])*(width*height*2),True,'synthetic destination')])
     if start_frame:
         report['start'] = invoke(m,0x6074e348,0xf0,96,{'d0':JOB})
@@ -676,7 +717,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             values=[m.memory.read(pointer+i*2,2) for i in range(2)],events=m.events[-6:])
     # This is a native cursor, NOT a successful-entry counter (see controls).
     report['executor_index'] = memory.read(JOB+10388,2)
-    report['events'] = m.events
+    report['events'] = list(m.events)
     report['fixture_buffers'] = owner.buffers
     report['active_owner_slots'] = sorted(owner.active_slots)
     report['descriptor_refs'] = {hex(k):v for k,v in owner.descriptor_refs.items()}
@@ -702,7 +743,43 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     output_region = next(r for r in m.memory.regions if r.address == OUTPUT)
     report['output_changed'] = output_region.data.count(0xcd) != len(output_region.data)
     report['allocation_canaries_intact'] = True
+    report['input_configuration']={str(o):hex(m.memory.read(SCRATCH+o,4))
+                                  for o in (112,116,120,124,128,132,136,9260,9264,9308)}
+    if destroy_job:
+        if execution.get('pc')!=RETURN or not report['pending_record_zero']:
+            raise ValueError('destruction requires returned executor and empty pending record')
+        report['destructor']=invoke(m,0x6074e2fd,0xa0,12,{'d0':JOB})
+        report['pool_live_after_destructor']=list(pool.live)
+        report['owner_slots_after_destructor']=sorted(owner.active_slots)
+        report['destructor_events']=m.events[len(report['events']):]
     return report
+
+
+def buffer_release_experiment(image,code):
+    """Native 48-record sweep: owned callback, borrowed record, repeat sweep."""
+    job=bytearray(16384); owner=FixtureOwner()
+    struct.pack_into('<2I',job,4,OWNER_CALLBACK,OWNER_CONTEXT)
+    m=CallMachine(code,Memory([Region(BASE,image),Region(JOB,job,True),
+        Region(STACK,bytearray(16384),True),Region(OUTPUT,bytearray([0xcd])*64,True)]),
+        {'sp':SP},models={OWNER_CALLBACK:owner,0x4700111e:FillModel()})
+    record=JOB+5668
+    m.memory.write(record+72,64,4); m.memory.write(record+76,0x1000,4)
+    m.r.update(a1=OWNER_CONTEXT,a0=record,d0=19)
+    owner.validate(m,0,0); owner.apply(m)
+    # The second record borrows caller memory and must never deliver event 20.
+    struct.pack_into('<I',job,5668+88+64,OUTPUT)
+    job[5668+88+84]=1
+    result=invoke(m,0x6074accb,0xa0,12,{'a0':JOB})
+    assert result.get('pc')==RETURN and m.r['sp']==SP,result
+    assert not any(job[5668:5668+176])
+    assert owner.released_buffers=={owner.buffers[0]['address']}
+    count=len([e for e in m.events if e.get('event')==20])
+    again=invoke(m,0x6074accb,0xa0,12,{'a0':JOB})
+    assert again.get('pc')==RETURN
+    assert count==1==len([e for e in m.events if e.get('event')==20])
+    assert bytes(next(r for r in m.memory.regions if r.address==OUTPUT).data)==b'\xcd'*64
+    return dict(result=result,repeat=again,owner_free_callbacks=count,
+                borrowed_payload_preserved=True,records_zero=True,events=m.events)
 
 
 def main():
@@ -758,6 +835,21 @@ def main():
         else:
             assert case['executor'].get('target')==0x604bbfac and case['executor']['pc']==0x6073920e
         assert case['processor_return'] is None and not case['output_changed']
+    destruction=[experiment(image,code,k,0x40,s,provide_slot=True,destroy_job=True)
+                 for k in RECIPES for s in (0,2)]
+    for case in destruction:
+        assert case['destructor'].get('pc')==RETURN and case['destructor']['registers']['sp']==hex(SP)
+        assert case['pool_live_after_destructor']==[]
+        assert case['owner_slots_after_destructor']==[0xff07,0xff0b]
+    packing=[experiment(image,code,k,0x40,s,provide_slot=True,input_format=0x200,input_stride=stride)
+             for k in RECIPES for s in (0,2) for stride in (640,704)]
+    for index,case in enumerate(packing):
+        stride=(640,704)[index%2]; cfg=case['input_configuration']
+        assert_hardware_boundary(case)
+        assert int(cfg['112'],16)==stride*2
+        assert int(cfg['9260'],16)==SOURCE
+        assert int(cfg['9264'],16)==stride*480*2==case['source_allocation_bytes']
+        assert cfg['120']=='0x76543210' and cfg['128']=='0x1000d00'
     controls = []
     for key in RECIPES:
         for name,options,selector in [('no_frame_start',{'start_frame':False},0),
@@ -800,6 +892,8 @@ def main():
                 full_pixel_cycle_passed=False,cases=cases,connected_color_cases=connected,
                 owner_slot_cases=slot_cases,
                 short_input_cases=short_inputs,
+                destruction_cases=destruction,input_stride_cases=packing,
+                buffer_release_audit=buffer_release_experiment(image,code),
                 controls=controls,cache_audit=cache_experiment(image,code),
                 source_sha256=source_hashes,decode_anchors=len({**EXPECTED,**JOB_ANCHORS}),
                 new_windows={k:[hex(a),hex(b)] for k,(a,b) in JOB_WINDOWS.items()},

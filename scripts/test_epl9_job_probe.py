@@ -2,7 +2,7 @@
 import struct
 import unittest
 
-from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal, FixtureCompletion,
+from epl9_job_probe import (FixtureOwner, FixturePool, FixturePoolFree, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal, FixtureCompletion,
                             JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT)
 from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
@@ -31,6 +31,32 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_pool_free_rejects_pending_and_double_free(self):
+        m=fixture(); pool=FixturePool(); pool.live=[JOB,CACHE]
+        release=FixturePoolFree(pool); m.r['a0']=CACHE
+        m.memory.write(JOB+13640,JOB,4)
+        with self.assertRaises(Fault): release.validate(m,0,4)
+        self.assertEqual(pool.live,[JOB,CACHE])
+        m.memory.write(JOB+13640,0,4)
+        release.validate(m,0,4); release.apply(m)
+        self.assertEqual(pool.live,[JOB])
+        with self.assertRaises(Fault): release.validate(m,0,4)
+
+    def test_owner_free_rejects_borrowed_mismatched_and_duplicate_buffer(self):
+        owner=FixtureOwner(); m=fixture(owner); record=JOB+5668
+        m.memory.write(record+64,OUTPUT,4)
+        with self.assertRaises(Fault): callback(m,20,record)
+        m.memory.write(record+64,0,4)
+        m.memory.write(record+72,64,4); m.memory.write(record+76,0x1000,4)
+        callback(m,19,record)
+        pointer=m.memory.read(record+64,4)
+        m.memory.write(record+72,63,4)
+        with self.assertRaises(Fault): callback(m,20,record)
+        m.memory.write(record+72,64,4)
+        callback(m,20,record)
+        self.assertEqual(owner.released_buffers,{pointer})
+        with self.assertRaises(Fault): callback(m,20,record)
+
     def test_completion_wait_never_invents_signal_and_checks_output(self):
         m=fixture(); pool=FixtureEventBits(); signal=FixtureSignal(pool)
         wait=FixtureCompletion('wait',signal,None,None)

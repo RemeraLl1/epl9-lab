@@ -292,3 +292,37 @@ The fixture previously used routing kind `0x0040` as the input descriptor format
 The short family-2 route requests resource mask 32 rather than the long fixture's 16. Its host lock accepts only that one exact uncontended acquisition; no scheduler/MMIO completion is added. Source remains a synthetic 640×480 two-byte allocation, destination format `0x0302`. **Actual pixel packing, channel order, bit depth, planes and camera-buffer provenance remain unverified**; successful configuration cannot establish them. These new short cases use stock configuration, not the attached diagnostic table oracle.
 
 Validation: the full job probe passes the previous 12 baseline cases, eight attached COLOR comparisons, ten negative controls, four revised failure-cleanup cases, eight independent-input comparisons and cache audit. All 93 workspace unit tests pass, including three new tests for absent signals/invalid output pointers, event-clear/release ordering/double release, and consumer teardown preconditions. `full_pixel_cycle_passed` remains false. Next work is the remaining format-specific helper and actual buffer layout/ISP contract, followed by successful completion and job-owned buffer release; those cannot be inferred from error cleanup.
+
+## Input stride and job-buffer ownership, 2026-11-02
+
+Same exact E-PL9 stock input and hashes as above. The new retained report is `local/job-probe-packing-release-20261102/results.json`; reproduce with the job probe and a fresh ignored output directory.
+
+### Format 0x0200: measured memory configuration
+
+Eight native runs cover both recipe identities, selectors 0/2 and descriptor strides 640/704, with active dimensions 640×480. They stop at the existing peripheral boundary without processing source pixels. The configuration measured at the 9596-byte workspace is:
+
+| Workspace offset | Stride 640 | Stride 704 | Evidence scope |
+| --- | --- | --- | --- |
+| +112 | 1280 | 1408 | Native programmed row step, two bytes per descriptor stride unit |
+| +120 | `0x76543210` | same | Native reorder/configuration word; semantic channel labels unknown |
+| +128 / +132 / +136 | `0x01000d00` / 4 / `0x00040001` | same | Exact selected memory-interface configuration |
+| +9260 | source base | source base | Zero-origin base-address selection |
+| +9264 | 614400 | 675840 | Native size/plane-offset field equals `stride × height × 2`; not independently a validated DMA allocation bound |
+
+`0x6073b330` classifies the descriptor; `0x6073b033` derives the row step and source addressing. In the measured branch the stride calculation at `0x6073b1d6…0x6073b1e3` gives two bytes per unit. The descriptor stride at +10 is distinct from active width +12; padding changes the row step while active width remains 640. The fixture now accepts an independent bounded, 64-unit-aligned input stride and sizes its source accordingly. This alignment is a conservative fixture constraint, not a proven minimum hardware alignment. The configuration words are captured as regression evidence.
+
+This narrows the memory contract but **does not identify RGB565, YUYV/UYVY, Bayer order, effective sample precision, or byte/channel order**. In particular, neither a two-byte step nor `0x76543210` assigns channel names. The payload has not been read by modeled hardware. Cropped/nonzero-origin addressing, other format variants and actual camera-produced samples still need qualification. Do not use the input-format code as a JPEG/RAW file-format label.
+
+### Two cleanup levels, plus owner-managed output slots
+
+Native destructor `0x6074e2fd` calls mode cleanup `0x6074ed61`, buffer sweep `0x6074accb`, cache destructor `0x6073e57a`, then pool free `0x604023b2` for the job. Four post-error experiments now execute this chain and return with balanced stack and no live JOB/CACHE slots. A finite pool-free model rejects unknown/double releases and any nonzero pending record; it retains bytes solely for inspection. This covers the already-returned `0x9e40` path, not destruction while ISP work remains active.
+
+The native sweep visits 48 88-byte records plus two auxiliary records. A new isolated native audit places one owned and one borrowed allocation in the main table:
+
+- A nonzero pointer at record+64 with byte+84 zero and no internal-pool flag routes through `0x6074ad9f` to **owner event 20**, then clears the first 84 bytes and ID. The host accepts only the exact live allocation's pointer, size and ID.
+- A nonzero borrowed record with byte+84 set takes `0x6074abee`, clears all 88 record bytes and never sends event 20. Its caller payload remains unchanged.
+- A repeat sweep sends no additional release. Internal-pool flag `0x20000` and nonempty auxiliary pools are separate branches and are not covered by this two-record audit.
+
+Output slots `0xff07`/`0xff0b` are **not** these sweep records. Both remain active after the tested destructor, so no claim of complete owner-buffer reclamation is made. Native `0x6074fbd3` emits **event 24**. One caller is the pending callback's event-10 branch (`0x6075056b`): with owner flag job+10396 set, it reads slot IDs at pending-record+36/+38 and notifies the owner through calls at `0x607505a9`/`0x607505c9`; it later signals completion. Other callers include `0x60763dbb/0x60763dca` and `0x60765cc4/0x60765cd3`. This establishes a separate lifecycle notification, not that event 24 necessarily frees physical storage for every real owner. It is not fabricated on the current error path to make counters reach zero.
+
+Validation: previous job regressions pass, plus eight stride cases, four destructor cases and the owned/borrowed/repeat sweep audit. Full workspace discovery passes 116 tests (including independently added tests from other work); two new job unit tests reject pending/double pool release and borrowed/mismatched/double owner-buffer release. One initial audit run failed due to a Python assertion accessing a tuple as a Region; the assertion was corrected and the full probe rerun successfully. Next work is to trace the real owner's event-24 handling and the format's producer/hardware unpacking. Full pixel output and normal completion remain unverified.
