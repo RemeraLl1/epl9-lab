@@ -1,0 +1,47 @@
+{
+  "upstream": "https://sourceware.org/git/binutils-gdb.git",
+  "tag": "binutils-2_45",
+  "commit": "2bc7af1ff7732451b6a7b09462a815c3284f9613",
+  "files": [
+    {
+      "path": "opcodes/m10300-dis.c",
+      "url": "https://gnu.googlesource.com/binutils-gdb/+/refs/tags/binutils-2_45/opcodes/m10300-dis.c?format=TEXT",
+      "bytes": 20405,
+      "sha256": "0a7223538629ed43191fe527bd7d3ac09f658aa9dbcb2bae23a511023abbce2b"
+    },
+    {
+      "path": "opcodes/m10300-opc.c",
+      "url": "https://gnu.googlesource.com/binutils-gdb/+/refs/tags/binutils-2_45/opcodes/m10300-opc.c?format=TEXT",
+      "bytes": 103339,
+      "sha256": "1e1150db856998de8366870394297e37d51db464164190e6ed0f988b44910796"
+    },
+    {
+      "path": "include/opcode/mn10300.h",
+      "url": "https://gnu.googlesource.com/binutils-gdb/+/refs/tags/binutils-2_45/include/opcode/mn10300.h?format=TEXT",
+      "bytes": 4763,
+      "sha256": "59f7515a00fb657ebd29dc258c10e05228ac0f2b40960ffa33635e8823c26f46"
+    },
+    {
+      "path": "COPYING3",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "path": "gas/testsuite/gas/mn10300/am33-2.d",
+      "bytes": 84531,
+      "sha256": "5cc7db1009f73a08420bc8fdcef63e3165c9d75ca556da8788e3e96f9f1ad00f"
+    },
+    {
+      "path": "gas/testsuite/gas/mn10300/am33-2.s",
+      "bytes": 26639,
+      "sha256": "0c5a04737dc28abb9324c55fc7885da22c47e96a35e4947afb20f30eb420c64f"
+    }
+  ],
+  "compiler": {
+    "name": "TinyCC",
+    "version": "0.9.27",
+    "archive_url": "https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27-win64-bin.zip",
+    "archive_sha256": "34a721949a2583fdff725312da092fa0f5f1f284b702e6f811c6954714faabb2",
+    "executable_sha256": "e9cb3e89e20a9efead83cc9e6b100314275634c2f705056da71f424ea9b0cdf0"
+  }
+}

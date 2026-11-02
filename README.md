@@ -12,6 +12,8 @@ Tools and research notes for an Olympus PEN E-PL9 camera.
 
 These are research goals. A working E-PL9 firmware modification has not been produced by this project.
 
+The first selected target is [Watercolor I → Kodak Gold 200](docs/watercolor-gold200.md): replace this ART slot's processing with a film-inspired look while retaining the other modes.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:

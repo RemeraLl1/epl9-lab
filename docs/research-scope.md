@@ -5,6 +5,7 @@
 The owner wants to investigate an Olympus PEN E-PL9 on a Windows computer:
 
 - Named film recipes applied by the camera, followed by investigation of replacing ART presets with custom looks and labels.
+- First selected replacement: **Watercolor I (Акварель I) → Kodak Gold 200-inspired look**, chosen by the owner on 2026-11-02. Target only type I; preserve Watercolor II and the other ART modes. First establish the native processing route, then tune the look. A menu-name change alone does not satisfy this goal.
 - Wi-Fi protocol coverage, direct browser browsing/downloads, an interface cached for offline use, and better transfer behavior.
 - Gyro measurements saved with video, initially as a separate Gyroflow-compatible file if feasible.
 - Full-field 4:3 video at reduced resolution, with 1440x1080 and 1920x1440 as candidate outputs, not proven modes.

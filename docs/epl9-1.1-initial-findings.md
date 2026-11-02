@@ -44,6 +44,8 @@ Under that candidate mapping, the table address is `0x608ee360`, with one little
 
 These are **candidates**, not validated instructions, semantic cross references or safe patch addresses. A disassembler and control-flow review are required before claiming which modes use the table. PEN-F and E-P7 addresses must not be copied into E-PL9 patches.
 
+Follow-up: the [Watercolor I / Gold 200 investigation](watercolor-gold200.md) now records native instruction decoding, separate type-I/type-II key branches, and a mode-key-11 call to the shared table consumer. It supersedes the literal-only status for those specific windows; hardware reachability and an isolated ART replacement remain unverified.
+
 The next implementation milestone is to trace the table consumer and ART mode dispatch, then design one isolated look with consistent live view, captured JPEGs and saved settings. Replacing the ART menu labels is a separate UI/resource step.
 
 ## USB observations
