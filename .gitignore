@@ -1,0 +1,36 @@
+# Local tools, third-party checkouts and machine configuration
+/downloads/
+/tools/
+/references/
+/local/
+/.venv/
+__pycache__/
+*.py[cod]
+
+# Camera data and firmware stay local
+/firmware/
+/captures/
+/samples/
+*.bin
+*.BIN
+*.orf
+*.ORF
+*.jpg
+*.JPG
+*.jpeg
+*.png
+*.mov
+*.MOV
+*.mp4
+*.pcap
+*.pcapng
+*.etl
+*.log
+
+# Credentials and editor files
+.env
+.env.*
+*.pem
+*.key
+.vscode/
+.idea/
