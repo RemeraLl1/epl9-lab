@@ -8,7 +8,7 @@ from pathlib import Path
 
 from epl9_integrated_probe import EXTRA_WINDOWS, WINDOWS, SERVICE_WINDOWS, EXPECTED, RETURN
 from epl9_art_routing_probe import ROOT, BASE, MAIN_SHA, STOCK_SHA
-from epl9_offline_prototype import header, RECIPES
+from epl9_offline_prototype import header, RECIPES, check_packing
 from mn103_subset import Memory, Region, Fault, parse_listing
 from mn103_calls import CallMachine
 from mn103_models import FillModel
@@ -17,6 +17,7 @@ JOB, CACHE = 0x11000000, 0x11010000
 PARAMS, ERROR, STACK, SP = 0x10020000, 0x10030000, 0x10010000, 0x10013c00
 OWNER_CALLBACK, OWNER_CONTEXT, SOURCE, OUTPUT = 0x0f000000, 0x10040000, 0x12000000, 0x16000000
 SCRATCH = 0x18000000
+PARAMETER_OBJECT, RECIPE_TABLE = 0x19000000, 0x19010000
 JOB_WINDOWS = {
     'cache_constructor': (0x6073e562, 0x6073e6ac),
     'cache_descriptor_init': (0x60749fa5, 0x60749fb6),
@@ -55,12 +56,28 @@ JOB_WINDOWS = {
     'request_type_helpers': (0x607a3bed, 0x607a3df6),
     'processing_dispatch': (0x60734068, 0x60734302),
     'processing_configuration_start': (0x6073af53, 0x6073b603),
-    'processing_configuration_helpers': (0x60734519, 0x6073595c),
+    'processing_configuration_helpers': (0x60734519, 0x6073a880),
     'input_format_dispatch': (0x60799f48, 0x60799fac),
     'input_format_configuration': (0x607a01b1, 0x607a038d),
     'input_format_parameters': (0x60799fdc, 0x6079a304),
     'input_format_table': (0x60749150, 0x60749187),
     'optional_raw_parameters_prefix': (0x6078ac47, 0x6078ace6),
+    'color_configuration_full': (0x60799eb6, 0x607a038d),
+    'parameter_interpolation': (0x607a460d, 0x607a476b),
+    'parameter_interpolation_tables': (0x607a44c9, 0x607a460d),
+    'post_color_configuration': (0x6073e1c7, 0x6073e562),
+    'post_color_gate': (0x60792332, 0x60792399),
+    'post_color_parameters': (0x60792332, 0x60799eb6),
+    'consumer_output_configuration': (0x6073abd3, 0x6073af53),
+    'frame_gates': (0x607a399b, 0x607a3bed),
+    'processing_store_configuration': (0x6073b603, 0x6073e1c7),
+    'optional_processing_stage': (0x6078bd18, 0x6078c250),
+    'processing_resource_wait': (0x607a18ae, 0x607a18f3),
+    'hardware_start': (0x6073f74f, 0x6073f860),
+    'hardware_synchronization': (0x6073eaea, 0x6073eb1a),
+    'parameter_object_builder': (0x6078ab39, 0x6078ac47),
+    'parameter_slot_selection': (0x6074b433, 0x6074b487),
+    'optional_geometry_configuration': (0x6078c378, 0x6078c43d),
 }
 JOB_ANCHORS = {
     0x6073e5b3: 'movhu\td0,(5694,a2)',
@@ -73,6 +90,17 @@ JOB_ANCHORS = {
     0x6073f107: 'call\t0x6073e6ac,[d2,d3,a2,a3],20',
     0x6073f22f: 'movhu\t(8,a0),d0',
     0x6073b218: 'udf01\td2,d1',
+    0x6073eafa: 'mov\td0,(0x9880014c)',
+    0x6078ab52: 'mov\td0,(a2)',
+    0x6078ab6b: 'mov\ta0,(8,a2)',
+    0x6078ab94: 'mov\ta0,(16,a2)',
+    0x6078ac23: 'mov\t-100,d1',
+    0x6078ac40: 'movbu\td0,(28,a2)',
+    0x6074f354: 'mov\t3710,a1',
+    0x6074f359: 'mov\t1576,a0',
+    0x6079565d: 'movhu\t(2,a0),d3',
+    0x6079fc15: 'call\t0x6079ebcc,[d2,d3,a2,a3],20',
+    0x6074b44d: 'udfu01\t4184,d2',
 }
 
 
@@ -89,7 +117,13 @@ class FixtureOwner:
         if (mask,frame,m.r['a1']) != (0,0,OWNER_CONTEXT):
             raise Fault('fixture owner callback ABI/context mismatch')
         event, arg = m.r['d0'],m.r['a0']
-        if event == 14:
+        if event == 2:
+            # 6079c026 offers nine native halfword coefficients to the owner.
+            if not max(STACK,m.r['sp']+4) <= arg or arg+18 > STACK+16384 or arg%2:
+                raise Fault('coefficient notification outside declared stack')
+            if not any(e.get('pc') == 0x6079c026 for e in m.events[-3:]):
+                raise Fault('undeclared coefficient callback caller')
+        elif event == 14:
             descriptor_id = m.memory.read(arg+4,2)
             if m.memory.read(arg,4) != JOB+36 or descriptor_id not in (1,2,0xff12):
                 raise Fault(f'owner descriptor {descriptor_id:#x} not declared by fixture')
@@ -130,7 +164,9 @@ class FixtureOwner:
     def apply(self,m):
         event,arg = m.r['d0'],m.r['a0']
         detail = dict(event=event,argument=hex(arg))
-        if event == 19:
+        if event == 2:
+            detail['coefficients_preserved'] = [m.memory.read(arg+i*2,2) for i in range(9)]
+        elif event == 19:
             size = m.memory.read(arg+72,4)
             address = 0x20000000+len(self.buffers)*0x03000000
             region = Region(address,bytearray([0xcd])*size+bytearray([0xa5])*16,True,'fixture output buffer')
@@ -223,6 +259,24 @@ class FixtureConsumerSlot:
         return dict(address=hex(SCRATCH),size=9596,completed=False)
 
 
+class FixtureLock:
+    """One uncontended single-thread acquisition; no IRQ or device emulation."""
+    name = 'fixture-uncontended-lock'
+
+    def __init__(self, value, mask, frame):
+        self.expected = (value,mask,frame)
+        self.held = False
+
+    def validate(self,m,mask,frame):
+        if (m.r['d0'],mask,frame) != self.expected or self.held:
+            raise Fault('lock fixture ABI/key mismatch or already held')
+
+    def apply(self,m):
+        self.held = True
+        m.r['d0'] = self.expected[0]
+        return dict(key=hex(m.r['d0']),held=True,device_accessed=False)
+
+
 def load():
     path = ROOT/'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin'
     image = path.read_bytes()
@@ -254,11 +308,11 @@ def resume(m, pc, stops=()):
                          instructions=len(m.trace),last_instructions=[hex(p) for p in m.trace[-8:]])
 
 
-def invoke(m, entry, mask, frame, regs):
+def invoke(m, entry, mask, frame, regs, stops=()):
     if m.r['sp'] != SP:
         raise ValueError('cannot invoke with unbalanced caller stack')
     m.r.update(regs)
-    return resume(m,m.enter(entry,RETURN,mask,frame))
+    return resume(m,m.enter(entry,RETURN,mask,frame),stops)
 
 
 def cache_experiment(image,code):
@@ -305,7 +359,8 @@ def cache_experiment(image,code):
 
 
 def experiment(image, code, key, kind, selector, *, start_frame=True,
-               continue_processing=True, accept_request=True, provide_long_output=True):
+               continue_processing=True, accept_request=True, provide_long_output=True,
+               attach_table=False, provide_reference_dimensions=True):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -322,12 +377,15 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(PARAMS,params),Region(ERROR,bytearray(4),True),
                      Region(STACK,bytearray(16384),True,'stack'),Region(0x8050,bytearray(4)),
                      Region(OWNER_CONTEXT,bytearray(4)),
+                     Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
                     models={0x60402595:pool,0x4700111e:FillModel(),OWNER_CALLBACK:owner,
                             0x6074aea9:FixtureEventBits(),
                             0x607490c8:consumer_id,
-                            0x607a038d:FixtureConsumerSlot('workspace',consumer_id)})
+                            0x607a038d:FixtureConsumerSlot('workspace',consumer_id),
+                            0x607a17b7:FixtureLock(16,0xa0,12),
+                            0x607a1841:FixtureLock(8,0xc0,16)})
     # Host redirects only the Watercolor-specific branch and retains early paths.
     result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
     redirected = result.get('pc') == 0x60752202
@@ -352,6 +410,11 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     # Explicit synthetic caller data for two crop ratio records; not camera data.
     for offset in (3730,3738):
         struct.pack_into('<4H',job,offset,640,480,640,480)
+    if provide_reference_dimensions:
+        # Copied natively to request+1576/+1584; the first pair is used as
+        # reference dimensions by 6079565b/6079565d, not optional zero padding.
+        for offset in (3746,3754):
+            struct.pack_into('<4H',job,offset,640,480,640,480)
     width,height = (640,480) if kind == 0x40 else (4608,3456)
     # Buffer layout/format are a synthetic caller fixture, not decoded sensor data.
     descriptors = [(36,SOURCE,kind),(100,OUTPUT,0x0302)]
@@ -371,7 +434,67 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     # Mode handoff after the complete constructor, before execution.
     job[12:16] = header(11)
     struct.pack_into('<I',job,10384,11)
-    report['executor'] = invoke(m,0x6074e6eb,0xf0,32,{'d0':JOB,'d1':count})
+    if attach_table:
+        memory.write(JOB+12320,PARAMETER_OBJECT,4)
+        preparation=invoke(m,0x6074e6eb,0xf0,32,{'d0':JOB,'d1':count},[0x6072fd27])
+        assert preparation.get('pc') == 0x6072fd27,preparation
+        # Run the native object builder on a private copy of this request: it
+        # intentionally changes its key to 2 while selecting companion tables.
+        request=bytearray(job[10440:10440+1876])
+        struct.pack_into('<I',request,1524,0)
+        parameter=bytearray([0xa5])*(4184+16)
+        builder=CallMachine(code,Memory([Region(BASE,image),
+            Region(0x1a000000,request,True),Region(PARAMETER_OBJECT,parameter,True),
+            Region(STACK,bytearray(16384),True)]),{'sp':SP},models={0x4700111e:FillModel()})
+        construction=invoke(builder,0x6078ab39,0xb0,36,{'a0':0x1a000000,'a1':PARAMETER_OBJECT})
+        assert construction.get('pc') == RETURN and builder.r['sp']==SP,construction
+        # For these requests all companion pointers refer to ROM. Only the
+        # 129-byte header is initialized; enforce that exact readable extent.
+        assert parameter[129:] == b'\xa5'*(len(parameter)-129)
+        assert all(BASE <= struct.unpack_from('<I',parameter,o)[0] <= BASE+len(image)-512
+                   for o in (0,8))
+        assert parameter[20:24] == b'\xa5'*4  # Native builder leaves comparison token to its owner.
+        table=bytearray(image[0x4ee340:0x4ee340+3028])
+        struct.pack_into('<h',table,14,50 if key==0x01010078 else -50)
+        struct.pack_into('<2I',parameter,16,RECIPE_TABLE,1 if key==0x01010078 else 2)
+        m.memory=Memory([*m.memory.regions,Region(PARAMETER_OBJECT,parameter[:129]),Region(RECIPE_TABLE,table)])
+        report['parameter_construction']=dict(result=construction,events=builder.events,
+            native_slot_bytes=4184,mapped_header_bytes=129,
+            sha256=hashlib.sha256(parameter[:129]).hexdigest(),
+            fields={str(o):hex(struct.unpack_from('<I',parameter,o)[0]) for o in (0,4,8,12,16,20)},
+            gamma_variant=parameter[28],inline_block_sha256=hashlib.sha256(parameter[29:129]).hexdigest())
+        execution=resume(m,0x6072fd27,[0x6079ebcc])
+    else:
+        execution=invoke(m,0x6074e6eb,0xf0,32,{'d0':JOB,'d1':count})
+    if attach_table:
+        assert execution.get('pc') == 0x6079ebcc,execution
+        context=m.r['a0']
+        out=m.memory.read(context+12,4)
+        assert out == CACHE and m.memory.read(context+60,4) & 0x10000000
+        assert m.memory.read(JOB+10440+1524,4) == PARAMETER_OBJECT
+        initial=bytes(cache[:5200])
+        color_call=m.events[-1]
+        assert color_call == dict(op='call',pc=0x6079fc15,target=0x6079ebcc)
+        raw,op,_=code[color_call['pc']]
+        assert op == 'call' and raw[-2:] == b'\xf0\x14'
+        return_pc=m.memory.read(m.r['sp']+raw[-1],4)
+        assert return_pc == color_call['pc']+len(raw)
+        trace_start=len(m.trace)
+        color=resume(m,0x6079ebcc,[return_pc])
+        assert color.get('pc') == return_pc and 0x6079e50e in m.trace[trace_start:]
+        packed=bytes(cache[:5200])
+        check_packing(packed,table,[struct.unpack_from('<h',table,r*28+14)[0] for r in range(12)],
+                      initial=initial,table_address=RECIPE_TABLE)
+        report['connected_color'] = dict(result=color,bytes_checked=5200,
+            output_sha256=hashlib.sha256(packed).hexdigest(),table_sha256=hashlib.sha256(table).hexdigest(),
+            synthetic_marker=struct.unpack_from('<h',table,14)[0],
+            lifetime='host-owned readonly object/table retained through the stopped native request')
+        execution=resume(m,return_pc)
+    report['executor'] = execution
+    if m.trace[-1] == 0x60795691:
+        pointer=m.memory.read(m.r['sp']+164,4)
+        report['dimension_fault']=dict(pointer=hex(pointer),request_offset=pointer-(JOB+10440),
+            values=[m.memory.read(pointer+i*2,2) for i in range(2)],events=m.events[-6:])
     # This is a native cursor, NOT a successful-entry counter (see controls).
     report['executor_index'] = memory.read(JOB+10388,2)
     report['events'] = m.events
@@ -414,23 +537,36 @@ def main():
                                          '5699':'0x81','5748':'0xffffffff','5760':'0x0'}
         if case['kind'] == '0x40':
             assert case['executor'].get('error') == 'owner descriptor 0xff07 not declared by fixture'
-            assert not case['cache_compare_executed'] and not case['processor_entered']
+            assert not case['cache_compare_executed'] and not case['processor_entered'] and not case['native_color_entered']
         else:
-            target = 0x6079bf86 if case['kind'] == '0x200' else 0x6079a304
-            assert case['executor'].get('target') == target and case['executor']['status'] == 'external_call'
+            assert_hardware_boundary(case)
             assert case['cache_compare_executed'] and case['processor_entered']
             assert case['request_words']['1484'] == hex(CACHE) and case['request_words']['8'] == '0xb0000'
             assert case['request_words']['916'] != '0x0'
+    connected=[experiment(image,code,k,kind,s,attach_table=True)
+               for k in RECIPES for kind in (0x200,0x100) for s in (0,2)]
+    for case in connected:
+        assert_hardware_boundary(case)
+        assert case['connected_color']['bytes_checked'] == 5200
+        assert case['parameter_construction']['result']['registers']['d0'] == '0x0'
+    for kind in ('0x200','0x100'):
+        assert len({c['connected_color']['output_sha256'] for c in connected if c['kind']==kind}) == 2
     controls = []
     for key in RECIPES:
         for name,options,selector in [('no_frame_start',{'start_frame':False},0),
                 ('owner_cancel',{'continue_processing':False},0),
                 ('request_rejected',{'accept_request':False},0),
-                ('missing_long_output',{'provide_long_output':False},2)]:
-            case=experiment(image,code,key,0x200,selector,**options)
+                ('missing_long_output',{'provide_long_output':False},2),
+                ('missing_reference_dimensions',{'provide_reference_dimensions':False},0)]:
+            kind=0x100 if name == 'missing_reference_dimensions' else 0x200
+            case=experiment(image,code,key,kind,selector,**options)
             case['control']=name
-            assert not case['output_changed'] and not case['processor_entered']
-            if name == 'no_frame_start':
+            assert not case['output_changed']
+            if name == 'missing_reference_dimensions':
+                assert case['executor'].get('error') == "0x60795691 div ['d3', 'd2']: division by zero"
+                assert case['dimension_fault']['request_offset']==1576 and case['dimension_fault']['values']==[0,0]
+                assert case['processor_entered'] and case['native_color_entered']
+            elif name == 'no_frame_start':
                 assert case['executor']['registers']['d0'] == '0x0' and not case['worklist_calls']
                 assert case['executor_index'] == 16
             elif name == 'missing_long_output':
@@ -442,6 +578,8 @@ def main():
                     assert not case['worklist_calls'] and case['executor_index'] == 0
                 else:
                     assert all(v == '0x0' for v in case['pending_record'].values())
+            if name != 'missing_reference_dimensions':
+                assert not case['processor_entered']
             controls.append(case)
     source_hashes={name:hashlib.sha256((ROOT/'scripts'/name).read_bytes()).hexdigest() for name in
                    ('epl9_job_probe.py','epl9_integrated_probe.py','epl9_offline_prototype.py',
@@ -452,12 +590,15 @@ def main():
                 stock_identity_from_prior_audit=True,analysis_base=hex(BASE),
                 reader_sha256='e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae',
                 synthetic_inputs=True,camera_accessed=False,firmware_modified=False,
-                full_pixel_cycle_passed=False,cases=cases,controls=controls,cache_audit=cache_experiment(image,code),
+                full_pixel_cycle_passed=False,cases=cases,connected_color_cases=connected,
+                controls=controls,cache_audit=cache_experiment(image,code),
                 source_sha256=source_hashes,decode_anchors=len({**EXPECTED,**JOB_ANCHORS}),
                 new_windows={k:[hex(a),hex(b)] for k,(a,b) in JOB_WINDOWS.items()},
                 limitations=['synthetic descriptors and software resource contracts',
                              'no RTOS scheduling, DMA, ISP, request completion or camera measurement',
-                             'no calibrated film table attached in the connected job grid'])
+                             'attached tables use diagnostic saturation markers, not calibrated film recipes',
+                             'parameter owner lifetime/comparison-token production not integrated',
+                             'type 0x40 owner buffer 0xff07 remains undeclared'])
     args.out.mkdir(parents=True)
     (args.out/'results.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     def brief(v):
@@ -465,6 +606,15 @@ def main():
                 if k in ('status','pc','target','error','instructions')} | {'d0':v['registers']['d0']}
     print(json.dumps([{'key':r['key'],'kind':r['kind'],'selector':r['selector'],
         **{k:brief(r[k]) for k in ('constructor','start','executor') if k in r}} for r in cases]))
+
+
+def assert_hardware_boundary(case):
+    assert case['executor']['status'] == 'fault'
+    assert case['executor'].get('error') == "0x6073eafa mov ['d0', '(0x9880014c)']: unmapped access at 0x9880014c, size 4"
+    assert case['executor']['registers']['d0'] == '0x800'
+    assert case['cache_compare_executed'] and case['processor_entered'] and case['native_color_entered']
+    assert not case['output_changed'] and not any(b['payload_changed'] for b in case['fixture_buffers'])
+    assert case['allocation_canaries_intact']
 
 
 if __name__=='__main__':

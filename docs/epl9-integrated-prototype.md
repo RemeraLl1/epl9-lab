@@ -4,7 +4,7 @@
 
 The revised host experiment removes the four schedule regressions found in the first prototype. It also runs the worklist builder from its actual entry, preserving earlier optimized paths that the original branch-only experiment did not reach. Both recipe slots execute native COLOR selection, table packing and returns with a complete 5200-byte output comparison.
 
-**The complete image-processing cycle has not passed.** The latest [connected-job follow-up](#connected-constructor-frame-start-and-consumer-2026-11-02) completes the constructor and frame start, executes the cache comparator and reaches processing configuration in eight synthetic cases. Four others require additional owner buffers. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
+**The complete image-processing cycle has not passed.** The latest [hardware-boundary follow-up](#native-parameter-object-color-and-hardware-boundary-2026-11-02) connects job creation, frame start, native parameter-object construction, cache comparison and COLOR execution. Eight cases with attached diagnostic tables reach the first unmapped peripheral write. Four other baseline cases still require an owner buffer. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
 
 ## Inputs and execution boundary
 
@@ -107,6 +107,8 @@ Retained final follow-up run: `local/integrated-probe-20261102-v5/results.json`.
 
 ## Connected constructor, frame start and consumer, 2026-11-02
 
+This checkpoint is retained for provenance; the later hardware-boundary results below supersede its configuration-call stopping points.
+
 `scripts/epl9_job_probe.py` now connects the **native constructor → native frame start → native worklist executor → request creation → consumer configuration**, with explicitly modeled host resources. It does not claim that a request returning zero, a cursor advancing, or an allocated event token constitutes pixel completion. The input is the same exact E-PL9 1.1/build-1101 main identified above; all work is offline.
 
 ### Second object and frame lifecycle
@@ -182,3 +184,58 @@ Revalidated after the engine changes: all 120 full-builder pairs, both 5200-byte
 ```
 
 Use a new ignored output directory and keep assertions enabled. Retained run: `local/job-probe-20261102-final/results.json`. The report records 53 decode anchors, loaded windows, source hashes, exact stock/main identities, native/model events, stop registers, request pointers, guards and negative controls. Follow-up should resolve the two configuration callees and the `0xff07` owner buffer from actual caller contracts, then trace submission/completion and pixel consumption. Do not replace those boundaries with successful no-ops.
+
+## Native parameter object, COLOR and hardware boundary, 2026-11-02
+
+The connected runner now executes the previously absent configuration functions and reaches `0x6073eafa`, which attempts to write `0x800` to **`0x9880014c`**. This address is deliberately unmapped. It is in the hardware-start chain `0x6072fd27 → 0x6073f74f → 0x6073eaea`, followed by accesses to other peripheral addresses. This is a concrete hardware-emulation boundary in the offline run, not a camera failure. Treating these registers as ordinary writable RAM would not implement image processing or completion.
+
+### Build the companion object with native code
+
+A COLOR-only object is insufficient for the connected pipeline. Besides its table and comparison token, downstream stages consume gamma, tone, chroma, a variant byte and inline configuration data. The native builder **`0x6078ab39`** supplies these together. Slot selection at `0x6074b433` uses a **4184-byte stride** for three owner-managed slots; this is stronger layout evidence than enlarging a synthetic object until faults disappear.
+
+The harness pauses the real job at request-consumer entry `0x6072fd27`. On a private copy of its 1876-byte request, with the existing parameter pointer cleared, it runs `0x6078ab39` through its native return on a separate stack. The routine intentionally changes that private request's effective key to 2 while selecting some companion data. The live job/request remains at key 11. This is an explicit host integration experiment, not execution of the complete native owner lifecycle or a validated key-2/key-11 equivalence.
+
+| Header field | Native builder / connected observation |
+| --- | --- |
+| +0, +4 | Gamma pointer `0x608c37e4`, comparison field 0 |
+| +8, +12 | Tone pointer `0x608cf3ee`, comparison field 0 |
+| +16 | Native HSL selection, subsequently replaced by the diagnostic table pointer |
+| +20 | **Not initialized by this builder**; the harness explicitly supplies comparison token 1 or 2. Its native producer remains open. |
+| +24/+26 | Chroma halfwords from native selector `0x6079dd34` |
+| +28 | Native gamma-variant byte, zero in these requests |
+| +29…+128 | 100 bytes of companion configuration copied from the native selector's result, `0x608bf944` in the tested state |
+
+Both companion curve pointers reference valid ROM spans in all eight attachment cases. The builder initializes only the header in these cases: bytes +129 through the end of the 4184-byte slot and its 16-byte guard retain poison. The connected consumer is therefore given **only the 129-byte header as readable, read-only memory**, plus the separate read-only 3028-byte diagnostic table. Any access past that established header stops. Other builder paths can use in-slot curve storage; this fixture does not claim to cover them.
+
+The old 20-byte isolated COLOR fixture and 24-byte cache-comparator fixture remain valid for their narrower consumers. Neither represents a complete parameter object. Native owner acquisition/release, switching between live objects and the lifetime of in-slot curves are still not integrated. The host retains the header/table through the stopped request.
+
+### Connected table verification
+
+Both replacement identities, input types `0x0200`/`0x0100` and selectors 0/2 form **eight attachment cases**. Each copies a stock HSL table and puts a diagnostic signed marker of +50 or −50 into its first saturation field. These are distinguishable test tables, **not Gold 200 or Portra 400 recipes**.
+
+The native request copies the object pointer, native cache comparison sets rebuild bit `0x10000000`, and the actual common pipeline calls COLOR at `0x6079fc15 → 0x6079ebcc → 0x6079e50e`. Its five-byte CALL returns to `0x6079fc1a`; stack return and decoded instruction length are checked. All **5200 configuration bytes** match the independent packing oracle, including preservation of data produced by earlier stages and relocation of ten table pointers. Different input types legitimately retain different unrelated configuration bytes. Within each type, the two markers produce distinct configuration hashes.
+
+After COLOR returns, the native configuration chain continues to the peripheral boundary in all eight cases. Pixel destinations remain entirely poisoned with `0xcd`; no rendered-image comparison is claimed.
+
+### Additional input and callback requirements
+
+The type-`0x0100` path exposed missing reference dimensions in the old fixture. Request construction at `0x6074f354…0x6074f36a` copies `job+3746` to `request+1576`; the next record comes from `job+3754` to `request+1584`. A later routine reads the first pair and divides by the second halfword at `0x60795691`. Zero-filled fields cause division by zero. The fixture now explicitly supplies four-halfword records `(640,480,640,480)` at both locations. These are declared test values, not measured sensor geometry. Two negative controls retain the zeros and reproduce the exact stop.
+
+Native matrix setup at `0x6079c026` offers nine halfword coefficients to **owner event 2** before packing them. The host accepts only this identified caller with a valid nonoverlapping stack span and leaves all nine values unchanged. This models an owner without additional coefficient correction. The native caller does not inspect that callback's return value. Unknown callbacks, including event 31, still stop unless separately modeled under their established contract.
+
+Two additional host models permit one uncontended acquisition each: resource mask 16 at `0x607a17b7`, and hardware guard mask 8 at `0x607a1841`. Wrong key/ABI or repeated acquisition stops. Five synchronization-counter bytes at `0x8ff001b0` start at declared zero. These models assume one thread and volatile-register preservation; they neither execute RTOS/interrupt code nor release locks, signal events or complete requests. Peripheral memory remains absent.
+
+### Current results and reproduction
+
+| Cases | Result |
+| --- | --- |
+| Baseline two slots × three types × two selectors | All 12 constructors/frame starts return; eight reach the peripheral write; four type-`0x0040` cases stop at undeclared owner descriptor `0xff07` |
+| Two slots × types `0x0200`/`0x0100` × selectors 0/2, attached tables | Eight native object builds, eight complete COLOR configuration comparisons, eight identical peripheral boundaries |
+| Five negative controls per slot | Missing frame start, owner cancellation, request rejection, absent long output, and absent reference dimensions reproduce their expected failures |
+| Native cache initialize/compare/update audit | Previous pointer/token findings remain unchanged |
+
+Native service routines map descriptor `0xff07` to the first slot at `job+4960`; the associated caller-owned payload and activation notifications still need a complete contract. Its four cases are not included in the attachment success count. Request completion, subsequent worklist entries, final output handoff, balanced releases after processing and ISP pixel behavior remain open.
+
+Retained result: `local/job-probe-20261102-hardware-v1/results.json`, **63 decode anchors**, exact input/source hashes, native and modeled calls, and unchanged destination guards. Twelve job-fixture unit tests pass, including new owner-coefficient, lock and packing-oracle rejection checks. Full workspace discovery passed 77 tests, of which 53 cover this ART/tooling lineage; independent Wi-Fi/video/color-audit tests are separate work. The original prototype again passes 30 route pairs, 180 saturation cases, two full tables and 1050 flag-route cases with zero new ordinary-schedule changes. The integrated regression again passes 120 full-builder pairs, both COLOR results, 12 pre-cancellation paths and 11 service checks.
+
+Reproduce with the connected-job command above and a new ignored output directory. No source firmware bytes or camera state were changed. `full_pixel_cycle_passed` remains **false**. Further work must establish the remaining caller contracts and actual ISP/DMA/interrupt/completion behavior; extending the CPU instruction subset alone does not produce a pixel cycle.

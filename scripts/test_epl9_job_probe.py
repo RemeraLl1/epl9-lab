@@ -1,8 +1,10 @@
 """Synthetic contract tests only: no firmware, camera, RTOS or ISP required."""
+import struct
 import unittest
 
-from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot,
+from epl9_job_probe import (FixtureOwner, FixturePool, FixtureEventBits, FixtureConsumerSlot, FixtureLock,
                             JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT)
+from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
 from mn103_subset import Memory, Region, Fault
 
@@ -29,6 +31,58 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_coefficient_notification_preserves_all_nine_native_values(self):
+        m=fixture()
+        m.events.append(dict(op='call',pc=0x6079c026,target=0x6073eab3))
+        values=[128,10,65530,8,124,65532,65534,6,124]
+        for index,value in enumerate(values):
+            m.memory.write(SP+64+index*2,value,2)
+        callback(m,2,SP+64)
+        self.assertEqual(m.events[-1]['coefficients_preserved'],values)
+        self.assertEqual([m.memory.read(SP+64+i*2,2) for i in range(9)],values)
+        self.assertEqual(m.r['sp'],SP)
+
+    def test_coefficient_notification_rejects_unknown_caller_and_frame_overlap(self):
+        for arg,caller in [(SP+64,False),(SP,True),(SP+65,True),(STACK+16368,True),(OUTPUT,True)]:
+            m=fixture()
+            if caller:
+                m.events.append(dict(op='call',pc=0x6079c026,target=0x6073eab3))
+            before=[bytes(r.data) for r in m.memory.regions]
+            with self.assertRaises(Fault):
+                callback(m,2,arg)
+            self.assertEqual(m.r['sp'],SP)
+            self.assertEqual(before,[bytes(r.data) for r in m.memory.regions])
+
+    def test_uncontended_locks_reject_wrong_key_abi_and_reentry(self):
+        for value,mask,frame in [(16,0xa0,12),(8,0xc0,16)]:
+            m=fixture(); lock=FixtureLock(value,mask,frame)
+            for bad_value,bad_mask,bad_frame in [(value+1,mask,frame),(value,0,frame),(value,mask,0)]:
+                m.r['d0']=bad_value
+                with self.assertRaises(Fault):
+                    lock.validate(m,bad_mask,bad_frame)
+                self.assertFalse(lock.held)
+            m.r['d0']=value
+            lock.validate(m,mask,frame)
+            detail=lock.apply(m)
+            self.assertTrue(detail['held'])
+            self.assertFalse(detail['device_accessed'])
+            with self.assertRaises(Fault):
+                lock.validate(m,mask,frame)
+
+    def test_packing_oracle_preserves_prior_state_and_checks_relocated_pointers(self):
+        table=bytes(3028)
+        initial=bytes([0xa5])*5200
+        packed=bytearray(initial)
+        packed[688:980]=bytes(292)
+        # Zero-valued table leaves only the ten relocated LUT pointers nonzero.
+        for index,offset in enumerate((336,1680,720,1104,2064,2448,1296,2640,1488,2832)):
+            struct.pack_into('<I',packed,3124+index*4,0x19010000+offset)
+        check_packing(packed,table,[0]*12,initial=initial,table_address=0x19010000)
+        for offset in (500,3124):
+            changed=bytearray(packed); changed[offset]^=1
+            with self.assertRaises(ValueError):
+                check_packing(changed,table,[0]*12,initial=initial,table_address=0x19010000)
+
     def test_owner_continue_and_reject_are_explicit(self):
         for value in (False,True):
             m=fixture(FixtureOwner(value,value))
