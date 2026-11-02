@@ -62,6 +62,21 @@ For type `0x0100` or `0x0040`, selector `2`, the original uses the single ordina
 
 Early conditions, nonzero inherited flags, complete job initialization, buffer lifetimes and all other ART modes remain outside this grid. These type/selector values have not been mapped to real preview/capture contexts.
 
+### Static follow-up: what the longer sequence contains
+
+Direct decoding of the same exact E-PL9 image clarifies the four entry functions. Calling them "extra/unnecessary operations" would overstate the finding: they belong to a different stock scheduling path and may be required in its original context.
+
+| Entry | Observed code | Interpretation and limit |
+| --- | --- | --- |
+| `0x607518c5` → `0x607638cf` | Builds an auxiliary descriptor pointing to `job+4264`, moves a previous entry's `+8` value, and calls `0x60761b6a`. When a source handle at `job+3980` exists, it temporarily obtains a value through `0x6074b41f`, writes `job+12320`, then calls `0x6074b429` and clears that field. | Submission through the previously identified ordinary request builder, with intermediate data and optional parameter-object handling. The acquire/release semantics of the two handle functions still need confirmation. |
+| `0x607511db` → `0x60763978` | Calls `0x6074ee9c`, submits service code `31` through `0x6073eab3`, handles failure, and clears the current entry's `+8` value on success. | A service/control step; its exact purpose, synchronization behavior and pixel effect remain unknown. |
+| `0x607518d3` | Uses descriptor `job+4264`, computes a byte-count candidate as two 16-bit dimensions multiplied by 2, calls buffer helper `0x6074a8e4` with ID `0x1000`, and passes two addresses and that count to `0x6074bae2`. The latter submits a kind-14 request through `0x6074ef3a`. | Buffer preparation and a data-transfer request candidate. Physical copying/DMA completion is not executed or proven by this static inspection. |
+| `0x60751930` | Takes and clears the previous entry's `+8` value, passes it by reference with descriptor `job+4264` to `0x60750c2e`, and stores the returned value in the current entry on success. | Chaining intermediate state/results to another processing helper; the complete helper and ownership contract remain untraced. |
+
+This is evidence about request/buffer orchestration, not additional visible ART effects or a measured slowdown. The original single-entry path also calls other routines internally; four worklist entries versus one does not directly measure work or runtime. Both the lone path and the longer sequence require caller-context analysis before changing their scheduling.
+
+Local evidence: `local/art-routing/extra-ops-prefix.tsv` (`0x607511db..0x60751319`), `extra-ops-tail.tsv` (`0x607518c5..0x6075199d`), `extra-ops-workers.tsv` (`0x607638cf..0x60763a80`), and `extra-ops-copy.tsv` (`0x6074bae2..0x6074bb75`). This follow-up is static only and does not extend the prototype's execution coverage.
+
 ## Recipe and image limits
 
 The harness retains the original mode key and selects `gold200` or `portra400` in Python, then changes the simulated job's header and cached key to 11. No native hook implements this yet. Request-header copying, color selection and coefficient construction are separately checked components; the actual processing requests and callbacks are not run as an integrated job.
