@@ -20,6 +20,8 @@ The [E-PL9 manual](https://learnandsupport.getolympus.com/sites/default/files/me
 
 No camera writes or flashing are part of the current offline investigation.
 
+The owner will copy original test media from the SD card separately when required. Camera USB Storage troubleshooting does not block this investigation; no sample transfer has yet been verified by this project.
+
 ## Reference material
 
 The external E-P7 project at commit `7d42c1f258737b7196c6b17cec5d643b5080ece6` documents a Water Color base ID `0x78` and type-I key `0x01010078`. It also contains a `lib2_gold` recipe. Both are search/comparison references, not E-PL9 implementation evidence or calibrated Kodak values:

@@ -17,6 +17,10 @@ The owner previously supplied an OI.Share capability XML advertising `get_campro
 
 The referenced firmware projects target other models and contain useful methods. Their working functions and offsets must not be treated as E-PL9 compatibility evidence.
 
+## Accepted file-transfer workflow
+
+On 2026-11-02 the owner confirmed they can copy files from the SD card separately, without using the camera's USB Storage connection. Use this route to obtain original research samples when needed; troubleshooting USB Storage is not a prerequisite for the film-look investigation. This is an accepted workflow, not a measured successful transfer or a resolution of the earlier volume error. It does not establish a firmware installation or recovery method.
+
 ## First session
 
 1. Record the camera and lens firmware versions and any prior modifications.
