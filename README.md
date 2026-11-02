@@ -4,9 +4,9 @@ Tools and research notes for an Olympus PEN E-PL9 camera.
 
 ## Research goals
 
-1. Document the camera's Wi-Fi API and USB interfaces.
-2. Build a browser interface for browsing and downloading original files, and measure transfer performance.
-3. Investigate applying named film recipes, then replacing ART presets with in-camera film looks.
+1. Investigate applying named film recipes, then replacing ART presets with in-camera film looks.
+2. Document the camera's Wi-Fi API and USB interfaces.
+3. Build an offline-capable browser interface for browsing and downloading original files, and measure transfer performance.
 4. Investigate gyro logging for Gyroflow and full-field 4:3 video at reduced resolution.
 5. Determine hardware and firmware limits before making claims about additional video modes, including 4K60.
 
@@ -44,3 +44,5 @@ The inspector reads a local file and reports its size, SHA-256 and initial bytes
 The first camera session will record firmware versions, USB Storage/MTP descriptors, official-client recognition, Wi-Fi capabilities and transfer measurements. USB connection alone does not establish full firmware-dump access.
 
 See [research scope](docs/research-scope.md) and [sources](docs/sources.md).
+
+The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an exact shared COLOR table in the stock firmware. The [offline browser-client note](docs/offline-browser-client.md) separates cached interface behavior from camera transport requirements.
