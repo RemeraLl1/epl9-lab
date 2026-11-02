@@ -5,7 +5,7 @@
 The owner wants to investigate an Olympus PEN E-PL9 on a Windows computer:
 
 - Named film recipes applied by the camera, followed by investigation of replacing ART presets with custom looks and labels.
-- Selected replacements: **Watercolor I (Акварель I) → Kodak Gold 200-inspired look** and **Watercolor II (Акварель II) → Kodak Portra 400-inspired look**, chosen by the owner on 2026-11-02. The later addition of type II supersedes the initial requirement to preserve it. Preserve other ART modes. First establish the native processing route, then tune the looks. A menu-name change alone does not satisfy this goal.
+- Selected replacements: **Watercolor I → Kodak Gold 200-inspired look** and **Watercolor II → Kodak Portra 400-inspired look**, chosen by the owner on 2026-11-02. The later addition of type II supersedes the initial requirement to preserve it. Preserve other ART modes. First establish the native processing route, then tune the looks. A menu-name change alone does not satisfy this goal.
 - UI requirement added on 2026-11-02: each accepted film recipe should have its own icon embedded in the firmware, replacing the corresponding old ART artwork. Start with Gold 200 and Portra 400. Keep the existing menu structure, navigation and unrelated camera behavior; the owner is satisfied with the rest of the system. The [icon audit](epl9-watercolor-icons.md) identifies distinct I/II resources and their format; complete screen/palette mapping and resource replacement remain to be established.
 - The owner also includes the large example photographs in ART selection. Replace the examples for the two accepted slots while preserving other modes. Film cards/icons, later owner photographs rendered with the recipes, and representative existing photographs remain alternatives, not a finalized asset choice. See [picture resources](epl9-art-example-pictures.md).
 - Wi-Fi protocol coverage, direct browser browsing/downloads, an interface cached for offline use, and better transfer behavior.
@@ -37,6 +37,8 @@ The owner confirms displayed body version 1.1. Exact stock input identification,
 
 ## Public research and continuity
 
-The owner requests a publicly readable project with a prominent amateur, AI-assisted and at-your-own-risk explanation. Do not present the owner as a firmware expert or imply safety, support or a finished product. Preserve the [limitations](risks-and-limitations.md) and both README introductions as the research evolves.
+Maintain project documentation, research notes, code comments, commit messages, issues and pull requests in English, as requested by the owner.
+
+The owner requests a publicly readable project with a prominent amateur, AI-assisted and at-your-own-risk explanation. Do not present the owner as a firmware expert or imply safety, support or a finished product. Preserve the [limitations](risks-and-limitations.md) and the README introduction as the research evolves.
 
 Publish enough methods, input identities, source provenance, reproduction steps, negative results and open questions for someone else to continue without private chat history or the original author's involvement. The [handoff and porting guide](porting-guide.md) explains how to establish independent evidence for another model/build; shared offsets are not a compatibility promise. Original work is reusable under the [documented licenses](licensing.md), preserving the reader's GPL notices and third-party rights.

@@ -1,6 +1,6 @@
 # Watercolor I → Kodak Gold 200; Watercolor II → Kodak Portra 400
 
-The owner selected **Watercolor I (Акварель I) → Kodak Gold 200** and subsequently added **Watercolor II (Акварель II) → Kodak Portra 400** on 2026-11-02. The second decision supersedes the earlier requirement to preserve Watercolor II. Preserve the other ART modes. These are accepted implementation targets, not working patches or calibrated film recipes.
+The owner selected **Watercolor I → Kodak Gold 200** and subsequently added **Watercolor II → Kodak Portra 400** on 2026-11-02. The second decision supersedes the earlier requirement to preserve Watercolor II. Preserve the other ART modes. These are accepted implementation targets, not working patches or calibrated film recipes.
 
 ## Image target
 

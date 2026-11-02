@@ -1,6 +1,6 @@
 # Contributing and continuing the research
 
-Anyone may read, fork, question or continue this project under its [licenses](docs/licensing.md). Contributions and corrections in English or Russian are welcome. Specialist expertise is not required to ask a question; claims of functionality do require evidence. Maintenance, response times and acceptance of contributions are not guaranteed.
+Anyone may read, fork, question or continue this project under its [licenses](docs/licensing.md). Contributions and corrections are welcome. Please write documentation, research notes, code comments, issues and pull requests in English. Specialist expertise is not required to ask a question; claims of functionality do require evidence. Maintenance, response times and acceptance of contributions are not guaranteed.
 
 Read the [risks](docs/risks-and-limitations.md), [accepted scope](docs/research-scope.md) and [handoff / porting guide](docs/porting-guide.md). Current work is offline analysis and read-only diagnostics. The disclaimer does not expand that scope to camera writes.
 
