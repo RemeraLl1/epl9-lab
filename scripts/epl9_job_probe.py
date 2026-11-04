@@ -565,7 +565,8 @@ def cache_experiment(image,code):
 def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
-               input_format=None, input_stride=None, destroy_job=False):
+               input_format=None, input_stride=None, destroy_job=False,
+               legacy_output_offsets=False):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -600,6 +601,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                             0x607a06d2:FixtureConsumerSlot('release',workspace),
                             0x607a17b7:FixtureLock(32 if kind==0x40 else 16,0xa0,12),
                             0x607a1841:FixtureLock(8,0xc0,16)})
+    output_address_writes=[]
+    native_write=m.write
+    def observe_output_address(operand,value,size=4):
+        if operand.startswith('(') and m.address(operand)==SCRATCH+9068+208:
+            output_address_writes.append(dict(pc=hex(m.trace[-1]),value=hex(value&0xffffffff)))
+        native_write(operand,value,size)
+    m.write=observe_output_address
     # Host redirects only the Watercolor-specific branch and retains early paths.
     result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
     redirected = result.get('pc') == 0x60752202
@@ -642,7 +650,10 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
         descriptors.append((4264,OUTPUT,0x0302))
     for offset,address,fmt in descriptors:
         struct.pack_into('<I',job,offset,address)
-        struct.pack_into('<6H',job,offset+8,fmt,width,width,height,width,height)
+        # SRC +16/+18 are area dimensions; DST +16/+18 are H/V offsets.
+        # Confirmed by native diagnostic printers 6176a567 / 6176a650.
+        tail=(width,height) if offset==36 or legacy_output_offsets else (0,0)
+        struct.pack_into('<6H',job,offset+8,fmt,width,width,height,*tail)
     stride=width if input_stride is None else input_stride
     if not width<=stride<=4608 or stride%64:
         raise ValueError('input fixture requires a bounded 64-unit aligned stride')
@@ -752,6 +763,25 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['allocation_canaries_intact'] = True
     report['input_configuration']={str(o):hex(m.memory.read(SCRATCH+o,4))
                                   for o in (112,116,120,124,128,132,136,9260,9264,9308)}
+    if m.trace[-1]==0x6073eafa:
+        context=m.r['a3']
+        outputs=[m.memory.read(context+32+4*i,4) for i in range(5)]
+        report['output_views']=[dict(request_offset=pointer-(JOB+10440),
+            pointer=hex(m.memory.read(pointer,4)),format=hex(m.memory.read(pointer+8,2)),
+            fields={name:m.memory.read(pointer+o,2) for name,o in
+                    (('memory_width',10),('width',12),('height',14),('offset_h',16),('offset_v',18))})
+            for pointer in outputs if pointer]
+        report['output_memory_configuration']={str(o):hex(m.memory.read(SCRATCH+9068+o,4))
+            for o in range(208,324,4)}
+        report['output_address_writes']=output_address_writes
+        primary=report['output_views'][0]
+        origin=int(primary['pointer'],16)
+        extent=primary['fields']['memory_width']*primary['fields']['height']*2
+        native_base=m.memory.read(SCRATCH+9068+208,4)
+        report['output_base_in_destination']=(origin<=native_base<origin+extent and any(
+            r.writable and r.address<=origin and origin+extent<=r.address+len(r.data)
+            for r in m.memory.regions))
+        report['legacy_output_offsets']=legacy_output_offsets
     if destroy_job:
         if execution.get('pc')!=RETURN or not report['pending_record_zero']:
             raise ValueError('destruction requires returned executor and empty pending record')
@@ -854,6 +884,11 @@ def main():
         assert int(cfg['9260'],16)==SOURCE
         assert int(cfg['9264'],16)==stride*480*2==case['source_allocation_bytes']
         assert cfg['120']=='0x76543210' and cfg['128']=='0x1000d00'
+    bad_offsets=[experiment(image,code,k,0x40,0,provide_slot=True,input_format=0x100,
+                            legacy_output_offsets=True) for k in RECIPES]
+    for case in bad_offsets:
+        assert case['output_memory_configuration']['208']==hex(OUTPUT+640*480*2)
+        assert not case['output_base_in_destination']
     controls = []
     for key in RECIPES:
         for name,options,selector in [('no_frame_start',{'start_frame':False},0),
@@ -898,6 +933,7 @@ def main():
                 short_input_cases=short_inputs,
                 destruction_cases=destruction,input_stride_cases=packing,
                 buffer_release_audit=buffer_release_experiment(image,code),
+                invalid_output_offset_controls=bad_offsets,
                 controls=controls,cache_audit=cache_experiment(image,code),
                 source_sha256=source_hashes,decode_anchors=len({**EXPECTED,**JOB_ANCHORS}),
                 new_windows={k:[hex(a),hex(b)] for k,(a,b) in JOB_WINDOWS.items()},
@@ -922,6 +958,9 @@ def assert_hardware_boundary(case):
     assert case['cache_compare_executed'] and case['processor_entered'] and case['native_color_entered']
     assert not case['output_changed'] and not any(b['payload_changed'] for b in case['fixture_buffers'])
     assert case['allocation_canaries_intact']
+    assert case['output_base_in_destination']
+    assert all(case['output_memory_configuration'][str(208+4*i)]==view['pointer']
+               for i,view in enumerate(case['output_views']))
 
 
 if __name__=='__main__':
