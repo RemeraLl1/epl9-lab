@@ -15,6 +15,12 @@ The owner wants to investigate an Olympus PEN E-PL9 on a Windows computer:
 
 ## Evidence carried forward
 
+### Paused direction: Log, 10-bit and HEVC
+
+On 2026-11-04 the owner put this direction on hold because a practical quality/dynamic-range improvement has not been demonstrated and a flatter image alone is not the objective. Genuine ten-bit recording remains unproven, not proven impossible. Do not resume Log, ten-bit or HEVC work automatically; a new explicit owner request is required. Preserve the [reported findings and original artifacts](log-ten-bit-handoff.md), including the originating uncommitted work. Film looks/ART, Wi-Fi, full-field 4:3 video and gyro logging remain separate directions.
+
+### Other prior evidence
+
 The owner previously supplied an OI.Share capability XML advertising `get_camprop`, `set_camprop`, ART-related properties, and 4:3 live-view sizes up to 1280x960. This is historical evidence; save a fresh response from the camera before deriving an implementation from it. Preview dimensions alone do not prove full sensor field of view or video encoder support.
 
 The referenced firmware projects target other models and contain useful methods. Their working functions and offsets must not be treated as E-PL9 compatibility evidence.

@@ -20,6 +20,8 @@ These are research goals. A working E-PL9 firmware modification has not been pro
 
 The first implementation baseline is [Watercolor I → Kodak Gold 200-inspired and Watercolor II → Kodak Portra 400-inspired](docs/watercolor-gold200.md), preserving unrelated modes. The wider 31-profile catalog and its icons are a design backlog, not 31 working camera slots.
 
+**On hold:** Log, 10-bit and HEVC research, by owner decision on 2026-11-04. No practical quality/dynamic-range gain or genuine ten-bit recording is established. Preserve the [findings and resumption limits](docs/log-ten-bit-handoff.md); do not automatically restart this direction. Other project goals remain separate.
+
 ## Current evidence, 2026-11-04
 
 **Real desktop color, white-balance and tonal draft images now exist. The modified camera pipeline still has no complete pixel cycle or installable package.** See the [status report](docs/project-status.md) for exact evidence provenance and newer work reported by other chats.

@@ -57,6 +57,8 @@ There is no new permission to flash, reset, erase files or issue vendor writes. 
 
 ## Next concrete work
 
+The owner has [paused Log, 10-bit and HEVC](log-ten-bit-handoff.md) as of 2026-11-04. No demonstrated quality/DR gain or genuine ten-bit output is established; feasibility is unresolved. Preserve the prior findings and do not automatically resume this branch. The following next steps concern the other project directions.
+
 1. Tune the now-published v2 drafts against neutral targets, additional illuminants and highlight-rich scenes. Preserve the negative v1 gamma result, original v0 color controls and distinction between joint tone response and isolated field behavior.
 2. Resolve the true camera input/crop/CFA, ISP/data/coherence and completion contracts. Retain poison checks, pixel-read observations, cache invalidation, ownership and non-target-mode regressions.
 3. Publish the Wi-Fi, deep-color, timing/gyro and recovery audits independently, with exact input identity and reproducible commands; then integrate their qualified conclusions into this index.

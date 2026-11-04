@@ -15,6 +15,7 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [Porting and handoff](porting-guide.md) | Reading order, reproduction requirements and new-model/build template |
 | [Licensing](licensing.md) | MIT/GPL scopes and third-party exclusions |
 | [Sources](sources.md) | Upstream and manufacturer references |
+| [Paused Log / 10-bit / HEVC handoff](log-ten-bit-handoff.md) | Owner decision, retained reported findings, missing-artifact status and explicit resumption condition |
 
 ## Film recipes and desktop image evidence
 

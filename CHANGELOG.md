@@ -4,6 +4,12 @@ Record meaningful changes in English. Describe the result, why it changed, the c
 
 ## Unreleased
 
+### Direction paused, 2026-11-04
+
+- Record the owner's decision to pause Log, 10-bit and HEVC work. A useful quality/dynamic-range gain has not been demonstrated, and ten-bit feasibility remains unresolved rather than proven impossible.
+- Preserve an English summary of the uploaded handoff and its source-availability limits; do not delete the originating uncommitted work, fabricate its missing files, or automatically restart the investigation.
+- Keep film/ART, Wi-Fi, full-field 4:3 video and gyro logging as separate directions. Update the README, scope, agent guidance, status, illustrated-plan table and directory index to carry the pause forward.
+
 ### Research refresh, 2026-11-04
 
 - Synchronize the entire checkout with published main through `a399202a0d7ded05eedc4120b5e4676fcf059a70`, preserving the public-research documentation branch. Import the existing completion/hardware/real-RAW audits, Workspace bridge, v0/v1/v2 recipes and tonal tools/tests without modifying their implementations.
