@@ -106,8 +106,10 @@ def native_tone(image, code, recipe):
     ):
         result = invoke(m, entry, mask, frame, regs)
         require(result.get('pc') == RETURN, f'tone construction stopped: {result}')
-    require(struct.unpack_from('<I', o, 2608)[0] == OUTPUT+2612, 'tone did not use owned buffer')
-    curve = bytes(o[2612:3124])
+    pointer = struct.unpack_from('<I', o, 2608)[0]
+    require(pointer == OUTPUT+2612 or BASE <= pointer <= BASE+len(image)-512,
+            'tone curve is outside its native owned/ROM storage')
+    curve = b''.join(m.memory.read(pointer+n*2,2).to_bytes(2,'little') for n in range(256))
     values = struct.unpack('<256H', curve)
     require(values[0] == 0 and values[-1] == 1023 and all(a <= b for a, b in zip(values, values[1:])),
             'invalid generated tone curve')
@@ -315,20 +317,13 @@ def exercise(image, code, bundles):
     return reports
 
 
-def live_control_boundaries(image, code, bundles):
+def live_control_checks(image, code, bundles):
     reports = []
     for selected in bundles:
-        try:
-            pipeline(image, code, bundles, selected, live_tone=True)
-        except ValueError as error:
-            require('0x60749f80' in str(error) and 'ambiguous GNU unsigned multiply immediate' in str(error),
-                    f'unexpected active-control boundary: {error}')
-            reports.append(dict(name=selected['name'], completed=False, pc='0x60749f80',
-                instruction='udfu01 182,d2', reason='Known unresolved high-bit immediate semantics',
-                stage='global chroma adjustment, before HSL/tone completion',
-                model_or_arithmetic_bypass=False))
-        else:
-            raise ValueError('active-control boundary unexpectedly changed; review before accepting')
+        for fmt in (0x200, 0x100, 0x40):
+            row, _, _ = pipeline(image, code, bundles, selected, fmt, live_tone=True)
+            reports.append(dict(**row, completed=True, former_stop='0x60749f80',
+                immediate_extension='Panasonic MULQIU zero-extension', model_or_arithmetic_bypass=False))
     return reports
 
 
@@ -347,7 +342,7 @@ def main():
     bundles = [make_bundle(image, code, row, by_name[row['base_name']], i) for i, row in enumerate(recipes)]
     composition = [tone_composition(image, code, b) for b in bundles]
     results = exercise(image, code, bundles)
-    live_boundaries = live_control_boundaries(image, code, bundles)
+    live_controls = live_control_checks(image, code, bundles)
     from epl9_job_probe import cache_experiment
     cache = cache_experiment(image, code)
     require(args.image.read_bytes() == image, 'firmware changed during execution')
@@ -366,7 +361,7 @@ def main():
             'epl9_job_probe.py', 'epl9_offline_prototype.py', 'mn103_subset.py',
             'mn103_calls.py', 'mn103_models.py')},
         host_intervention=dict(pc=hex(RGB_RETURN), compiled_firmware_hook=False),
-        results=results, tone_composition=composition, active_controls=live_boundaries,
+        results=results, tone_composition=composition, active_controls=live_controls,
         cache_comparator_regression=cache,
         bundles=[dict(name=b['name'], address=hex(b['address']), bytes=len(b['data']),
             sha256=sha(b['data']), diagnostic_rgb_and_matrix=True, tone_sha256=sha(b['tone']),
@@ -374,7 +369,7 @@ def main():
         limits=['Synthetic caller/configuration only; no sensor data or hardware pixels.',
                 'RGB slot order/domain and diagnostic matrix color space unqualified.',
                 'Original recipe identity and lifetime are retained by the host, not a native owner hook.',
-                'Full-chain active H/S/M hits unresolved multiply semantics; precomputed-tone fixtures pass.',
+                'Active H/S/M now returns after manual-qualified immediate multiply; hardware is untested.',
                 'WB, native callback/refcount scheduling and actual preview/capture/save remain unverified.'],
         camera_accessed=False, firmware_modified=False)
     (args.out/'results.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')

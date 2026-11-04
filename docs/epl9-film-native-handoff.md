@@ -2,6 +2,8 @@
 
 ## Outcome, 2026-11-04
 
+**Later same-day follow-up:** [the native film module](epl9-native-film-module.md) resolves the former MULQIU boundary from Panasonic's instruction specification and replaces the host interventions with emitted machine code in offline tests. This page retains the earlier host experiment and its historical limits.
+
 The complete native **color-configuration builder** `0x6079fb88` now returns with a retained parameter object, the existing draft HSL values, a native-generated draft tone curve, a diagnostic matrix and **three separate gamma pointers present together**. Previously, the RGB setter and selectors had only been checked separately. The wrapper's intervening logic does not discard the three supplied pointers in the tested states.
 
 This is progress toward a camera implementation, **not a working firmware replacement or a new film rendering**. The selector intervention is still Python host code at a native return boundary. RGB shapes and matrix inputs are deliberately diagnostic; they are not new Gold/Portra calibration proposals. No new ORF/TIFF is generated in this step. The [v2 Workspace exports](epl9-tonal-neutral-trials.md) remain the latest actual photographic results.
@@ -62,7 +64,7 @@ Four native composition cases establish the practical rule:
 
 The full-chain passing fixture therefore supplies an already calculated curve with **no active control pointer**. This is an explicit fixture choice, not permission to discard the owner's live highlight/shadow adjustments in a future firmware hook. A real integration must choose one place to compose recipe and current controls and preserve their intended behavior.
 
-When active controls are passed through the **entire** color builder, both current cases stop earlier in global chroma adjustment at **`0x60749f80`, `udfu01 182,d2`**. The existing interpreter rejects unsigned immediate multiplication with the high bit set because the pinned GNU semantics contain a sign-extension ambiguity. This is a known deliberate stop described in [the bounded prototype](epl9-offline-prototype.md), not evidence of a camera crash. No opcode bypass, guessed result or shared-interpreter change was introduced. Isolated tone composition passes; full-chain active-control behavior remains unverified until that arithmetic is qualified.
+In the retained initial run, active controls passed through the **entire** color builder stopped earlier in global chroma adjustment at **`0x60749f80`, `udfu01 182,d2`**. At that time the interpreter rejected high-bit unsigned immediates because the pinned GNU semantics contain a sign-extension ambiguity. No opcode bypass or guessed result was introduced in that run. The [later native-module follow-up](epl9-native-film-module.md) qualifies zero extension from Panasonic's manual and completes all six active-control cases; the old stopping result remains historical evidence, not a camera crash.
 
 ## Cache behavior and scenario count
 

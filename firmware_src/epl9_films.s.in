@@ -1,0 +1,257 @@
+# E-PL9 1101 experimental native module. Original project source.
+# Addresses/data are supplied by the exact-image-gated offline builder.
+# Caller-owned parameter slots and control buffers must outlive processing.
+# No storage address in this template is an approved on-camera placement.
+
+# Inline gate entered with the original worklist frame/registers.
+# Replay the displaced five bytes for every non-target key.
+film_route_gate:
+ mov (4,sp),a0
+ mov (10384,a0),d1
+ cmp $GOLD_KEY,d1
+ beq route_recipe
+ cmp $PORTRA_KEY,d1
+ beq route_recipe
+ mov d2,d0
+ exthu d0
+ udfu01 12,d0
+ jmp 0x60752207
+route_recipe:
+ jmp 0x607523a5
+
+# ABI: a0=job, a1=caller-owned parameter object; RETF [],0.
+# Only after worklist construction. Preserve identity in object+20 before
+# normalizing the two job keys and attaching the retained object.
+# Caller must keep the job idle and hold its owner synchronization here.
+film_commit_job:
+ cmp 0,a1
+ beq commit_none
+ mov (10384,a0),d0
+ cmp $GOLD_KEY,d0
+ beq commit_gold
+ cmp $PORTRA_KEY,d0
+ beq commit_portra
+commit_none:
+ mov 0,d0
+ retf [],0
+commit_gold:
+ mov $GOLD_HSL,d1
+ bra commit_selected
+commit_portra:
+ mov $PORTRA_HSL,d1
+commit_selected:
+ mov d0,(20,a1)
+ mov d1,(16,a1)
+ mov a1,(12320,a0)
+ mov 11,d1
+ mov d1,(10384,a0)
+ mov $COLOR_HEADER,d1
+ mov d1,(12,a0)
+ retf [],0
+
+# ABI: a0=request, a1=writable native 4184-byte parameter slot,
+# d0=original recipe key, d1=retained writable 10-byte tone-control buffer.
+# CALL/RET [d2,d3,a2,a3],44. Returns recipe index (0=not handled).
+# The owner supplies valid disjoint storage; no allocation/refcount is hidden.
+film_prepare_frame:
+ mov a0,a3
+ mov a1,a2
+ mov d0,(4,sp)
+ mov d1,(8,sp)
+ cmp 0,a1
+ beq prepare_none
+ cmp 0,d1
+ beq prepare_none
+ cmp $GOLD_KEY,d0
+ beq prepare_gold
+ cmp $PORTRA_KEY,d0
+ beq prepare_portra
+prepare_none:
+ mov 0,d0
+ ret [d2,d3,a2,a3],44
+prepare_gold:
+ mov 1,d2
+ movbu (1795,a3),d0
+ extb d0
+ add $GOLD_CONTRAST,d0
+ bra contrast_clamp
+prepare_portra:
+ mov 2,d2
+ movbu (1795,a3),d0
+ extb d0
+ add $PORTRA_CONTRAST,d0
+contrast_clamp:
+ cmp 2,d0
+ ble contrast_lower
+ mov 2,d0
+contrast_lower:
+ cmp -2,d0
+ bge contrast_store
+ mov -2,d0
+contrast_store:
+ movbu d0,(1795,a3)
+ mov $COLOR_HEADER,d0
+ mov d0,(8,a3)
+ mov a3,a0
+ mov a2,a1
+ call 0x6078ab39,[d2,a2,a3],36
+ mov $COLOR_HEADER,d0
+ mov d0,(8,a3)
+ mov a2,(1524,a3)
+ mov (4,sp),d0
+ mov d0,(20,a2)
+ cmp 1,d2
+ beq prepare_hsl_gold
+ mov $PORTRA_HSL,d0
+ bra prepare_hsl_store
+prepare_hsl_gold:
+ mov $GOLD_HSL,d0
+prepare_hsl_store:
+ mov d0,(16,a2)
+ mov (1512,a3),a0
+ mov (8,sp),a1
+ cmp 0,a0
+ beq controls_zero
+ movhu (0,a0),d0
+ movhu d0,(0,a1)
+ movhu (2,a0),d0
+ movhu d0,(2,a1)
+ movhu (4,a0),d0
+ movhu d0,(4,a1)
+ movhu (6,a0),d0
+ movhu d0,(6,a1)
+ movhu (8,a0),d0
+ movhu d0,(8,a1)
+ bra controls_bias
+controls_zero:
+ mov 0,d0
+ movhu d0,(0,a1)
+ movhu d0,(2,a1)
+ movhu d0,(4,a1)
+ movhu d0,(6,a1)
+ movhu d0,(8,a1)
+controls_bias:
+ movhu (4,a1),d0
+ exth d0
+ cmp 1,d2
+ beq highlights_gold
+ add $PORTRA_HIGHLIGHTS,d0
+ bra highlights_clamp
+highlights_gold:
+ add $GOLD_HIGHLIGHTS,d0
+highlights_clamp:
+ cmp 7,d0
+ ble highlights_lower
+ mov 7,d0
+highlights_lower:
+ cmp -7,d0
+ bge highlights_store
+ mov -7,d0
+highlights_store:
+ movhu d0,(4,a1)
+ movhu (6,a1),d0
+ exth d0
+ add 1,d0
+ cmp 7,d0
+ ble midtones_lower
+ mov 7,d0
+midtones_lower:
+ cmp -7,d0
+ bge midtones_store
+ mov -7,d0
+midtones_store:
+ movhu d0,(6,a1)
+ movhu (8,a1),d0
+ exth d0
+ cmp 1,d2
+ beq shadows_gold
+ add $PORTRA_SHADOWS,d0
+ bra shadows_clamp
+shadows_gold:
+ add $GOLD_SHADOWS,d0
+shadows_clamp:
+ cmp 7,d0
+ ble shadows_lower
+ mov 7,d0
+shadows_lower:
+ cmp -7,d0
+ bge shadows_store
+ mov -7,d0
+shadows_store:
+ movhu d0,(8,a1)
+ mov a1,(1512,a3)
+ mov d2,d0
+ ret [d2,d3,a2,a3],44
+
+# Replacement for the selector call AND displaced return-byte store.
+# CALL/RET [d2,d3,a2,a3],28. Original selector ABI is retained.
+film_gamma_hook:
+ mov a1,d2
+ mov d0,d3
+ mov d1,a2
+ mov a0,a3
+ call 0x6079d328,[d2,d3,a2,a3],28
+ mov (1524,a3),a0
+ cmp 0,a0
+ bne gamma_has_object
+ jmp gamma_done
+gamma_has_object:
+ movhu (14,a3),d1
+ cmp 512,d1
+ beq gamma_format
+ cmp 256,d1
+ beq gamma_format
+ cmp 64,d1
+ beq gamma_format
+ jmp gamma_done
+gamma_format:
+ movhu (28,a3),d1
+ cmp 256,d1
+ beq gamma_secondary
+ jmp gamma_done
+gamma_secondary:
+ movhu (1832,a3),d1
+ cmp 0,d1
+ beq gamma_kind
+ jmp gamma_done
+gamma_kind:
+ movbu (48,a3),d1
+ cmp 0,d1
+ beq gamma_header
+ jmp gamma_done
+gamma_header:
+ mov (8,a3),d1
+ cmp $COLOR_HEADER,d1
+ beq gamma_identity
+ jmp gamma_done
+gamma_identity:
+ mov (16,a0),d1
+ cmp $GOLD_HSL,d1
+ beq gamma_gold
+ cmp $PORTRA_HSL,d1
+ beq gamma_portra
+ jmp gamma_done
+gamma_gold:
+ mov d2,a0
+ mov $GOLD_RGB0,d1
+ mov d1,(0,a0)
+ mov d3,a0
+ mov $GOLD_RGB1,d1
+ mov d1,(0,a0)
+ mov a2,a0
+ mov $GOLD_RGB2,d1
+ mov d1,(0,a0)
+ bra gamma_done
+gamma_portra:
+ mov d2,a0
+ mov $PORTRA_RGB0,d1
+ mov d1,(0,a0)
+ mov d3,a0
+ mov $PORTRA_RGB1,d1
+ mov d1,(0,a0)
+ mov a2,a0
+ mov $PORTRA_RGB2,d1
+ mov d1,(0,a0)
+gamma_done:
+ movbu d0,(89,sp)
+ ret [d2,d3,a2,a3],28

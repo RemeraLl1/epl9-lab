@@ -212,11 +212,18 @@ class Machine:
                     left, right = map(self.read, args)
                     if op == 'udf00':
                         left, right = signed(left), signed(right)
-                    elif op == 'udf01' and (len(raw) != 2 or raw[0] != 0xf6 or raw[1] >> 4 != 1
-                                          or any(arg not in ('d0','d1','d2','d3') for arg in args)):
+                    elif op == 'udfu01':
+                        # Panasonic MULQIU specifies zero extension for imm8/16.
+                        # Pinned GNU igen's EXTEND8/16 contradicts its comment;
+                        # see docs/epl9-native-film-module.md for the manual.
+                        if (len(raw) not in (3, 4, 6) or raw[0] != {3:0xf9, 4:0xfb, 6:0xfd}[len(raw)]
+                                or args[0] in self.r or args[1] not in ('d0','d1','d2','d3')
+                                or raw[1] != 0x14+int(args[1][1])
+                                or left != int.from_bytes(raw[2:], 'little')):
+                            raise Fault('unsupported or mismatched unsigned immediate multiply encoding')
+                    elif (len(raw) != 2 or raw[0] != 0xf6 or raw[1] >> 4 != 1
+                            or any(arg not in ('d0','d1','d2','d3') for arg in args)):
                         raise Fault('unsupported unsigned register multiply encoding')
-                    elif args[0] not in self.r and left >= (1 << (8 * (len(raw)-2)-1)):
-                        raise Fault('ambiguous GNU unsigned multiply immediate')
                     product = left * right
                     self.write(args[1], product)
                     self.r['mdrq'] = (product >> 32) & MASK
