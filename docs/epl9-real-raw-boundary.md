@@ -55,7 +55,7 @@ The zero-payload controls independently confirm data-insensitivity of this prefi
 
 No verified pixel backend for these modified native jobs was found in the examined tools. This is a scoped investigation result, not proof that no implementation could ever be written. A desktop approximation would need separate labeling and calibration; it would not satisfy a claim of exact TruePic execution.
 
-The subsequent [Workspace CMIO bridge experiment](epl9-workspace-cmio-bridge.md) adds a real full-size Natural TIFF reference and identifies this E-PL9 ORF's own encoded firmware tables and matching captured coefficients. Two copied ORF controls preserve the RAW while changing only those measured spans. Native/Python decoding agrees, but their Workspace pixel exports are still pending. This is a candidate desktop transport for tuning, not execution of the modified native job or completed film recipes.
+The subsequent [Workspace CMIO bridge experiment](epl9-workspace-cmio-bridge.md) identifies this E-PL9 ORF's own encoded firmware tables and matching captured coefficients. Actual manual full-size TIFF exports now confirm that two copied ORFs with identical RAW/T blocks and different P coefficients produce the expected saturation change. [First Gold/Portra color drafts](epl9-film-draft-trials.md) also have real, distinct Workspace TIFFs and matching native-packed coefficient records. This qualifies a desktop route for color trials; it does not execute the modified native job, supply a camera ISP emulator or complete/calibrate the film recipes.
 
 ## Reproduction and validation
 

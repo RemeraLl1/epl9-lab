@@ -1,6 +1,6 @@
 """Prepare copied E-PL9 ORF controls for manual OM Workspace development.
 
-This is a CMIO transport experiment, not a TruePic emulator or a film recipe.
+These are CMIO transport experiments/drafts, not a TruePic emulator or calibrated film recipes.
 Only measured native Natural table/parameter spans are replaced. No camera,
 installed application, embedded preview, or original source file is written.
 """
@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import struct
+import subprocess
 
 from epl9_color_audit import MAIN_SHA, TABLE_SHA
 
@@ -148,7 +149,34 @@ def replace_span(encoded, offset, before, after):
         encoded[offset+i+1] ^= delta
 
 
-def prepare(source, main, key):
+def validate_recipes(document):
+    """Only the accepted two slots and bounded, physical-record coefficients."""
+    if document.get('schema') != 'epl9-native-hsl-drafts-v1':
+        raise ValueError('unsupported recipe schema')
+    recipes = document.get('recipes')
+    if not isinstance(recipes, list) or len(recipes) != 2:
+        raise ValueError('requires exactly two accepted recipe slots')
+    expected = {'gold200-draft-v0': '0x01010078', 'portra400-draft-v0': '0x01020078'}
+    seen = set()
+    for recipe in recipes:
+        name = recipe.get('name')
+        if name not in expected or name in seen or recipe.get('watercolor_key') != expected[name]:
+            raise ValueError('invalid/duplicate recipe identity or Watercolor binding')
+        seen.add(name)
+        rows = recipe.get('native_hsl')
+        if not isinstance(rows, list) or len(rows) != 12:
+            raise ValueError('requires twelve physical H/S/L records')
+        for row in rows:
+            if not isinstance(row, list) or len(row) != 3 or any(type(v) is not int for v in row):
+                raise ValueError('each H/S/L record must contain three integers')
+            if not (-1000 <= row[0] <= 1000 and -240 <= row[1] <= 240 and -100 <= row[2] <= 100):
+                raise ValueError('draft coefficient outside conservative experiment bounds')
+    return recipes
+
+
+def prepare(source, main, key, recipes=None):
+    if recipes is not None:
+        validate_recipes(dict(schema='epl9-native-hsl-drafts-v1', recipes=recipes))
     if len(main) != 26214336 or sha(main) != MAIN_SHA:
         raise ValueError('requires exact E-PL9 build 1101 decoded main')
     layout = Epl9Orf(source)
@@ -167,10 +195,14 @@ def prepare(source, main, key):
         if parameters[p_at:p_at+72] != coefficients:
             raise ValueError('Natural P coefficients differ; refusing an already edited source')
     results = []
-    for name, saturation in (('epl9-cmio-neutral', 0), ('epl9-cmio-desat-control', -240)):
+    definitions = (recipes if recipes is not None else [
+        dict(name=name, native_hsl=[[0, saturation, 0] for _ in range(12)])
+        for name, saturation in (('epl9-cmio-neutral', 0), ('epl9-cmio-desat-control', -240))])
+    for recipe in definitions:
+        name = recipe['name']
         p, t = bytearray(parameters), bytearray(encoded)
         expected_plain = bytearray(decoded)
-        weights = struct.pack('<36h', *[v for _ in range(12) for v in (0, saturation, 0)])
+        weights = struct.pack('<36h', *[v for row in recipe['native_hsl'] for v in row])
         for t_at, _, p_at in SLOTS:
             replace_span(t, t_at, decoded[t_at:t_at+TABLE_BYTES], creative)
             expected_plain[t_at:t_at+TABLE_BYTES] = creative
@@ -188,7 +220,9 @@ def prepare(source, main, key):
             changed_bytes=sum(a != b for a, b in zip(source, result)),
             only_declared_cmio_spans_changed=True, raw_strips_unchanged=True,
             decoded_tables_checked=True, pixel_render_observed=False,
-            film_recipe=False, sha256=sha(result))))
+            film_recipe_draft=recipes is not None, film_calibrated=False,
+            watercolor_key=recipe.get('watercolor_key'),
+            camera_art_route_executed=False, sha256=sha(result))))
     return layout, results
 
 
@@ -206,25 +240,72 @@ def verify_copy(source, result, allowed, strips):
         raise ValueError('RAW samples changed')
 
 
+def native_recipe_configs(image_path, recipes):
+    """Execute the exact camera coefficient packer, without an ISP model."""
+    from epl9_integrated_probe import native, attempt, RETURN
+    from epl9_offline_prototype import TABLE, OUTPUT, SP, check_packing
+    from mn103_subset import Region, parse_listing
+    image = image_path.read_bytes()
+    if len(image) != 26214336 or sha(image) != MAIN_SHA:
+        raise ValueError('exact E-PL9 build 1101 required for native comparison')
+    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    if sha(reader.read_bytes()) != 'e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae':
+        raise ValueError('requires the inspected GNU reader')
+    listing = subprocess.check_output([str(reader), str(image_path.resolve()), hex(BASE),
+        hex(0x6079e50e-BASE), hex(0x6079e6a0-BASE)], text=True)
+    code = parse_listing(listing, image, BASE)
+    results = []
+    for recipe in recipes:
+        table = bytearray(image[COLOR_ROM-BASE:COLOR_ROM-BASE+TABLE_BYTES])
+        for r, row in enumerate(recipe['native_hsl']):
+            struct.pack_into('<3h', table, r*28+12, *row)
+        output = bytearray(5200)
+        machine = native(image, code, [Region(TABLE, table), Region(OUTPUT, output, True)],
+            dict(a0=TABLE, a1=OUTPUT, d0=struct.unpack_from('<H', table, 3024)[0]))
+        result = attempt(machine, 0x6079e50e, 0xf0, 80)
+        if result.get('pc') != RETURN or machine.r['sp'] != SP:
+            raise ValueError(f'native recipe builder did not return: {result}')
+        check_packing(output, table, [row[1] for row in recipe['native_hsl']])
+        observed = [list(struct.unpack_from('<3h', output, 688+r*24+18)) for r in range(12)]
+        if observed != recipe['native_hsl']:
+            raise ValueError('native configuration and CMIO recipe triplets differ')
+        results.append((recipe['name'], bytes(table), bytes(output), dict(
+            entry='0x6079e50e', instructions=len(machine.trace), native_return=True,
+            full_configuration_bytes_checked=5200, native_coefficients_equal_cmio=True,
+            table_sha256=sha(table), configuration_sha256=sha(output),
+            pixel_processing_executed=False)))
+    return results
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--raw', type=Path, required=True)
     ap.add_argument('--image', type=Path, default=MAIN)
     ap.add_argument('--library', type=Path, default=LAUREL)
     ap.add_argument('--reference-tiff', type=Path)
+    ap.add_argument('--recipes', type=Path, help='validated two-slot native HSL draft JSON')
+    ap.add_argument('--native-config', action='store_true', help='compare draft triplets with native camera packer')
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args()
     if args.out.exists() or not args.out.resolve().is_relative_to((ROOT/'local').resolve()):
         ap.error('output must be a new ignored directory under local/')
     source = args.raw.read_bytes()
-    layout, cases = prepare(source, args.image.read_bytes(), library_key(args.library))
+    recipes = validate_recipes(json.loads(args.recipes.read_text(encoding='utf-8'))) if args.recipes else None
+    if args.native_config and not recipes:
+        ap.error('--native-config requires --recipes')
+    layout, cases = prepare(source, args.image.read_bytes(), library_key(args.library), recipes)
+    configs = native_recipe_configs(args.image, recipes) if args.native_config else []
     report = dict(model='E-PL9', owner_body_version='1.1', downloaded_main_build='1101',
                   main_sha256=MAIN_SHA, source_sha256=sha(source), source_bytes=len(source),
                   cmio_p=layout.p, cmio_t=layout.t,
                   original_cmio_t_sha256=sha(layout.value(layout.t)),
                   library_sha256=LAUREL_SHA, cases=[], camera_accessed=False,
                   full_pixel_cycle_passed=False,
-                  scope='Manual Workspace CMIO transport controls, not ART replacements or film recipes')
+                  scope=('Manual Workspace native HSL draft trials; not a validated ART replacement'
+                         if recipes else 'Manual Workspace CMIO transport controls, not ART replacements or film recipes'))
+    if args.recipes:
+        report['recipe_definition_sha256'] = sha(args.recipes.read_bytes())
+        report['recipes'] = recipes
     if args.reference_tiff:
         from PIL import Image, ImageCms
         import io
@@ -238,6 +319,11 @@ def main():
                     io.BytesIO(im.info['icc_profile']))).strip(),
                 provenance='Owner manually exported Natural using OM Workspace GUI')
     args.out.mkdir()
+    for name, table, output, detail in configs:
+        (args.out/(name+'-native-table.bin')).write_bytes(table)
+        (args.out/(name+'-native-config.bin')).write_bytes(output)
+    if configs:
+        report['native_configuration_checks'] = [dict(name=name, **detail) for name, _, _, detail in configs]
     for name, data, detail in cases:
         target = args.out/(name+'.ORF')
         with target.open('xb') as f:

@@ -1,8 +1,11 @@
 import struct
 import unittest
+import copy
+import json
+from pathlib import Path
 
 from epl9_workspace_bridge import (Epl9Orf, P_SIZE, T_SIZE, decode_cmio,
-                                    replace_span, verify_copy)
+                                    replace_span, verify_copy, validate_recipes)
 
 
 def synthetic_orf():
@@ -86,6 +89,34 @@ class EncodedSpanTests(unittest.TestCase):
             verify_copy(original, changed, [(50, 1)], [(80, 20)])
         with self.assertRaisesRegex(ValueError, 'length'):
             verify_copy(original, changed[:-1], [], [])
+
+
+class RecipeContractTests(unittest.TestCase):
+    def setUp(self):
+        path = Path(__file__).resolve().parents[1]/'recipes/epl9-film-drafts-v0.json'
+        self.document = json.loads(path.read_text(encoding='utf-8'))
+
+    def test_checked_in_drafts_preserve_two_distinct_accepted_slots(self):
+        rows = validate_recipes(self.document)
+        self.assertEqual({r['watercolor_key'] for r in rows}, {'0x01010078', '0x01020078'})
+        self.assertNotEqual(rows[0]['native_hsl'], rows[1]['native_hsl'])
+
+    def test_duplicate_identity_or_swapped_mode_is_rejected(self):
+        for field in ('name', 'watercolor_key'):
+            document = copy.deepcopy(self.document)
+            document['recipes'][1][field] = document['recipes'][0][field]
+            with self.assertRaises(ValueError):
+                validate_recipes(document)
+
+    def test_overflow_bool_and_missing_record_are_rejected(self):
+        for value in (32768, -32769, True, 0.5):
+            document = copy.deepcopy(self.document)
+            document['recipes'][0]['native_hsl'][0][0] = value
+            with self.assertRaises(ValueError):
+                validate_recipes(document)
+        self.document['recipes'][0]['native_hsl'].pop()
+        with self.assertRaises(ValueError):
+            validate_recipes(self.document)
 
 
 if __name__ == '__main__':
