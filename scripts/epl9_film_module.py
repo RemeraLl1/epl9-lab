@@ -1,6 +1,6 @@
 """Emit original E-PL9 native film glue; never assemble a flashable container.
 
-Placement is synthetic. Owner allocation/call-site binding is an explicit
+Placement defaults to synthetic; one early-load candidate is opt-in. Owner allocation/call-site binding is an explicit
 remaining integration requirement. Default RGB contents stay stock.
 """
 import argparse
@@ -14,6 +14,7 @@ from epl9_workspace_bridge import ROOT, BASE, MAIN, MAIN_SHA, COLOR_ROM, sha, va
 from epl9_tonal_drafts import definitions, READER_SHA, remap_curve
 from mn103_emit import assemble, encode
 from mn103_subset import parse_listing
+from epl9_placement import check_slot
 
 MODULE_BASE = 0x68000000  # Synthetic, not an approved camera address.
 TEMPLATE = ROOT/'firmware_src/epl9_films.s.in'
@@ -31,7 +32,7 @@ def build_module(image, base=MODULE_BASE, diagnostic_rgb=False):
     require(len(image) == 26214336 and sha(image) == MAIN_SHA, 'requires exact E-PL9 build 1101')
     require(type(base) is int and base % 4 == 0 and 0 <= base <= 0xffffffff-0x3c00,
             'module address is out of range or unaligned')
-    require(base+0x3c00 <= BASE or base >= BASE+len(image), 'offline module cannot overlap the stock mapping')
+    placement=check_slot(image,base,0x3c00)
     hsl_path, tone_path = ROOT/'recipes/epl9-film-drafts-v0.json', ROOT/'recipes/epl9-film-drafts-v2.json'
     hsl = validate_recipes(json.loads(hsl_path.read_text()))
     tone = definitions(json.loads(tone_path.read_text()))
@@ -70,7 +71,7 @@ def build_module(image, base=MODULE_BASE, diagnostic_rgb=False):
         patches.append(dict(address=address, before=before, after=after.hex()))
     return dict(data=bytes(data), source=source, symbols=symbols, constants=constants,
         code_bytes=len(code), rows=rows, patches=patches, base=base,
-        diagnostic_rgb=diagnostic_rgb, recipes=tone,
+        diagnostic_rgb=diagnostic_rgb, recipes=tone,placement=placement,
         definitions={p.name:sha(p.read_bytes()) for p in (hsl_path,tone_path)})
 
 
@@ -105,7 +106,7 @@ def emit_files(module, out, reader=None):
     (out/'native-listing.tsv').write_text(listing,encoding='utf-8')
     report = dict(model='Olympus E-PL9', displayed_version='1.1 (owner report)', downloaded_build='1101',
         main_bytes=26214336, main_sha256=MAIN_SHA, reader_sha256=READER_SHA,
-        module_base=hex(module['base']), placement='synthetic; camera placement unqualified',
+        module_base=hex(module['base']), placement=module['placement'],
         module_bytes=len(module['data']), code_bytes=module['code_bytes'],
         module_sha256=sha(module['data']), source_sha256=sha(module['source'].encode()),
         template_sha256=sha(module.get('template',TEMPLATE).read_bytes()), definitions=module['definitions'],

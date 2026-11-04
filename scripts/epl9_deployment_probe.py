@@ -36,6 +36,7 @@ class Registers(dict):
 
 
 class Observe:
+    def __init__(self,base=0x68000000):self.module_base=base
     def __call__(self,m):
         self.m=m
         self.reads=[]
@@ -51,7 +52,7 @@ class Observe:
             return read(operand,size)
         def observed_write(operand,value,size=4):
             address=m.address(operand) if operand.startswith('(') else -1
-            if m.trace and 0x68000000<=m.trace[-1]<0x68001000 and address-m.r['a2'] in (8,1512,1524,1795):
+            if m.trace and self.module_base<=m.trace[-1]<self.module_base+0x1000 and address-m.r['a2'] in (8,1512,1524,1795):
                 self.request_addresses.add(m.r['a2'])
                 self.writes.append((m.trace[-1],address-m.r['a2'],size))
                 self.locks_at_writes.add(tuple(bool(getattr(m.models.get(k),'held',False)) for k in (0x607a17b7,0x607a1841)))
@@ -85,10 +86,11 @@ def main():
     ap.add_argument('--out',type=Path,required=True)
     ap.add_argument('--color-controls',type=Path)
     ap.add_argument('--wb-controls',type=Path)
+    ap.add_argument('--base',type=lambda s:int(s,0),default=0x68000000)
     args=ap.parse_args()
     document=json.loads(args.color_controls.read_text()) if args.color_controls else None
     wb=json.loads(args.wb_controls.read_text()) if args.wb_controls else None
-    image,patched,original_code,code,module,manifest=prepare_probe(args.out,color_document=document,wb_document=wb)
+    image,patched,original_code,code,module,manifest=prepare_probe(args.out,color_document=document,wb_document=wb,base=args.base)
     cases=[]
     for key in (0x01010078,0x01020078):
         for kind in (0x200,0x100,0x40):
@@ -96,7 +98,7 @@ def main():
             if wb is not None: options['gain_fixture']=(2048,1536,1024,1056)
             observed=[]
             for mode in ('historical_color','native_film'):
-                meter=Observe()
+                meter=Observe(module['base'])
                 report=experiment(patched if mode=='native_film' else image,
                     code if mode=='native_film' else original_code,key,kind,0,
                     native_module=module if mode=='native_film' else None,machine_observer=meter,**options)

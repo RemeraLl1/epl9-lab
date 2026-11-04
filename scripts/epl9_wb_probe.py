@@ -5,6 +5,7 @@ from epl9_offline_prototype import REQUEST, SP, header
 from mn103_subset import Region
 from epl9_wb_extension import adjusted
 from epl9_film_module import require
+from epl9_placement import module_regions
 
 
 def boundaries(image,code,module):
@@ -22,7 +23,7 @@ def boundaries(image,code,module):
                 before=bytes(request)
                 regs=dict(a2=REQUEST,a0=REQUEST+1568,a3=0x11223344,d3=0x55667788,
                           mdr=0x12345678,mdrq=0x76543210)
-                m=native(image,code,[Region(REQUEST,request,True),Region(module['base'],module['data'])],regs)
+                m=native(image,code,[Region(REQUEST,request,True),*module_regions(image,module)],regs)
                 result=m.run(0x6074f352,[0x6074f357])
                 require(result['pc']==0x6074f357 and m.r['sp']==SP,'early gain hook did not return')
                 for name,value in regs.items(): require(m.r[name]==value,'early hook clobbered '+name)
@@ -38,6 +39,8 @@ def boundaries(image,code,module):
 
 
 class CoefficientReads:
+    def __init__(self,module):
+        self.code_start=module['base']
     def __call__(self,m):
         from epl9_job_probe import JOB
         self.reads=[]
@@ -45,7 +48,8 @@ class CoefficientReads:
         def observed(operand,size=4):
             value=read(operand,size)
             address=m.address(operand) if operand.startswith('(') else -1
-            if JOB+10440+1568<=address<JOB+10440+1576 and m.trace and m.trace[-1]<0x68000000:
+            if (JOB+10440+1568<=address<JOB+10440+1576 and m.trace and
+                    not self.code_start<=m.trace[-1]<self.code_start+0x1000):
                 self.reads.append(dict(pc=hex(m.trace[-1]),index=(address-(JOB+10440+1568))//2,value=value))
             return value
         m.read=observed

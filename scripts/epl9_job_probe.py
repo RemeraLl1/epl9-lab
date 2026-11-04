@@ -12,6 +12,7 @@ from epl9_offline_prototype import header, RECIPES, check_packing
 from mn103_subset import Memory, Region, Fault, parse_listing
 from mn103_calls import CallMachine
 from mn103_models import FillModel
+from epl9_placement import module_regions
 
 JOB, CACHE = 0x11000000, 0x11010000
 PARAMS, ERROR, STACK, SP = 0x10020000, 0x10030000, 0x10010000, 0x10013c00
@@ -611,7 +612,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
     if native_module is not None:
-        memory = Memory([*memory.regions,Region(native_module['base'],native_module['data'],False,'native film module')])
+        memory = Memory([*memory.regions,*module_regions(image,native_module)])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
                     models={**completion,0x60402595:pool,0x604023b2:FixturePoolFree(pool),
                             0x4700111e:FillModel(),OWNER_CALLBACK:owner,
@@ -809,6 +810,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             early_gain_hook=native_module['symbols'].get('film_wb_entry') in m.trace,
             source_gain_record=list(struct.unpack_from('<4H',job,10406)),
             request_gain_record=list(struct.unpack_from('<4H',job,10440+1568)),
+            matrix_words=list(struct.unpack_from('<9H',cache,80)),
             request_fields={str(o):memory.read(JOB+10440+o,s) for o,s in ((14,2),(28,2),(48,1),(1832,2))},
             gamma_pointers=[hex(memory.read(CACHE+2596+i*4,4)) for i in range(3)])
     report['pending_record'] = {str(o):hex(m.memory.read(JOB+13640+o,4)) for o in (0,8,12,16)}

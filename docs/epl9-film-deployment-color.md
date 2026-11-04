@@ -1,5 +1,10 @@
 # E-PL9: extended color, icon embedding and deployment qualification
 
+Follow-up: [WB math, early-load placement and callback consistency](epl9-wb-math-placement.md)
+qualifies an offline early-load candidate, traverses the new math path under
+explicit scalar contracts, and fixes matrix notification consistency. The late
+matrix overlay and synthetic-only placement below describe the preceding pass.
+
 ## Outcome — 2026-11-04
 
 Watercolor I and II remain the only replacement slots: Gold 200-inspired and

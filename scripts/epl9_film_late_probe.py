@@ -18,6 +18,8 @@ from epl9_job_probe import JOB_WINDOWS, experiment
 from epl9_color_extension import matrix_result
 from epl9_wb_extension import adjusted
 from epl9_wb_probe import boundaries as wb_boundaries, CoefficientReads
+from epl9_placement import module_regions, with_module_data
+from epl9_film_module import MODULE_BASE
 
 AUX = 0x19000000
 NATIVE_OWNER = 0x1b000000
@@ -47,6 +49,7 @@ def frame_inputs(image,original_code,key,fmt,contrast,user,with_owner,secondary=
 
 
 def run_color(image,code,module,request,obj,user,key,flags=0x10000002,state=None):
+    image=with_module_data(image,module)
     r,c = bytearray(request),bytearray(128)
     output,cache = state if state is not None else (bytearray(5200),bytearray(6000))
     controls = struct.pack('<5h',*(user or (0,)*5))
@@ -54,7 +57,7 @@ def run_color(image,code,module,request,obj,user,key,flags=0x10000002,state=None
         struct.pack_into('<I',c,at,value)
     m = native(image,code,[Region(REQUEST,r,True),Region(CONTEXT,c,True),Region(OUTPUT,output,True),
         Region(AUX,cache,True),Region(OBJECT,obj),Region(USER_CONTROLS,controls),
-        Region(module['base'],module['data'])],{})
+        *module_regions(image,module)],{})
     if user is not None:
         call(m,0x6074a061,0,16,dict(a0=USER_CONTROLS,a1=CONTEXT+64))
     before_c = bytes(c)
@@ -194,12 +197,16 @@ def connected_cases(image,code,module):
             for selector in (0,2):
                 options = dict(provide_slot=True,input_format=0x100) if kind == 0x40 else {}
                 wb=module.get('wb_controls')
-                meter=CoefficientReads()
+                meter=CoefficientReads(module)
                 if wb is not None:
                     options.update(gain_fixture=(2048,1536,1024,1056),machine_observer=meter)
                 report = experiment(image,code,int(recipe['watercolor_key'],16),kind,selector,
                                     native_module=module,**options)
                 film = report['native_film']
+                notified=[e['coefficients_preserved'] for e in report['events'] if e.get('event')==2 and 'coefficients_preserved' in e]
+                require(notified and all(values==film['matrix_words'] for values in notified),
+                        'owner notification and final ISP matrix disagree')
+                film['owner_matrix_matches_isp']=True
                 if wb is not None:
                     expected=adjusted(options['gain_fixture'],wb[recipe['watercolor_key']])
                     require(film['early_gain_hook'] and tuple(film['request_gain_record'])==expected,
@@ -261,8 +268,11 @@ def extension_boundaries(image,code,module):
                 matrix=[0]*9;matrix[index]=value
                 output=bytearray(5200)
                 struct.pack_into('<9h',output,80,*matrix)
-                m=native(image,code,[Region(OUTPUT,output,True),Region(module['base'],module['data'])],
-                         dict(d2=OUTPUT,d3=slot))
+                m=native(image,code,[Region(OUTPUT,output,True),*module_regions(image,module)],
+                         dict(d2=OUTPUT+80,d3=slot))
+                result=m.run(module['symbols']['matrix_'+label],[0x6079c01c])
+                require(result['pc']==0x6079c01c and m.r['sp']==SP,'matrix boundary failed')
+                m.r['d2']=OUTPUT
                 result=m.run(module['symbols']['extended_'+label],[module['symbols']['color_restore']])
                 require(result['pc']==module['symbols']['color_restore'] and m.r['sp']==SP,'extension boundary failed')
                 require(struct.unpack_from('<9h',output,80)==matrix_result(matrix,settings['matrix_delta']),
@@ -288,14 +298,14 @@ def route_cases(image,code,original_image,original_code,module):
                     struct.pack_into('<I',job,16,flags)
                     struct.pack_into('<H',job,20,kind)
                     job[25] = selector
-                    m = native(image,code,[Region(JOB,job,True),Region(module['base'],module['data'])],{})
+                    m = native(image,code,[Region(JOB,job,True),*module_regions(image,module)],{})
                     call(m,0x607519b8,0xf0,40,dict(a0=JOB))
                     require(job == expected,'late routing changed an undeclared job field')
                     results.append(dict(key=hex(key),kind=hex(kind),selector=selector,flags=hex(flags),bytes_compared=14552))
     return results
 
 
-def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None):
+def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
     image,code,_ = load_code(MAIN,reader)
@@ -304,9 +314,11 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
-    module = build_late_module(image,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document)
+    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document)
     generated,manifest = emit_files(module,out)
     modified = bytearray(image)
+    if BASE<=base and base+len(module['data'])<=BASE+len(image):
+        modified[base-BASE:base-BASE+len(module['data'])]=module['data']
     for index,p in enumerate(module['patches']):
         raw = bytes.fromhex(p['after'])
         modified[p['address']-BASE:p['address']-BASE+len(raw)] = raw
@@ -316,6 +328,8 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         for at in [at for at in code if p['address']<=at<p['address']+len(raw)]: del code[at]
         code.update(parse_listing(listing,raw,p['address']))
     code.update(generated)
+    if BASE<=base<BASE+len(image):
+        (out/'main-with-module-OFFLINE-ONLY.decoded.bin').write_bytes(modified)
     return image,bytes(modified),original_code,code,module,manifest
 
 
@@ -326,11 +340,12 @@ def main():
     ap.add_argument('--rgb-tables',type=Path)
     ap.add_argument('--color-controls',type=Path)
     ap.add_argument('--wb-controls',type=Path)
+    ap.add_argument('--base',type=lambda v:int(v,0),default=MODULE_BASE)
     args = ap.parse_args()
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
     color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
     wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
-    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document,color_document,wb_document)
+    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document,color_document,wb_document,args.base)
     crosscheck = original_key_crosscheck(image,original_code)
     frames = []
     for recipe in module['recipes']:
@@ -358,7 +373,7 @@ def main():
     require(MAIN.read_bytes()==image,'original main changed')
     sources = ('epl9_film_late_module.py','epl9_film_late_probe.py','epl9_film_module.py',
         'epl9_film_handoff.py','epl9_film_module_probe.py','epl9_job_probe.py','mn103_emit.py',
-        'mn103_subset.py','mn103_calls.py','mn103_models.py','epl9_color_extension.py','epl9_wb_extension.py','epl9_wb_probe.py')
+        'mn103_subset.py','mn103_calls.py','mn103_models.py','epl9_color_extension.py','epl9_wb_extension.py','epl9_wb_probe.py','epl9_placement.py')
     report = dict(module=manifest,frame_cases=frames,route_cases=routes,flag_cases=flags,
         attached_object_original_key_crosscheck=crosscheck,
         cache_sequence=cache,passthrough_cases=passthrough,native_owner_reference_case=refs,connected_jobs=connected,

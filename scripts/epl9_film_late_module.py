@@ -9,7 +9,7 @@ from epl9_film_module import build_module, emit_files, require, MODULE_BASE
 from epl9_workspace_bridge import ROOT, BASE, MAIN, sha
 from epl9_tonal_drafts import validate_curve
 from mn103_emit import assemble, encode
-from epl9_color_extension import controls, assembly, KEYS
+from epl9_color_extension import controls, assembly, matrix_assembly, KEYS
 from epl9_wb_extension import controls as wb_controls, assembly as wb_assembly
 
 LATE_TEMPLATE = ROOT/'firmware_src/epl9_films_late.s.in'
@@ -45,6 +45,7 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
     extended=controls(color_document) if color_document is not None else None
     if extended is not None:
         source=source.replace('color_restore:\n',assembly(extended,base)+'color_restore:\n')
+        source+='\n'+matrix_assembly(extended)
     wb=wb_controls(wb_document) if wb_document is not None else None
     if wb is not None: source+='\n'+wb_assembly(wb)
     code,symbols,rows = assemble(source,base)
@@ -70,6 +71,8 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
     ]
     if wb is not None:
         hook_specs.append((0x6074f352,'0008257e0e','jmp',['film_wb_entry'],b''))
+    if extended is not None:
+        hook_specs.append((0x6079c017,'cdc4feb00c','jmp',['film_matrix_hook'],b''))
     for at,before,op,args,suffix in hook_specs:
         raw = bytes.fromhex(before)
         require(image[at-BASE:at-BASE+len(raw)] == raw,'late hook source bytes changed')
@@ -90,6 +93,7 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
             native_wb_bias_implemented=wb is not None,install_ready=False,
             native_matrix_preserved=not extended or all(v['matrix_delta'] is None for v in extended.values()),
             calibration_matrix_replaced=False,six_axis_override_enabled=bool(extended and any(v['six_axis'] is not None for v in extended.values())),
+            matrix_adjustment_before_owner_callback=extended is not None,
             owner_call_sites_bound=False,
             owner_binding_strategy='No new owner call; use the existing selected request object',
             owner_synchronization_and_buffer_lifetime_external=True,
