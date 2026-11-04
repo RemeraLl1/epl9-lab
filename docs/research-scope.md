@@ -33,7 +33,7 @@ On 2026-11-02 the owner confirmed they can copy files from the SD card separatel
 6. Obtain an exact E-PL9 stock update input for offline identification and decoding.
 7. Inspect original MOV metadata and compare photo/video fields of view.
 
-The owner confirms displayed body version 1.1. Exact stock input identification, a shared COLOR table match and MTP enumeration are recorded in `epl9-1.1-initial-findings.md`. Owner RAW/JPEG data and actual full-size Workspace exports now exist; the desktop CMIO controls and color-only v0 drafts are documented in `epl9-workspace-cmio-bridge.md` and `epl9-film-draft-trials.md`. Modified-camera rendering and installation remain unverified. Later Wi-Fi transfer, timing and recovery findings are separated by source availability in `project-status.md`; setup, a chat summary or a synthetic test is not proof that a camera feature works.
+The owner confirms displayed body version 1.1. Exact stock input identification, a shared COLOR table match and MTP enumeration are recorded in `epl9-1.1-initial-findings.md`. Owner RAW/JPEG data and actual full-size Workspace exports now exist; the desktop CMIO controls, v0 color drafts and v2 tone/WB trials are documented in the bridge, film-draft and `epl9-tonal-neutral-trials.md` reports. Modified-camera rendering and installation remain unverified. Later Wi-Fi transfer, timing and recovery findings are separated by source availability in `project-status.md`; setup, a chat summary or a synthetic test is not proof that a camera feature works.
 
 ## Broader design backlog and current evidence
 

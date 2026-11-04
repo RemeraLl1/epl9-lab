@@ -24,7 +24,7 @@ All use, reproduction and modification is at your own risk. Material is provided
 | Passing synthetic tests / bounded execution | Behavior covered by supplied inputs and implemented semantics | Complete CPU/RTOS/ISP emulation, real pixels or hardware safety |
 | A successful hardware observation | That operation under the recorded conditions | Other modes, versions, long-term reliability or recovery |
 
-Unsupported instructions, missing callees, synthetic objects, host redirections and unmodeled services must remain visible in reports. They cannot be replaced with assumed success. The current native job has not completed an image-processing cycle or produced recipe pixels. Separate actual full-size Workspace TIFF exports now demonstrate desktop CMIO controls and color-only Gold/Portra drafts; those are not modified-firmware pixels or on-camera behavior. See [current evidence and pending reports](project-status.md).
+Unsupported instructions, missing callees, synthetic objects, host redirections and unmodeled services must remain visible in reports. They cannot be replaced with assumed success. The current native job has not completed an image-processing cycle or produced recipe pixels. Separate actual full-size Workspace TIFF exports demonstrate desktop CMIO controls and v2 Gold/Portra color/tone/WB drafts; those are not modified-firmware pixels or on-camera behavior. See [current evidence and pending reports](project-status.md).
 
 ## Current boundary
 

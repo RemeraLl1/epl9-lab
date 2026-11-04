@@ -1,0 +1,27 @@
+{
+  "schema": "epl9-rgb-tone-wb-drafts-v1",
+  "status": "Stronger tonal/neutral-balance proposals for manual Workspace evaluation; not calibrated film emulations",
+  "base_hsl_file": "recipes/epl9-film-drafts-v0.json",
+  "curve_domain": "Compose a monotone output-code remap with the exact 256-point shared RGB gamma curve; 12-bit codes 0..4095",
+  "wb_domain": "Relative red/blue gain multipliers in thousandths, applied to captured WB metadata, retaining both green reference values",
+  "recipes": [
+    {
+      "name": "gold200-draft-v1",
+      "base_name": "gold200-draft-v0",
+      "watercolor_key": "0x01010078",
+      "red_gain_permille": 1080,
+      "blue_gain_permille": 880,
+      "tone_knots": [[0, 32], [164, 112], [491, 410], [1024, 963], [2048, 2191], [3071, 3235], [3686, 3726], [4095, 4030]],
+      "intent": "Clearly warmer balance, denser low tones, brighter midtones and a bounded white endpoint"
+    },
+    {
+      "name": "portra400-draft-v1",
+      "base_name": "portra400-draft-v0",
+      "watercolor_key": "0x01020078",
+      "red_gain_permille": 1035,
+      "blue_gain_permille": 940,
+      "tone_knots": [[0, 102], [164, 246], [491, 614], [1024, 1188], [2048, 2211], [3071, 3153], [3686, 3686], [4095, 4013]],
+      "intent": "Milder warm balance with a raised black endpoint and lighter shadows, retaining the restrained v0 color coefficients"
+    }
+  ]
+}

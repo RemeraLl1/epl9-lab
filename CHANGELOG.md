@@ -6,9 +6,9 @@ Record meaningful changes in English. Describe the result, why it changed, the c
 
 ### Research refresh, 2026-11-04
 
-- Synchronize the entire checkout with published main through `f1d7fbec398300ca027b5ee4c744bd2d81440d94`, preserving the public-research documentation branch. Import the existing completion/hardware/real-RAW audits, Workspace bridge, v0 recipes and their scripts/tests without modifying their implementations.
+- Synchronize the entire checkout with published main through `a399202a0d7ded05eedc4120b5e4676fcf059a70`, preserving the public-research documentation branch. Import the existing completion/hardware/real-RAW audits, Workspace bridge, v0/v1/v2 recipes and tonal tools/tests without modifying their implementations.
 - Replace obsolete current-blocker summaries with the native peripheral/ISP boundary. Preserve earlier absent-callee, schedule, descriptor and failure observations as dated history.
-- Document actual desktop CMIO controls and full-size Gold/Portra v0 TIFFs separately from modified-camera output. Keep newer v1/v2 tone/WB trials and their negative RGB-remap result labeled as reported work pending publication.
+- Document actual desktop CMIO controls and full-size Gold/Portra color/tone/WB TIFFs separately from modified-camera output. The v1/v2 source was published during the refresh and is now integrated: retain the negative gamma result, effective v2 joint tone route and remaining calibration limits. Update only v2's descriptive validation metadata, preserving every numeric parameter and the historical v1 definition.
 - Add a complete documentation directory and source-qualified project-status handoff. Record newer deep-color, Wi-Fi rd/ISC, video timing/gyro and E-PL9 validator findings without inventing unavailable public scripts or importing private media.
 - Update installation planning with reported same-build acceptance, checksum-before-write checks, duplicate-component and hidden-write-error limits, and restoration of every modified component. Early E-PL9 entry and physical recovery remain unresolved.
 - Carry forward the requested 1920×1440 full-field/60 fps target and broader 31-profile/icon design backlog without presenting either as working firmware.
@@ -16,7 +16,7 @@ Record meaningful changes in English. Describe the result, why it changed, the c
 
 ### Validation for the 2026-11-04 refresh
 
-- The available public checkout passes **89 unit tests** after restoring the exact pinned external OSD decoder in ignored `references/`. Its stored hash uses CRLF; the independently identified LF/CRLF identities and setup are documented. No image/decoder hash checks were disabled.
+- The available public checkout passes **99 unit tests**, including ten newly published tone/WB tests, after restoring the exact pinned external OSD decoder in ignored `references/`. The earlier pre-tonal run passed 89. Its stored hash uses CRLF; the independently identified LF/CRLF identities and setup are documented. No image/decoder hash checks were disabled.
 - The first clean-checkout run exposed the missing decoder; an LF source copy then correctly failed the recorded CRLF identity check. After verifying both forms of the pinned source and restoring the expected bytes, the complete suite passed. Historical Windows totals include independent unpublished work and are not reused as this run's count.
 - Documentation links/anchors, directory coverage, SVG parsing/rendering, English text and whitespace are reviewed for the refresh. Exact-image firmware audits, private ORF/TIFF trials, Windows DLL execution and physical-camera tests were not rerun in the cloud.
 

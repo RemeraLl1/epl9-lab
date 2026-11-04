@@ -1,10 +1,12 @@
 # E-PL9: first Gold 200 / Portra 400 color drafts
 
-Publication status, 2026-11-04: this v0 report and its JSON remain the latest public recipe reproduction target at the reviewed main revision. Newer v1/v2 tone/WB trials and a negative RGB-remap result are reported in the active processing chat but are not supplied here; [project status](project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction) records that distinction without changing the v0 data below.
+Publication status, 2026-11-04: this page preserves the original color-only v0 experiment. The now-published [v1/v2 tonal follow-up](epl9-tonal-neutral-trials.md) supplies newer definitions, actual exports and the negative RGB-remap control. V2 is the current draft; [project status](project-status.md) separates those desktop results from the still-incomplete camera implementation without changing the v0 measurements below.
 
 ## Outcome, 2026-11-04
 
 The owner has now exported **two actual full-resolution RAW developments** with independently specified CMIO coefficient sets using OM Workspace. The first Gold 200-inspired draft is slightly warmer in the supplied scene; the Portra 400-inspired draft is more restrained in chroma. Both have distinct pixels. These are **v0 color-only proposals**, not calibrated film emulations, a Classic Chrome implementation, output from modified camera firmware, or an installed ART replacement.
+
+**Follow-up:** [neutral balance and tonal trials v1/v2](epl9-tonal-neutral-trials.md) now establish an effective stock contrast/H/S/M path in actual Workspace exports. The attempted v1 CMIO gamma attachment had no effect in its isolated pixel control. This page retains the original v0 experiment and its limits.
 
 This follows a successful [CMIO control experiment](epl9-workspace-cmio-bridge.md): copied ORFs differing only in captured coefficients produced a clear, directionally correct saturation change in the software renderer. The exact numeric proposals are versioned in [the draft definitions](../recipes/epl9-film-drafts-v0.json). Images, ORFs, tables, configurations and private metadata remain ignored under `local/`.
 

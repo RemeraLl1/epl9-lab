@@ -22,17 +22,17 @@ The first implementation baseline is [Watercolor I → Kodak Gold 200-inspired a
 
 ## Current evidence, 2026-11-04
 
-**Real desktop draft images now exist. The modified camera pipeline still has no complete pixel cycle or installable package.** See the [status report](docs/project-status.md) for exact evidence provenance and newer work reported by other chats.
+**Real desktop color, white-balance and tonal draft images now exist. The modified camera pipeline still has no complete pixel cycle or installable package.** See the [status report](docs/project-status.md) for exact evidence provenance and newer work reported by other chats.
 
 | Area | What is established | What remains open |
 | --- | --- | --- |
 | Native pipeline | [Connected construction, table attachment and completion contracts](docs/epl9-integrated-prototype.md), plus corrected [destination descriptors/status handling](docs/epl9-hardware-completion.md) | Actual ISP/DMA execution, coherent pixels and successful complete jobs |
 | Real RAW input | [Eight actual-mosaic configuration cases](docs/epl9-real-raw-boundary.md) reach a peripheral boundary; the CPU prefix makes no source-pixel reads | Actual camera crop/CFA/packing and a usable native pixel executor |
-| Desktop recipes | [Workspace controls](docs/epl9-workspace-cmio-bridge.md) and [versioned Gold/Portra v0 trials](docs/epl9-film-draft-trials.md) have distinct full-size TIFF exports | Calibration, newer tone/WB controls, native hook and on-camera preview/capture behavior |
+| Desktop recipes | [Workspace controls](docs/epl9-workspace-cmio-bridge.md), [v0 color trials](docs/epl9-film-draft-trials.md) and [v2 tone/WB trials](docs/epl9-tonal-neutral-trials.md) have actual full-size TIFF exports | Calibration across scenes/illuminants, native hook and on-camera preview/capture behavior |
 | UI resources | [G200/P400 draft icons](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) fit ten allocations; [photo references](docs/epl9-art-example-pictures.md) have provenance | Runtime screen/palette/photo bindings and final distributable artwork |
 | Other research | Newer Wi-Fi, video/gyro, deep-color and E-PL9 recovery results are summarized as [reported work](docs/project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction) | Corresponding public source, reproducible evidence and physical-camera validation |
 
-The public definitions are [v0 color-only proposals](recipes/epl9-film-drafts-v0.json). Later v1/v2 tone trials are reported by the active research chat and await their source/results being published. Desktop TIFFs do not execute the modified native worklist or demonstrate film fidelity. Firmware, original media and generated TIFFs remain local.
+The current public definitions are [v2 color/tone/WB drafts](recipes/epl9-film-drafts-v2.json), retaining the original [v0 color base](recipes/epl9-film-drafts-v0.json). The [v1 gamma proposal](recipes/epl9-film-drafts-v1.json) is retained as a negative experiment: its isolated RGB-curve change produced no pixel difference, while v2's joint contrast/H/S/M change did. Gold v2 is still too warm in the test scene; these are not calibrated film matches. Desktop TIFFs do not execute the modified native worklist. Firmware, original media and generated TIFFs remain local.
 
 ## Planned changes and future installation
 

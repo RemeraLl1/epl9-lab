@@ -23,6 +23,7 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [Recipe targets](watercolor-gold200.md) | Accepted Watercolor I/II replacement goals and historical routing observations |
 | [Workspace CMIO bridge](epl9-workspace-cmio-bridge.md) | Actual desktop controls qualify coefficient transport into Workspace |
 | [Gold / Portra draft trials](epl9-film-draft-trials.md) | Versioned v0 coefficients, actual TIFF results and calibration limits |
+| [Neutral balance and tonal v1/v2 trials](epl9-tonal-neutral-trials.md) | Current v2 desktop drafts, native curve checks and the negative v1 gamma control |
 | [Icon resources](epl9-watercolor-icons.md) | Existing resources, draft G200/P400 encodings and screen/palette limits |
 | [Menu example pictures](epl9-art-example-pictures.md) | Picture extraction, unresolved runtime bindings and photo provenance |
 

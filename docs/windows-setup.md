@@ -28,7 +28,7 @@ The project's own offline identity inspector has been checked against a multi-ch
 
 ## Clean checkout and cloud reproduction, 2026-11-04
 
-The prepared Windows workstation above is historical machine state, not content supplied by a clone. The public checkout now includes native completion/RAW tools, the Workspace CMIO bridge and versioned v0 recipes. Read [current project status](project-status.md) before interpreting older "camera-specific testing pending" language: actual owner media and desktop TIFF exports exist, but modified-camera rendering/installation remain unverified.
+The prepared Windows workstation above is historical machine state, not content supplied by a clone. The public checkout now includes native completion/RAW tools, the Workspace CMIO bridge and versioned v0/v1/v2 recipes. Read [current project status](project-status.md) before interpreting older "camera-specific testing pending" language: actual owner media and desktop TIFF exports exist, but modified-camera rendering/installation remain unverified.
 
 For a new Windows environment with Python 3.12 or newer:
 
@@ -69,4 +69,4 @@ With the public dependencies present, from the repository root:
 python -m unittest discover -s scripts -p 'test_*.py' -v
 ```
 
-This cloud refresh ran **89 tests successfully**. Reports mentioning 121/125/128/136/145 tests describe earlier full Windows workspaces that also contained independent unpublished tests. They are historical run counts, not the number delivered by this checkout. Real firmware/image/DLL/camera runs still need their own prerequisites and evidence. Keep generated logs in ignored `local/`.
+This cloud refresh ran **99 tests successfully**, including the ten published tone/WB cases (the earlier pre-tonal run passed 89). Reports mentioning 121/125/128/136/145/167 tests describe full Windows workspaces that also contained independent unpublished tests. They are source-workspace run counts, not the number delivered by this checkout. Real firmware/image/DLL/camera runs still need their own prerequisites and evidence. Keep generated logs in ignored `local/`.

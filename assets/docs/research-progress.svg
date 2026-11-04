@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
-<title id="title">E-PL9 research evidence on 2026-11-04</title><desc id="desc">Three distinct paths: actual desktop v0 TIFF renders, native CPU configuration stopping before ISP pixels, and reported offline update validation without a validated physical install or recovery procedure.</desc>
+<title id="title">E-PL9 research evidence on 2026-11-04</title><desc id="desc">Three distinct paths: actual desktop v2 color, tone and white-balance TIFF renders, native CPU configuration stopping before ISP pixels, and reported offline update validation without a validated physical install or recovery procedure.</desc>
 <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#506273"/></marker></defs>
 <rect width="1400" height="980" fill="#f5f3ed"/>
 <text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
@@ -25,7 +25,7 @@
 <path d="M375 287 L394 287" stroke="#506273" stroke-width="2" marker-end="url(#arrow)"/>
 <rect x="399" y="241" width="296" height="93" rx="10" fill="#f4f7f7" stroke="#2c7d79" stroke-width="2"/>
 <text x="414" y="272" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#14283c">
-<tspan x="414" dy="0">CMIO v0 coefficients</tspan>
+<tspan x="414" dy="0">Color + tone / WB v2</tspan>
 </text>
 <text x="414" y="307" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
 <tspan x="414" dy="0">Separate Gold / Portra</tspan>
@@ -47,7 +47,7 @@
 <tspan x="1060" dy="0">Distinct draft pixels</tspan>
 </text>
 <text x="76" y="370" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
-<tspan x="76" dy="0">Established desktop color trials; one scene, subtle changes, no film calibration or camera equivalence.</tspan>
+<tspan x="76" dy="0">Actual desktop tone/color trials; one scene, Gold too warm, no film calibration or camera equivalence.</tspan>
 </text>
 <rect x="54" y="421" width="1292" height="210" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="76" y="453" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="700" fill="#ae7b22">
@@ -127,6 +127,6 @@
 </text>
 <rect x="54" y="893" width="1292" height="53" rx="16" fill="#14283c" stroke="none" stroke-width="2"/>
 <text x="76" y="927" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="white">
-<tspan x="76" dy="0">Newer v1/v2 tone, Wi-Fi, timing/gyro and recovery reports need their own source and evidence.</tspan>
+<tspan x="76" dy="0">Wi-Fi, timing/gyro, deeper color and recovery reports still await source and reproducible evidence.</tspan>
 </text>
 </svg>
