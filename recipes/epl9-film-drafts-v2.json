@@ -1,0 +1,28 @@
+{
+  "schema": "epl9-stock-tone-wb-drafts-v2",
+  "status": "Stock contrast/highlight/shadow/midtone metadata with verified relative WB; awaiting isolated Workspace render validation",
+  "base_hsl_file": "recipes/epl9-film-drafts-v0.json",
+  "rgb_gamma": "Original curve retained: the v1 CMIO gamma edit had no pixel effect in the isolated Workspace test",
+  "recipes": [
+    {
+      "name": "gold200-draft-v2",
+      "base_name": "gold200-draft-v0",
+      "watercolor_key": "0x01010078",
+      "red_gain_permille": 1080,
+      "blue_gain_permille": 880,
+      "picture_mode_contrast": 1,
+      "tone_level": {"highlights": -2, "shadows": -1, "midtones": 1},
+      "intent": "Warm balance, denser shadows and lower highlights using existing camera tone settings"
+    },
+    {
+      "name": "portra400-draft-v2",
+      "base_name": "portra400-draft-v0",
+      "watercolor_key": "0x01020078",
+      "red_gain_permille": 1035,
+      "blue_gain_permille": 940,
+      "picture_mode_contrast": -1,
+      "tone_level": {"highlights": -1, "shadows": 3, "midtones": 1},
+      "intent": "Mild warm balance, lower contrast and raised shadows using existing camera tone settings"
+    }
+  ]
+}
