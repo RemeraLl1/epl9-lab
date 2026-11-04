@@ -19,6 +19,7 @@ OWNER_CALLBACK, OWNER_CONTEXT, SOURCE, OUTPUT = 0x0f000000, 0x10040000, 0x120000
 SCRATCH = 0x18000000
 PARAMETER_OBJECT, RECIPE_TABLE = 0x19000000, 0x19010000
 JOB_WINDOWS = {
+    'wide_arithmetic_helpers': (0x604bbecc, 0x604bc028),
     'job_destructor': (0x6074e2fd, 0x6074e33b),
     'cache_destructor': (0x6073e57a, 0x6073e588),
     'owner_buffer_free': (0x6074ad9f, 0x6074adbe),
@@ -40,7 +41,8 @@ JOB_WINDOWS = {
     'pending_wait_wrapper': (0x6074b125, 0x6074b143),
     'processing_classifier': (0x60792399, 0x60792510),
     'processing_classifier_support': (0x607925d2, 0x60792764),
-    'early_processing_classifier': (0x6078e83f, 0x6078e890),
+    'early_processing_classifier': (0x6078e82d, 0x6078e890),
+    'bayer_short_configuration': (0x6078e890, 0x6078ef28),
     'crop_ratios_and_coordinates': (0x607a3df6, 0x607a44bc),
     'first_pass_complete': (0x60761b6a, 0x60762cf1),
     'early_initializer_complete': (0x60761333, 0x607617dd),
@@ -88,6 +90,11 @@ JOB_WINDOWS = {
     'optional_geometry_configuration': (0x6078c378, 0x6078c43d),
 }
 JOB_ANCHORS = {
+    0x604bbf63: 'subc\td3,d1',
+    0x604bbf6e: 'addc\td1,d1',
+    0x604bbf85: 'ror\td2',
+    0x6073920e: 'call\t0x604bbfac,[d2,d3],8',
+    0x6078e837: 'call\t0x6078ea3d,[d2,d3,a2,a3],44',
     0x6073e5b3: 'movhu\td0,(5694,a2)',
     0x6073e8f3: 'mov\t(4,a0),a0',
     0x6073e915: 'mov\t(20,a0),d0',
@@ -830,10 +837,7 @@ def main():
     short_inputs=[experiment(image,code,k,0x40,s,provide_slot=True,input_format=f)
                   for k in RECIPES for s in (0,2) for f in (0x100,0x200)]
     for case in short_inputs:
-        if case['input_format']=='0x200':
-            assert_hardware_boundary(case)
-        else:
-            assert case['executor'].get('target')==0x604bbfac and case['executor']['pc']==0x6073920e
+        assert_hardware_boundary(case)
         assert case['processor_return'] is None and not case['output_changed']
     destruction=[experiment(image,code,k,0x40,s,provide_slot=True,destroy_job=True)
                  for k in RECIPES for s in (0,2)]

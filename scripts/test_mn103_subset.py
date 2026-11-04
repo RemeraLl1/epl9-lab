@@ -16,6 +16,39 @@ def mini(rows, registers=None, regions=()):
 
 
 class SubsetTests(unittest.TestCase):
+    def test_carry_arithmetic_uses_pinned_gnu_flags_and_chained_zero(self):
+        vectors=[(0,0),(MASK,0),(MASK,MASK),(0x7fffffff,1),(0x80000000,1)]
+        rng=random.Random(0x604bbecc)
+        vectors += [(rng.randrange(1<<32),rng.randrange(1<<32)) for _ in range(50)]
+        for left,right in vectors:
+            for op,raw in [('addc','f144'),('subc','f184')]:
+                for carry in (False,True):
+                    for zero in (False,True):
+                        m,end=mini([(raw,op+'\td1,d0')],{'d0':right,'d1':left})
+                        m.c,m.z=carry,zero
+                        m.run(0x2000,[end])
+                        expected=(right+left+carry if op=='addc' else right-left-carry)&MASK
+                        self.assertEqual(m.r['d0'],expected)
+                        self.assertEqual(m.z,zero and expected==0)
+                        self.assertEqual(m.n,bool(expected&0x80000000))
+                        # These are GNU igen formulas, not a generic CPU ABI.
+                        expected_c=(expected<left or expected<right) if op=='addc' else left>right
+                        self.assertEqual(m.c,expected_c)
+
+    def test_rotate_carry_and_unconditional_loop(self):
+        for value in (0,1,2,MASK,0x80000000):
+            for carry in (False,True):
+                m,end=mini([('f284','ror\td0')],{'d0':value})
+                m.c=carry; m.v=True
+                m.run(0x2000,[end])
+                self.assertEqual(m.r['d0'],(value>>1)|(int(carry)<<31))
+                self.assertEqual(m.c,bool(value&1)); self.assertFalse(m.v)
+        m,end=mini([('db','setlb'),('40','inc\td0'),('a003','cmp\t3,d0'),
+                    ('c803','beq\t0x2007'),('da','lra'),('cb','nop')])
+        m.run(0x2000,[end]); self.assertEqual(m.r['d0'],3)
+        m,_=mini([('da','lra')])
+        with self.assertRaises(Fault): m.run(0x2000)
+
     def test_add_sub_compare_flags_against_integer_arithmetic(self):
         rng = random.Random(1330)
         vectors = [(0, 0), (MASK, 1), (0x7fffffff, 1), (0x80000000, MASK)]
