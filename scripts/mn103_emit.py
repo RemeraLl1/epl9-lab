@@ -51,6 +51,8 @@ def encode(op, args, pc, symbols):
         return bytes([0xdf if op == 'ret' else 0xde,mask(args[0]),frame])
     if op == 'nop':
         return b'\xcb'
+    if op == 'clr' and reg(args[0],'d') is not None:
+        return bytes([4*reg(args[0],'d')])
     if op == 'inc4' and reg(args[0],'a') is not None:
         return bytes([0x50+reg(args[0],'a')])
     if op in ('extb','exth','exthu') and reg(args[0],'d') is not None:
@@ -61,12 +63,19 @@ def encode(op, args, pc, symbols):
             raise ValueError('emitter supports only unsigned imm8 multiply')
         return bytes([0xf9,0x14+dest,value])
     if op == 'add':
+        source, target = reg(args[0],'d'), reg(args[1],'d')
+        if source is not None and target is not None:
+            return bytes([0xe0+4*source+target])
         dest, address, value = reg(args[1],'d'), reg(args[1],'a'), number(args[0],symbols)
         if not -128 <= value <= 127:
             raise ValueError('emitter supports only signed imm8 add')
         if args[1] == 'sp': return bytes([0xf8,0xfe,value & 255])
         if dest is None and address is None: raise ValueError('unsupported add destination')
         return bytes([(0x28+dest) if dest is not None else (0x20+address),value & 255])
+    if op in ('asl','lsr') and reg(args[1],'d') is not None:
+        count=number(args[0],symbols)
+        if not 0 <= count < 32: raise ValueError('shift count outside supported subset')
+        return bytes([0xf8,(0xc0 if op=='asl' else 0xc4)+reg(args[1],'d'),count])
     if op == 'or' and reg(args[1],'d') is not None:
         return bytes([0xfc,0xe4+reg(args[1],'d')])+struct.pack('<I',number(args[0],symbols) & 0xffffffff)
     if op == 'cmp':

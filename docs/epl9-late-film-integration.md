@@ -10,6 +10,8 @@ This supersedes the early `film_commit_job` / `film_prepare_frame` integration s
 
 Implementation: [late assembly](../firmware_src/epl9_films_late.s.in), [builder](../scripts/epl9_film_late_module.py), [native validation](../scripts/epl9_film_late_probe.py).
 
+Scope clarification from the owner, 2026-11-04: replace exactly the two Watercolor recipes and their icons. **Keep the existing large example photographs unchanged.** This supersedes the earlier plan to replace those photographs for this integration. Final color tables will be supplied later.
+
 ## Retrieved findings and independent checks
 
 The owner requested retrieval of the other chats' findings. Relevant evidence came from the Codex chat **«Оценить исследование прошивки»**, reviewed on 2026-11-04, and the local deeper color audit (`docs/epl9-deep-color-controls.md`, maintained by a separate chat). The retrieved chat's unpublished source was not copied into this project. The assembly and checks here are an independent implementation against this project's pinned E-PL9 input.
@@ -119,6 +121,6 @@ Each output path must be new and inside ignored `local/`. The stock main is hash
 
 ## Remaining implementation boundary
 
-The integration now has concrete native hook sites and avoids the earlier custom-owner allocation/binding problem. It retains the v0 HSL and v2 tone directions. Default RGB data are stock; the optional different curves are deliberately diagnostic. Native WB recipe bias and a film-specific matrix are not implemented. Final photographic tables, icons and example pictures are separate work; the accepted replacements remain exactly the two Watercolor slots.
+The integration now has concrete native hook sites and avoids the earlier custom-owner allocation/binding problem. It retains the v0 HSL and v2 tone directions. Default RGB data are stock; the optional different curves are deliberately diagnostic. The [deployment and extended-color follow-up](epl9-film-deployment-color.md) adds optional early gain bias, bounded native matrix deltas and the separate six-axis packer, and embeds ten icon resources in an offline OSD copy. Final photographic calibration, deployment qualification and runtime screen/palette mapping remain unfinished; the accepted replacements remain exactly the two Watercolor slots. Existing example photographs are retained by the owner's latest instruction.
 
 To make this deployable still requires qualified module storage and references, caller/stack/synchronization review, update-container integration, and eventual camera-side ISP/pixel/completion checks in the agreed installation phase. The present software model cannot turn an unmapped hardware write into a real Gold/Portra image. The latest actual photographic results remain the [Workspace v2 trials](epl9-tonal-neutral-trials.md).

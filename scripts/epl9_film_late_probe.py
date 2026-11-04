@@ -15,6 +15,9 @@ from epl9_offline_prototype import JOB, REQUEST, CONTEXT, OUTPUT, OBJECT, SP, he
 from mn103_subset import Region, parse_listing
 from mn103_models import FillModel
 from epl9_job_probe import JOB_WINDOWS, experiment
+from epl9_color_extension import matrix_result
+from epl9_wb_extension import adjusted
+from epl9_wb_probe import boundaries as wb_boundaries, CoefficientReads
 
 AUX = 0x19000000
 NATIVE_OWNER = 0x1b000000
@@ -85,6 +88,11 @@ def reference_color(image,code,module,request,obj,user,recipe):
     call(m,0x6079f309,0xf0,32,dict(a0=CONTEXT))
     call(m,0x6079d7a0,0xa0,8,dict(a0=OUTPUT,a1=module['constants'][prefix+'_RGB0'],
         d0=module['constants'][prefix+'_RGB1'],d1=module['constants'][prefix+'_RGB2']))
+    if module.get('color_controls'):
+        row=module['color_controls'][recipe['watercolor_key']]
+        output=state[0]
+        struct.pack_into('<9h',output,80,*matrix_result(struct.unpack_from('<9h',output,80),row['matrix_delta']))
+        if row['six_axis'] is not None:struct.pack_into('<12h',output,100,*row['six_axis'])
     return bytes(state[0]),native_return
 
 
@@ -185,9 +193,22 @@ def connected_cases(image,code,module):
         for kind in (0x200,0x100,0x40):
             for selector in (0,2):
                 options = dict(provide_slot=True,input_format=0x100) if kind == 0x40 else {}
+                wb=module.get('wb_controls')
+                meter=CoefficientReads()
+                if wb is not None:
+                    options.update(gain_fixture=(2048,1536,1024,1056),machine_observer=meter)
                 report = experiment(image,code,int(recipe['watercolor_key'],16),kind,selector,
                                     native_module=module,**options)
                 film = report['native_film']
+                if wb is not None:
+                    expected=adjusted(options['gain_fixture'],wb[recipe['watercolor_key']])
+                    require(film['early_gain_hook'] and tuple(film['request_gain_record'])==expected,
+                            'connected constructor did not apply early gain bias')
+                    require(tuple(film['source_gain_record'])==options['gain_fixture'],'source gains mutated')
+                    require(meter.reads and {r['index'] for r in meter.reads}==set(range(4)) and
+                            all(r['value']==expected[r['index']] for r in meter.reads),
+                            'native consumers did not read adjusted coefficients')
+                    film['native_gain_consumers']=meter.reads
                 require(film['color_entry'] and film['recipe_applied'] and film['gamma_hook'],
                         'connected native job missed recipe configuration')
                 require(film['job_header_unchanged'] and film['cached_key_unchanged'],
@@ -230,6 +251,28 @@ def original_key_crosscheck(image,code):
     return rows
 
 
+def extension_boundaries(image,code,module):
+    if not module.get('color_controls'):return []
+    rows=[]
+    for slot,(key,label) in enumerate((('0x01010078','gold'),('0x01020078','portra')),1):
+        settings=module['color_controls'][key]
+        for value in (-32768,32767):
+            for index in range(9):
+                matrix=[0]*9;matrix[index]=value
+                output=bytearray(5200)
+                struct.pack_into('<9h',output,80,*matrix)
+                m=native(image,code,[Region(OUTPUT,output,True),Region(module['base'],module['data'])],
+                         dict(d2=OUTPUT,d3=slot))
+                result=m.run(module['symbols']['extended_'+label],[module['symbols']['color_restore']])
+                require(result['pc']==module['symbols']['color_restore'] and m.r['sp']==SP,'extension boundary failed')
+                require(struct.unpack_from('<9h',output,80)==matrix_result(matrix,settings['matrix_delta']),
+                        'native matrix overflow preflight differs from independent oracle')
+                if settings['six_axis'] is not None:
+                    require(struct.unpack_from('<12h',output,100)==settings['six_axis'],'native six-axis packing failed')
+                rows.append(dict(key=key,index=index,value=value,atomic_matrix_guard=True))
+    return rows
+
+
 def route_cases(image,code,original_image,original_code,module):
     results = []
     for key in (0x01010078,0x01020078,1,11,0x01030078):
@@ -252,7 +295,7 @@ def route_cases(image,code,original_image,original_code,module):
     return results
 
 
-def prepare_probe(out,diagnostic_rgb=False,rgb_document=None):
+def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
     image,code,_ = load_code(MAIN,reader)
@@ -261,7 +304,7 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None):
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
-    module = build_late_module(image,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document)
+    module = build_late_module(image,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document)
     generated,manifest = emit_files(module,out)
     modified = bytearray(image)
     for index,p in enumerate(module['patches']):
@@ -281,9 +324,13 @@ def main():
     ap.add_argument('--out',type=Path,required=True)
     ap.add_argument('--diagnostic-rgb',action='store_true')
     ap.add_argument('--rgb-tables',type=Path)
+    ap.add_argument('--color-controls',type=Path)
+    ap.add_argument('--wb-controls',type=Path)
     args = ap.parse_args()
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
-    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document)
+    color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
+    wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
+    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document,color_document,wb_document)
     crosscheck = original_key_crosscheck(image,original_code)
     frames = []
     for recipe in module['recipes']:
@@ -299,6 +346,8 @@ def main():
             row,_ = frame_case(modified,code,image,original_code,module,recipe,user=user,contrast=contrast)
             frames.append(row)
     print(f'Validated {len(frames)} native frame configurations',flush=True)
+    extended=extension_boundaries(modified,code,module)
+    wb_cases=wb_boundaries(modified,code,module)
     cache = cache_sequence(modified,code,image,original_code,module)
     passthrough = passthrough_cases(modified,code,image,original_code,module)
     refs = owner_reference_case(modified,code,image,original_code,module)
@@ -309,10 +358,12 @@ def main():
     require(MAIN.read_bytes()==image,'original main changed')
     sources = ('epl9_film_late_module.py','epl9_film_late_probe.py','epl9_film_module.py',
         'epl9_film_handoff.py','epl9_film_module_probe.py','epl9_job_probe.py','mn103_emit.py',
-        'mn103_subset.py','mn103_calls.py','mn103_models.py')
+        'mn103_subset.py','mn103_calls.py','mn103_models.py','epl9_color_extension.py','epl9_wb_extension.py','epl9_wb_probe.py')
     report = dict(module=manifest,frame_cases=frames,route_cases=routes,flag_cases=flags,
         attached_object_original_key_crosscheck=crosscheck,
         cache_sequence=cache,passthrough_cases=passthrough,native_owner_reference_case=refs,connected_jobs=connected,
+        extended_color_boundary_cases=extended,
+        early_gain_boundary_cases=wb_cases,
         source_sha256={name:sha((ROOT/'scripts'/name).read_bytes()) for name in sources},
         added_native_windows={name:[hex(a),hex(b)] for name,(a,b) in LATE_WINDOWS.items()},
         original_art_identity_preserved=True,new_owner_allocation=False,owner_header_mutation=False,

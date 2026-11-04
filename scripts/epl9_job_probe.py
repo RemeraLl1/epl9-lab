@@ -581,7 +581,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
-               legacy_output_offsets=False, source_fixture=None, native_module=None):
+               legacy_output_offsets=False, source_fixture=None, native_module=None, machine_observer=None,
+               gain_fixture=None):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     if native_module is not None and attach_table:
@@ -629,6 +630,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
         native_write(operand,value,size)
     m.write=observe_output_address
     source_reads=[]
+    if machine_observer is not None:
+        machine_observer(m)
     native_read=m.read
     def observe_source_read(operand,size=4):
         if operand.startswith('(') and SOURCE<=m.address(operand)<SOURCE+32*1024*1024:
@@ -656,9 +659,17 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['index_after_constructor'] = memory.read(JOB+10388,2)
     report['cache_sentinels'] = {str(o):hex(memory.read(CACHE+o,s))
         for o,s in ((5682,2),(5684,2),(5694,2),(5699,1),(5748,4),(5760,4))}
-    # Explicit synthetic caller data for two crop ratio records; not camera data.
+    # Historical synthetic four-halfword records; not camera data. A fresh
+    # trace shows the +3730 record reaches the color-gain producer, so these
+    # values must not all be interpreted as image geometry.
     for offset in (3730,3738):
         struct.pack_into('<4H',job,offset,640,480,640,480)
+    if gain_fixture is not None:
+        if len(gain_fixture)!=4 or any(type(v) is not int or not 0<=v<=65535 for v in gain_fixture):
+            raise ValueError('four synthetic unsigned coefficient values required')
+        # Caller inputs only. Native stores 607a4499..607a44b6 build +10406;
+        # the native request constructor subsequently copies it to R+1568.
+        for offset in (3730,3738): struct.pack_into('<4H',job,offset,*gain_fixture)
     if provide_reference_dimensions:
         # Copied natively to request+1576/+1584; the first pair is used as
         # reference dimensions by 6079565b/6079565d, not optional zero padding.
@@ -795,6 +806,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             job_header_unchanged=job[12:16] == header(key),
             cached_key_unchanged=memory.read(JOB+10384,4) == key,
             request_header=job[10448:10452].hex(),
+            early_gain_hook=native_module['symbols'].get('film_wb_entry') in m.trace,
+            source_gain_record=list(struct.unpack_from('<4H',job,10406)),
+            request_gain_record=list(struct.unpack_from('<4H',job,10440+1568)),
             request_fields={str(o):memory.read(JOB+10440+o,s) for o,s in ((14,2),(28,2),(48,1),(1832,2))},
             gamma_pointers=[hex(memory.read(CACHE+2596+i*4,4)) for i in range(3)])
     report['pending_record'] = {str(o):hex(m.memory.read(JOB+13640+o,4)) for o in (0,8,12,16)}

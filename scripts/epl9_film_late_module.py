@@ -9,6 +9,8 @@ from epl9_film_module import build_module, emit_files, require, MODULE_BASE
 from epl9_workspace_bridge import ROOT, BASE, MAIN, sha
 from epl9_tonal_drafts import validate_curve
 from mn103_emit import assemble, encode
+from epl9_color_extension import controls, assembly, KEYS
+from epl9_wb_extension import controls as wb_controls, assembly as wb_assembly
 
 LATE_TEMPLATE = ROOT/'firmware_src/epl9_films_late.s.in'
 
@@ -33,18 +35,27 @@ def rgb_tables(document):
     return result
 
 
-def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None):
+def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None):
     require(not (diagnostic_rgb and rgb_document is not None),'choose provided RGB tables or diagnostic RGB, not both')
     provided = rgb_tables(rgb_document) if rgb_document is not None else None
     module = build_module(image,base,diagnostic_rgb)
     constants = dict(module['constants'],GOLD_HEADER=0x00780101,PORTRA_HEADER=0x00780201,
                      CONTROL_MAGIC=0x46504c45)
     source = Template(LATE_TEMPLATE.read_text()).substitute({k:str(v) for k,v in constants.items()})
+    extended=controls(color_document) if color_document is not None else None
+    if extended is not None:
+        source=source.replace('color_restore:\n',assembly(extended,base)+'color_restore:\n')
+    wb=wb_controls(wb_document) if wb_document is not None else None
+    if wb is not None: source+='\n'+wb_assembly(wb)
     code,symbols,rows = assemble(source,base)
     require(len(code) <= 0x1000,'late code overlaps HSL data')
     data = bytearray(module['data'])
     data[:0x1000] = bytes(0x1000)
     data[:len(code)] = code
+    if extended is not None:
+        for key,offset in zip(KEYS,(0x1c00,0x2c00)):
+            if extended[key]['six_axis'] is not None:
+                struct.pack_into('<12h',data,offset,*extended[key]['six_axis'])
     if provided is not None:
         for prefix,key in (('GOLD','0x01010078'),('PORTRA','0x01020078')):
             for n,values in enumerate(provided[key]):
@@ -52,24 +63,33 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
                 data[at:at+512] = struct.pack('<256H',*values)
     rgb_sha = sha(json.dumps(rgb_document,sort_keys=True,separators=(',',':')).encode()) if provided is not None else None
     patches = []
-    for at,before,op,args,suffix in (
+    hook_specs = [
         (0x60752202,'881cf9140c','jmp',['film_route_gate'],b''),
         (0x6079d7f4,'cd34fbf01cf8923d','call',['film_gamma_hook','[d2,d3,a2,a3]','28'],b'\xcb'),
         (0x6079fb88,'f1d3f1ef53','jmp',['film_color_entry'],b''),
-    ):
+    ]
+    if wb is not None:
+        hook_specs.append((0x6074f352,'0008257e0e','jmp',['film_wb_entry'],b''))
+    for at,before,op,args,suffix in hook_specs:
         raw = bytes.fromhex(before)
         require(image[at-BASE:at-BASE+len(raw)] == raw,'late hook source bytes changed')
         replacement = encode(op,args,at,symbols)+suffix
         require(len(replacement) == len(raw),'late hook length mismatch')
         patches.append(dict(address=at,before=before,after=replacement.hex()))
     return dict(module,data=bytes(data),source=source,symbols=symbols,rows=rows,
-        code_bytes=len(code),constants=constants,patches=patches,template=LATE_TEMPLATE,
+        code_bytes=len(code),constants=constants,patches=patches,template=LATE_TEMPLATE,color_controls=extended,wb_controls=wb,
         metadata=dict(generation='late-v2',preserves_original_art_keys=True,
             existing_owner_object_unchanged=True,extra_owner_allocation=False,
             legacy_commit_prepare_interfaces_used=False,extra_stack_bytes=88,
             temporary_color_key=11,request_fields_restored_on_return=True,
             rgb_data_source='provided' if provided is not None else 'diagnostic' if diagnostic_rgb else 'stock',
             rgb_document_canonical_sha256=rgb_sha,native_curve_channel_order_verified=False,
+            color_controls_sha256=sha(json.dumps(color_document,sort_keys=True).encode()) if extended else None,
+            wb_controls_sha256=sha(json.dumps(wb_document,sort_keys=True).encode()) if wb else None,
+            early_gain_bias_enabled=wb is not None,physical_wb_channel_order_verified=False,
+            native_wb_bias_implemented=wb is not None,install_ready=False,
+            native_matrix_preserved=not extended or all(v['matrix_delta'] is None for v in extended.values()),
+            calibration_matrix_replaced=False,six_axis_override_enabled=bool(extended and any(v['six_axis'] is not None for v in extended.values())),
             owner_call_sites_bound=False,
             owner_binding_strategy='No new owner call; use the existing selected request object',
             owner_synchronization_and_buffer_lifetime_external=True,
@@ -82,9 +102,13 @@ def main():
     ap.add_argument('--base',type=lambda x:int(x,0),default=MODULE_BASE)
     ap.add_argument('--diagnostic-rgb',action='store_true')
     ap.add_argument('--rgb-tables',type=Path,help='Two recipes, three 256-entry native-order curves each')
+    ap.add_argument('--color-controls',type=Path)
+    ap.add_argument('--wb-controls',type=Path)
     args = ap.parse_args()
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
-    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document)
+    color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
+    wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
+    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document,color_document,wb_document)
     _,report = emit_files(module,args.out)
     print(json.dumps({k:report[k] for k in ('code_bytes','module_sha256','preserves_original_art_keys','extra_owner_allocation')},indent=2))
 
