@@ -1,5 +1,7 @@
 # E-PL9: first Gold 200 / Portra 400 color drafts
 
+Publication status, 2026-11-04: this v0 report and its JSON remain the latest public recipe reproduction target at the reviewed main revision. Newer v1/v2 tone/WB trials and a negative RGB-remap result are reported in the active processing chat but are not supplied here; [project status](project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction) records that distinction without changing the v0 data below.
+
 ## Outcome, 2026-11-04
 
 The owner has now exported **two actual full-resolution RAW developments** with independently specified CMIO coefficient sets using OM Workspace. The first Gold 200-inspired draft is slightly warmer in the supplied scene; the Portra 400-inspired draft is more restrained in chroma. Both have distinct pixels. These are **v0 color-only proposals**, not calibrated film emulations, a Classic Chrome implementation, output from modified camera firmware, or an installed ART replacement.

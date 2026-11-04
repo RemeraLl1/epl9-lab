@@ -1,5 +1,7 @@
 # Revised offline prototype: preserved schedules and native call chains
 
+This is a chronological research log. Its early "current" results and next steps apply to their dated sections. For the 2026-11-04 handoff, read [project status](project-status.md), [completion contracts](epl9-completion-contracts.md), [hardware/descriptor fixes](epl9-hardware-completion.md) and [actual RAW configuration](epl9-real-raw-boundary.md). [Workspace v0 images](epl9-film-draft-trials.md) are a separate desktop-rendering result, not completion of this native job.
+
 ## Result, 2026-11-02
 
 The revised host experiment removes the four schedule regressions found in the first prototype. It also runs the worklist builder from its actual entry, preserving earlier optimized paths that the original branch-only experiment did not reach. Both recipe slots execute native COLOR selection, table packing and returns with a complete 5200-byte output comparison.

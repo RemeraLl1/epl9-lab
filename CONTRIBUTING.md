@@ -4,6 +4,8 @@ Anyone may read, fork, question or continue this project under its [licenses](do
 
 Read the [risks](docs/risks-and-limitations.md), [accepted scope](docs/research-scope.md) and [handoff / porting guide](docs/porting-guide.md). Current work is offline analysis and read-only diagnostics. The disclaimer does not expand that scope to camera writes.
 
+Before changing a summary, read [current project status](docs/project-status.md) and [the documentation index](docs/README.md). A dated report can remain historically correct after its next step has been superseded. Update current navigation and add a scoped follow-up rather than deleting negative results. For work reported by another chat, identify whether its public source, exact inputs and results are actually available; never invent a missing report, command or test run.
+
 ## Make a result independently checkable
 
 For an issue, pull request or research note, include:
@@ -26,6 +28,8 @@ Keep upstream projects separate under ignored `references/`; record their URLs, 
 ## Validation and handoff
 
 Documentation changes need accurate claims, working links and review of the final diff. Code changes need relevant local or synthetic checks, including wrong-image rejection where applicable. Do not claim a firmware-dependent audit passed if its input, reader or host platform is unavailable.
+
+Keep three image-evidence paths distinct: desktop Workspace/LibRaw output, native CPU configuration/status models, and an actual modified-camera render. Count the tests run in the current checkout; higher totals from another workspace may include unpublished independent scripts. The [setup follow-up](docs/windows-setup.md#clean-checkout-and-cloud-reproduction-2026-11-04) describes the pinned OSD dependency needed by the full public test discovery.
 
 For the existing routing helpers, from the repository root with Python 3.12 or newer:
 

@@ -8,12 +8,20 @@ Read the [risks](risks-and-limitations.md). A camera can become unusable, photog
 
 The diagram is an original planning illustration. It does not show a tested E-PL9 installation.
 
+## Research update, 2026-11-04
+
+The latest recovery chat reports E-PL9-specific SD-client/service and package-validation execution, beyond the related-model references below. Its report and tests are not yet present in the public baseline reviewed here; these are **reported offline findings, not reproduced installation evidence**. See [source status](project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction).
+
+Fifteen intercepted-write scenarios reportedly accept build-1101 main without a version bump, reject bad checksums including a later corrupt component before a write request, and request full-component restoration. They also expose two host-side safeguards to require: reject duplicate components (the tested native service selects the last main), and retain lower-layer write failures rather than trusting an outer success wrapper. Small in-memory packages and intercepted requests do not validate full-size programming, power-loss behavior or the actual storage hardware.
+
+The SD client/service reportedly reside inside main. The **early physical entry, which code must survive damaged main, lamp/error/completion behavior and actual restore capability remain unresolved**. An ordinary install/restore on an intact test body would cover only that tested state, not every brick. Restoration must cover all changed components: main, OSD/icons and picture resources as applicable. A main-only restore is insufficient for a multi-component modification.
+
 ## 1. Two routes with different evidence
 
 | Route | Intended use | Evidence and present limit |
 | --- | --- | --- |
 | OM Workspace over USB | Manufacturer-provided stock updates | Officially documented. The project's earlier USB problems must be resolved before relying on it on this body; MTP enumeration alone does not establish update readiness. |
-| Camera SD updater | Candidate for locally built modifications and subsequent updates | Related Olympus projects document physical installs. E-PL9 trigger, file acceptance, signals and recovery coverage remain unverified here. |
+| Camera SD updater | Candidate for locally built modifications and subsequent updates | Related models have physical install reports. New E-PL9 service/validation execution is reported but awaits public source/reproduction; physical trigger, signals and recovery coverage remain unverified. |
 | Hardware/service repair | Possible last resort when software update paths cannot start | No project-validated E-PL9 board recovery, programmer procedure or full-device backup exists. Do not count it as an available fallback. |
 
 The official updater is not documented as a loader for this project's custom files. Do not substitute a modified image in its download/cache or send experimental USB write commands.
@@ -42,7 +50,7 @@ SD card root
 
 The pinned [E-P7 installation report](https://github.com/cakelesscoder/caduceus-ep7/blob/7d42c1f258737b7196c6b17cec5d643b5080ece6/docs/INSTALL.md) describes a model-specific DCOLYMP file, entry using **OK while powering on**, and lamp-based completion. Those are E-P7 observations. The button sequence, lamp meaning, elapsed time and rejection behavior must not be presented as tested E-PL9 instructions. The [PEN-F recovery analysis](https://github.com/fishcu/oly_fw_analysis/blob/539fcf1fa9eda5fdef8ede4deeab94a4691d94c3/docs/boot/pen-f/RECOVERY.md) also separates a mapped updater from proof of its physical startup entry and recovery coverage.
 
-Before documenting E-PL9 startup steps, establish its file matching, accepted component/model identifiers, validation-before-write behavior, entry path, success/error signals and dependency on still-functional startup code. Establish same-version reinstall and stock restoration separately. Until then there is no project-specific duration, safe forced-stop timeout, or confirmed recovery key combination to recommend.
+Before documenting E-PL9 startup steps, publish/review the reported validator and file-matcher evidence, then establish physical entry, success/error signals and dependency on surviving startup code. Same-build acceptance by a native service is not physical same-version reinstall or stock restoration. Test those separately in a later scoped phase. There is still no project-specific duration, safe forced-stop timeout, or confirmed recovery key combination to recommend.
 
 ## 2. What a future release must contain
 
@@ -52,10 +60,10 @@ We intend to distribute original patch/build material and instructions, with use
 | --- | --- |
 | Exact-input manifest | Model, displayed-version prerequisite, internal build, source provenance, byte sizes and SHA-256 of stock container and components |
 | Pinned source revision and local build instructions | Reproduce changes against that input; reject unknown images instead of disabling hash checks |
-| Patch/change manifest | Original-byte assertions, intended new ranges, component identities, scope and explicit exclusions |
+| Patch/change manifest | Original-byte assertions, intended new ranges, unique component identities, scope and explicit exclusions; reject duplicates before any future trial |
 | Output manifest | Built container/component sizes and hashes, package revision and test results; the output hash must differ when bytes change |
 | Release-specific install guide | E-PL9 procedure actually established for that package, including observed indications and limits |
-| Separately identified stock-restore material | Exact stock identities and a validated procedure with stated failure-state coverage, not a promise of universal unbricking |
+| Separately identified stock-restore material | Exact stock identities for every modified component, plus a validated procedure with stated failure-state coverage; no universal-unbricking promise |
 | Release notes and rollback limits | What changed, known issues, camera states tested and whether firmware/settings compatibility limits restoration |
 
 A locally built modified file must never be checked against the stock hash as though they should match. The stock input is fixed; each modified output needs its own audited hash. Reusing an old display version is not a reliable way to identify a custom build.
@@ -104,6 +112,6 @@ An update image may omit boot/storage/calibration regions. Preserving it does no
 
 ## Evidence and next work
 
-The official route above comes from the linked manufacturer sources. The custom SD route is a proposal informed by pinned E-P7/PEN-F reports and the project's recovery discussion; no E-PL9 hardware installation was performed to write this guide. Button behavior and filename acceptance still need model-specific evidence.
+The official route above comes from the linked manufacturer sources. The custom SD plan incorporates pinned related-model reports and newer chat-reported E-PL9 validator scenarios. The public source for the latter still needs to be integrated and reviewed; no E-PL9 hardware installation was performed to update this guide. Physical button/indication behavior, early-entry resilience and actual restoration remain unverified. Preserve the distinction between a mapped native validator, an intercepted write request and successful physical programming.
 
 See the [illustrated change plan](planned-changes.md), [current processing evidence](epl9-integrated-prototype.md), [handoff](porting-guide.md) and [changelog](../CHANGELOG.md). Future findings should update the relevant evidence status before this planning document is promoted to installation instructions.

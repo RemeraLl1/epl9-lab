@@ -1,6 +1,6 @@
 # E-PL9 Lab
 
-[Risks and limitations](docs/risks-and-limitations.md) · [Continue or port the research](docs/porting-guide.md)
+[Current status](docs/project-status.md) · [Documentation directory](docs/README.md) · [Risks and limitations](docs/risks-and-limitations.md) · [Continue or port the research](docs/porting-guide.md)
 
 > **Experimental amateur research — use entirely at your own risk.** The owner is learning as they go, has no specialist camera-firmware expertise, and uses AI assistance. Code, analysis and documentation may be wrong, incomplete or misleading, even when tests pass. This is not an official Olympus/OM System project or a supported firmware product. There is no installable firmware modification, validated recovery procedure or guarantee of compatibility. Experimental camera changes can cause permanent damage, an unusable camera or lost files. See the [full limitations](docs/risks-and-limitations.md).
 
@@ -13,20 +13,26 @@ Tools and research notes for an Olympus PEN E-PL9 camera.
 1. Investigate applying named film recipes, then replacing ART presets with in-camera film looks.
 2. Document the camera's Wi-Fi API and USB interfaces.
 3. Build an offline-capable browser interface for browsing and downloading original files, and measure transfer performance.
-4. Investigate gyro logging for Gyroflow and full-field 4:3 video at reduced resolution.
+4. Investigate synchronized gyro logging for Gyroflow and full-field 1920×1440 video at 60 fps; these remain requested targets, not working modes.
 5. Determine hardware and firmware limits before making claims about additional video modes, including 4K60.
 
 These are research goals. A working E-PL9 firmware modification has not been produced by this project.
 
-The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
+The first implementation baseline is [Watercolor I → Kodak Gold 200-inspired and Watercolor II → Kodak Portra 400-inspired](docs/watercolor-gold200.md), preserving unrelated modes. The wider 31-profile catalog and its icons are a design backlog, not 31 working camera slots.
 
-[Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
+## Current evidence, 2026-11-04
 
-The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.
+**Real desktop draft images now exist. The modified camera pipeline still has no complete pixel cycle or installable package.** See the [status report](docs/project-status.md) for exact evidence provenance and newer work reported by other chats.
 
-The follow-up adds explicit bounded memory models and deeper native request preparation, with allocation failure checked. [G200/P400 icon candidates](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) round-trip in all 10 target allocations. [Digital-recipe photo references](docs/epl9-art-example-pictures.md#digital-recipe-photo-shortlist-2026-11-02) are linked with provenance; third-party photos are not bundled.
+| Area | What is established | What remains open |
+| --- | --- | --- |
+| Native pipeline | [Connected construction, table attachment and completion contracts](docs/epl9-integrated-prototype.md), plus corrected [destination descriptors/status handling](docs/epl9-hardware-completion.md) | Actual ISP/DMA execution, coherent pixels and successful complete jobs |
+| Real RAW input | [Eight actual-mosaic configuration cases](docs/epl9-real-raw-boundary.md) reach a peripheral boundary; the CPU prefix makes no source-pixel reads | Actual camera crop/CFA/packing and a usable native pixel executor |
+| Desktop recipes | [Workspace controls](docs/epl9-workspace-cmio-bridge.md) and [versioned Gold/Portra v0 trials](docs/epl9-film-draft-trials.md) have distinct full-size TIFF exports | Calibration, newer tone/WB controls, native hook and on-camera preview/capture behavior |
+| UI resources | [G200/P400 draft icons](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) fit ten allocations; [photo references](docs/epl9-art-example-pictures.md) have provenance | Runtime screen/palette/photo bindings and final distributable artwork |
+| Other research | Newer Wi-Fi, video/gyro, deep-color and E-PL9 recovery results are summarized as [reported work](docs/project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction) | Corresponding public source, reproducible evidence and physical-camera validation |
 
-The [connected-job probe](docs/epl9-integrated-prototype.md#connected-constructor-frame-start-and-consumer-2026-11-02) now completes native construction/frame start and reaches request-consumer configuration with explicit host resource models. It identifies cache invalidation fields needed for future film-table switching and rejects misleading no-op success. Full pixel processing remains incomplete.
+The public definitions are [v0 color-only proposals](recipes/epl9-film-drafts-v0.json). Later v1/v2 tone trials are reported by the active research chat and await their source/results being published. Desktop TIFFs do not execute the modified native worklist or demonstrate film fidelity. Firmware, original media and generated TIFFs remain local.
 
 ## Planned changes and future installation
 
@@ -44,6 +50,8 @@ The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation ar
 | --- | --- | --- |
 | `scripts/` | Diagnostics and offline inspection tools | Yes |
 | `docs/` | Scope, sources and verified findings | Yes |
+| `recipes/` | Versioned original draft parameters, not installed firmware | Yes |
+| `assets/` | Original artwork, diagrams and source metadata | Yes |
 | `tools/`, `downloads/` | Installed tools and their installers | No |
 | `references/` | Independent upstream Git checkouts | No |
 | `local/` | Machine configuration, installation records and private reports | No |
@@ -65,11 +73,7 @@ For an offline file identity report, use Python 3.12 or newer:
 
 The inspector reads a local file and reports its size, SHA-256 and initial bytes. It does not decode, modify or flash firmware.
 
-The first camera session will record firmware versions, USB Storage/MTP descriptors, official-client recognition, Wi-Fi capabilities and transfer measurements. USB connection alone does not establish full firmware-dump access.
-
-See [research scope](docs/research-scope.md) and [sources](docs/sources.md).
-
-The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an exact shared COLOR table in the stock firmware. The [offline browser-client note](docs/offline-browser-client.md) separates cached interface behavior from camera transport requirements.
+Start with the [documentation directory](docs/README.md) and [clean-checkout prerequisites](docs/windows-setup.md#clean-checkout-and-cloud-reproduction-2026-11-04). The original first-session checklist is historical: owner media, desktop exports and initial USB observations now exist. Live camera behavior remains limited to specifically recorded observations; USB enumeration is not full firmware-dump or update readiness. The [offline browser-client note](docs/offline-browser-client.md) separates a cached interface from camera-network access.
 
 ## Continue the project
 

@@ -1,5 +1,7 @@
 # E-PL9 1.1: first firmware findings
 
+Historical first findings. For the current 2026-11-04 handoff, see [project status](project-status.md) and [the documentation directory](README.md). Later work traces native consumers through the hardware boundary and produces separate desktop CMIO/v0 TIFF evidence; the input identities and original observation limits below remain unchanged.
+
 Research priority: in-camera film looks and ART replacement first; Wi-Fi and an offline browser client second. This report records offline findings and observed USB enumeration. It does not provide an installable modification.
 
 ## Exact stock input

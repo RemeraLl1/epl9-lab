@@ -1,5 +1,7 @@
 # E-PL9 Watercolor worklist and native color routing
 
+Historical static-routing report. Read [current status](project-status.md), [integration follow-ups](epl9-integrated-prototype.md) and [the real-RAW boundary](epl9-real-raw-boundary.md) before implementing its proposed prototype. Later scheduling experiments preserve the original mode through routing and distinguish separate desktop renders from native camera processing; the proposal below is not the latest executable hook or an approved patch.
+
 ## Outcome and scope
 
 The exact E-PL9 main contains a shared worklist branch for the two candidate Watercolor keys. The branch can schedule three processing stages, `0x0600`, `0x0601`, `0x0602`, with intermediate buffers. Separately, an ordinary development request reaches the native COLOR selector. A late request uses a different selector which does not recognize COLOR key `11`.

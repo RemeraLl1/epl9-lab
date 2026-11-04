@@ -6,7 +6,7 @@ This is a guide to continuing research, not a firmware-installation procedure. N
 
 ## Reading order and current handoff
 
-This snapshot incorporates the published connected-job and icon follow-ups available on 2026-11-02. Detailed reports take precedence over this navigation summary when later evidence changes a conclusion.
+This snapshot incorporates published completion, hardware/RAW and desktop Workspace findings available on 2026-11-04. Start with [current project status](project-status.md) and [the full directory index](README.md); newer chat-reported results are kept separate until their source/evidence is published. Detailed dated reports remain authoritative for their own experiment boundaries.
 
 | Read | Purpose / current result |
 | --- | --- |
@@ -16,10 +16,13 @@ This snapshot incorporates the published connected-job and icon follow-ups avail
 | [Routing](epl9-art-routing.md) | Mode propagation, worklists, ordinary versus late COLOR paths |
 | [Service dependencies](epl9-service-dependencies.md) | Completion, callbacks, ownership and reference counts that must survive |
 | [First offline prototype](epl9-offline-prototype.md), then [revised integration](epl9-integrated-prototype.md) | Historical schedule regressions, scoped correction, native call chains and explicit execution stops |
+| [Completion contracts](epl9-completion-contracts.md) and [hardware/descriptor audit](epl9-hardware-completion.md) | Native notification/cleanup checks, corrected destination offsets and finite status replay |
+| [Real RAW boundary](epl9-real-raw-boundary.md) | Actual input samples reach configuration; the missing pixel executor is a hardware boundary |
+| [Workspace CMIO bridge](epl9-workspace-cmio-bridge.md) and [draft image trials](epl9-film-draft-trials.md) | Actual desktop TIFF controls and public v0 color-only recipes, separate from modified native jobs |
 | [Icons](epl9-watercolor-icons.md) and [example pictures](epl9-art-example-pictures.md) | Draft G200/P400 artwork round-trips; runtime rendering and example-picture bindings remain open |
 | [Tooling](mn103-tooling.md) and [sources](sources.md) | Build prerequisites, pinned dependencies, licenses and upstream research |
 
-The connected offline probe now joins native job/cache construction, frame start, worklist execution, request creation and consumer configuration with explicit host resources. Separate COLOR tests and original draft icon round trips also pass within their reported scope. No full pixel cycle, JPEG or installable package exists. Current connected execution stops at two absent configuration callees or an undeclared caller buffer; native recipe-object/cache invalidation, completion, image output, preview/capture coverage and calibration remain open. See the connected-job follow-up in the integrated report before extending the earlier, narrower experiments. Keep missing services and unsupported instructions as visible failures.
+The connected native probe now runs beyond the earlier missing-callee stops through object/table attachment, Bayer arithmetic and hardware configuration. Actual-mosaic cases stop at `0x6073eafa → 0x9880014c` with zero CPU source-pixel reads and poisoned output; independent native completion/status checks do not supply ISP pixels. Separately, real Workspace TIFF exports confirm desktop coefficient consumption and distinct Gold/Portra v0 drafts. There is still no completed modified-camera pixel cycle or installable package. The next native work concerns real input/crop/CFA/packing, ISP execution/coherence and actual completion; the desktop work concerns tone/WB qualification and calibration. Keep both paths and their evidence separate.
 
 The [illustrated change plan](planned-changes.md) explains processing and UI integration; the [future installation plan](firmware-installation-plan.md) separates stock USB updates from the unverified E-PL9 SD route. Track subsequent findings in [CHANGELOG.md](../CHANGELOG.md).
 
@@ -47,7 +50,7 @@ Flashing, factory reset, erasure and experimental vendor writes remain outside t
 
 A clone contains public source and notes. It does not include the firmware, decoded images, reference checkouts, compiler, private reports or samples. Start with Python 3.12+, the commands in each report and [Windows setup](windows-setup.md). Obtain dependencies separately, preserving provenance and licenses; do not expect `D:\EPL9Lab` or an existing `.venv` on your computer.
 
-The [MN103 build](mn103-tooling.md) is validated for the pinned Windows/TinyCC setup and checks its source/compiler hashes; it does not download inputs. Linux/macOS builds require their own validation. Existing reports include input hashes and assertions, but ignored raw runs are not a public evidence archive: regenerate them from identified inputs before relying on them. If an input or tool is unavailable, report reproduction as blocked rather than passed.
+The [MN103 build](mn103-tooling.md) is validated for the pinned Windows/TinyCC setup and checks its source/compiler hashes; it does not download inputs. Linux/macOS native builds require their own validation. The [setup follow-up](windows-setup.md#clean-checkout-and-cloud-reproduction-2026-11-04) explains the OSD decoder's exact CRLF pin, optional RAW dependencies and which checks a clean cloud checkout can run. Workspace's inspected DLL invocation and manual TIFF exports require the qualified Windows installation and owner inputs. Existing report hashes/assertions are not a public archive of ignored runs: regenerate them from identified inputs before relying on them. If unavailable, report reproduction as blocked.
 
 ## New-model or build report template
 

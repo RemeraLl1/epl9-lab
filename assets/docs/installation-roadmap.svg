@@ -66,11 +66,11 @@
 <path d="M363 694 L363 712" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
 <rect x="728" y="559" width="618" height="128" rx="18" fill="white" stroke="#dfc7c2" stroke-width="2"/>
 <text x="750" y="595" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
-<tspan x="750" dy="0">Establish the E-PL9 SD updater</tspan>
+<tspan x="750" dy="0">Qualify the E-PL9 update entry</tspan>
 </text>
 <text x="750" y="634" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
-<tspan x="750" dy="0">Filename, physical entry, acceptance,</tspan>
-<tspan x="750" dy="29">signals and restore limits: unverified.</tspan>
+<tspan x="750" dy="0">Native validator scenarios are reported.</tspan>
+<tspan x="750" dy="29">Physical entry and recovery: unverified.</tspan>
 </text>
 <path d="M1037 694 L1037 712" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-dasharray="9 7"/>
 <rect x="54" y="721" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>

@@ -2,11 +2,13 @@
 
 The owner selected **Watercolor I → Kodak Gold 200** and subsequently added **Watercolor II → Kodak Portra 400** on 2026-11-02. The second decision supersedes the earlier requirement to preserve Watercolor II. Preserve the other ART modes. These are accepted implementation targets, not working patches or calibrated film recipes.
 
+Current follow-up, 2026-11-04: [Workspace v0 trials](epl9-film-draft-trials.md) now provide original numerical color proposals and distinct full-size desktop TIFFs. [Project status](project-status.md) separates those published results from newer reported v1/v2 tone/WB trials. The observations below describe the earlier investigation; native job execution now reaches [the real-RAW hardware boundary](epl9-real-raw-boundary.md), not a complete modified-camera image.
+
 ## Image target
 
 Start with a Gold 200-inspired daylight rendering: warm color, recognizable skin tones, detailed foliage, natural edges and controlled highlights. Tune color and tone before investigating grain. These are initial design choices, not measured film equivalence or calibrated firmware values.
 
-Portra 400 is the accepted second recipe name. Its numerical color/tone parameters have not been chosen; keep it a separate recipe from Gold 200. Neither recipe implies forcing the camera ISO to the number in the film name.
+Portra 400 is the accepted second recipe name. It now has its own [v0 color-only definition](../recipes/epl9-film-drafts-v0.json), separate from Gold 200; final tone/color calibration remains open. Later tone/WB trials are reported separately until their artifacts are published. Neither recipe implies forcing the camera ISO to the number in the film name.
 
 [Kodak's E-7022 technical data](https://www.kodakprofessional.com/sites/default/files/wysiwyg/pro/resources/E7022%20Gold%20tech%20sheet.pdf) describes a daylight-balanced color negative film with fine grain, sharpness and color saturation. Its film response curves are not a ready-made digital-camera LUT; a developed/scanned reference and its rendering conditions are needed for a meaningful match. The name “200” does not mean forcing the camera to ISO 200 at all times.
 

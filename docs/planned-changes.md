@@ -1,6 +1,6 @@
 # Illustrated change plan
 
-**These are plans and research results, not screenshots of installed firmware or demonstrated Gold/Portra output.** The first integration baseline is the two accepted Watercolor slots. A broader recipe catalog is being discussed separately; neither slot expansion nor a redesigned menu follows from this baseline.
+**The illustrations are concepts, not screenshots or rendered examples.** Actual desktop Gold/Portra v0 TIFFs now exist in private research artifacts; no installed camera replacement is established. The first integration baseline is the two Watercolor slots. The owner also requested a wider 31-profile visual catalog and icons; that design backlog does not establish 31 working firmware slots or final menu mapping. See [current status, 2026-11-04](project-status.md).
 
 ![Conceptual mapping from Watercolor I and II to separate Gold 200 and Portra 400 recipes, names, icons and example images](../assets/docs/recipe-change-map.svg)
 
@@ -10,7 +10,7 @@ Original schematic; dimensions and arrangement are illustrative. The camera's ex
 
 | Layer | Present / observed | Intended result | Still required |
 | --- | --- | --- | --- |
-| Image processing | The inspected image contains candidate Watercolor I/II keys and their shared processing branch | Separate Gold 200-inspired and Portra 400-inspired rendering, with the Watercolor-specific spatial effect removed where appropriate | Complete connected processing, native object/cache contracts, real pixels, preview/capture coverage and calibration |
+| Image processing | Native jobs reach hardware configuration; desktop CMIO controls and v0 drafts produce real TIFF pixels | Separate Gold 200-inspired and Portra 400-inspired rendering on the camera, with the Watercolor-specific spatial effect removed where appropriate | Actual ISP execution/coherence, real caller contracts, preview/capture coverage and calibration; desktop output is a separate path |
 | Recipe name | English Watercolor I/II labels are associated with distinct UI values | Names that identify the correct recipe in the applicable screens | Targeted string/resource encoding, language/screen coverage and an audited rebuild |
 | Small icon / inline badge | Separate I/II bitmap and symbol resources were decoded | Distinct G200 / P400 icons in existing native sizes | Runtime palette/screen validation and integration; draft assets fit their checked allocations but are not installed |
 | Large menu example | Picture resources and visual candidates have been extracted; runtime selection is unresolved | A correctly mapped, authorized example image for each slot | Resolve actual resource bindings, choose licensed/owner-approved content, encode within allocation and check on screen |
@@ -37,22 +37,23 @@ For menu photos, the [source shortlist](epl9-art-example-pictures.md#digital-rec
 
 The intended flow is **retain the selected I/II recipe identity → choose a valid ordinary processing route → supply that recipe's color/tone parameters → preserve normal completion and ownership → render the correct preview and captured image**. It must preserve detail, unaffected modes and stable switching between recipes.
 
-The current [connected-job investigation](epl9-integrated-prototype.md#connected-constructor-frame-start-and-consumer-2026-11-02) reaches request-consumer configuration with explicit host resources. It has not produced pixels or a JPEG. The earlier COLOR table checks are separate experiments and must not be described as a completed end-to-end recipe.
+The current [native investigation](epl9-real-raw-boundary.md) reaches the peripheral boundary with actual source mosaic backing and attached table state. It makes no CPU source-pixel reads and produces no native output image. In contrast, the [Workspace bridge](epl9-workspace-cmio-bridge.md) and [v0 trials](epl9-film-draft-trials.md) now demonstrate actual desktop pixels from copied ORF controls. They qualify a desktop development path, not the modified native worklist, live view or a finished film recipe.
 
 The native cache comparison reads a parameter object's field at +20 but does not directly compare its table pointer at +16. Consequently, merely exchanging Gold/Portra table pointers could retain stale settings. The eventual integration needs the actual invalidation and lifetime contract, not an invented flag update. Live view, captured JPEGs, warm recipe switching and power-cycle persistence must be checked independently.
 
 ## Parallel investigations and how results become part of this plan
 
-Snapshot checked on 2026-11-02. The following work areas are active or discussed in other research chats; uncommitted chat findings are leads, not automatically published or reproduced evidence. This document creates no new camera feature commitment.
+Snapshot checked on 2026-11-04. The [source-qualified status report](project-status.md) distinguishes published results from more recent chat reports whose code/manifests are not in this checkout. This document creates no new camera feature commitment.
 
 | Work area | Current basis | Integration condition |
 | --- | --- | --- |
-| ART processing and resource integration | Published exact-image reports and connected offline probe; no full pixel cycle | Audited implementation, target/control comparisons and completed processing evidence |
-| Deeper color and tone control | Separate inquiry into available native controls and a restrained common rendering base | Verified numerical behavior and image calibration; a Classic Chrome-like reference is not a demonstrated Fujifilm implementation |
-| Larger film-recipe catalog | Separate recipe/ordering discussion | Reconcile accepted scope, actual slot/menu capacity, artwork rights and per-recipe evidence before packaging |
-| Wi-Fi original-file throughput | Separate offline investigation; candidate file-read/transport overhead, no proven acceleration | Publish reviewed report and reproducible measurements; do not fold speculative transport changes into the ART package |
-| Full-field 1920×1440 at 60 fps | Requested target in the video research chat | Establish sensor readout, field of view, bandwidth and encoder/timing support; changing output dimensions alone is insufficient |
-| Gyro logging during video | Separate diagnostic/firmware leads | Establish raw sample availability, rate, timestamp/video synchronization, buffering and recording impact; a diagnostic CSV routine is not a working recording logger |
+| ART processing and resource integration | Published native configuration/RAW/completion audits; actual desktop v0 TIFFs; no complete native pixel cycle | Preserve the desktop/native distinction, complete ISP/data flow and validate target/control modes |
+| Deeper color and tone control | Chat-reported native controls and newer v1/v2 desktop tone trials, including a negative RGB-remap result | Publish exact edits, controls, curves and pixel comparisons; v0 remains the public recipe target until then |
+| Larger film-recipe catalog | Requested 31-profile visual catalog and per-film icons | Reconcile actual slot capacity, final mapping/order, image rights and per-profile evidence |
+| Wi-Fi original-file throughput | Chat reports native rd data-preservation/copy savings and a separate ISC reuse model; no measured acceleration | Publish isolated source and resolve sector/stale-response semantics before camera timing claims |
+| Full-field 1920×1440 at 60 fps | Native timing/marker work is reported; physical TG phase and video-buffer/MOV-PTS link remain open | Verify hardware readout and timing; model constants or unchanged FULL template selection cannot establish a mode |
+| Gyro logging during video | Diagnostic access is a lead; sample/video synchronization is unverified | Establish raw rate, timestamp origin, buffer ownership, drops and recording impact |
+| Installation and recovery | E-PL9 validator/service scenarios are reported with intercepted writes | Publish/reproduce the audit, trace early entry and restore every modified component; no universal recovery claim |
 
 Detailed results should move into model/build-specific repository reports with input identity, pinned source, commands, tests, unresolved points and an entry in [CHANGELOG.md](../CHANGELOG.md). Local Windows paths or a chat statement alone are insufficient public evidence. The [contribution rules](../CONTRIBUTING.md) and [handoff guide](porting-guide.md) define the format.
 
