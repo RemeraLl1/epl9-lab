@@ -55,6 +55,8 @@ The zero-payload controls independently confirm data-insensitivity of this prefi
 
 No verified pixel backend for these modified native jobs was found in the examined tools. This is a scoped investigation result, not proof that no implementation could ever be written. A desktop approximation would need separate labeling and calibration; it would not satisfy a claim of exact TruePic execution.
 
+The subsequent [Workspace CMIO bridge experiment](epl9-workspace-cmio-bridge.md) adds a real full-size Natural TIFF reference and identifies this E-PL9 ORF's own encoded firmware tables and matching captured coefficients. Two copied ORF controls preserve the RAW while changing only those measured spans. Native/Python decoding agrees, but their Workspace pixel exports are still pending. This is a candidate desktop transport for tuning, not execution of the modified native job or completed film recipes.
+
 ## Reproduction and validation
 
 ```powershell
