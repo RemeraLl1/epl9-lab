@@ -43,6 +43,7 @@ JOB_WINDOWS = {
     'processing_classifier_support': (0x607925d2, 0x60792764),
     'early_processing_classifier': (0x6078e82d, 0x6078e890),
     'bayer_short_configuration': (0x6078e890, 0x6078ef28),
+    'bayer_area_geometry': (0x6078ffb0, 0x607900d8),
     'crop_ratios_and_coordinates': (0x607a3df6, 0x607a44bc),
     'first_pass_complete': (0x60761b6a, 0x60762cf1),
     'early_initializer_complete': (0x60761333, 0x607617dd),
@@ -123,7 +124,8 @@ class FixtureOwner:
     """Declared host descriptors and bounded buffers, never an ISP model."""
     name = 'synthetic-frame-owner'
 
-    def __init__(self, continue_processing=True, accept_request=True, provide_slot=False):
+    def __init__(self, continue_processing=True, accept_request=True, provide_slot=False,
+                 source_bounds=(4608,3456)):
         self.buffers = []
         self.released_buffers = set()
         self.provide_slot = provide_slot
@@ -134,6 +136,7 @@ class FixtureOwner:
         self.descriptor_refs = {0xff00:1} if provide_slot else {}
         self.continue_processing = continue_processing
         self.accept_request = accept_request
+        self.source_bounds=source_bounds
 
     def validate(self,m,mask,frame):
         if (mask,frame,m.r['a1']) != (0,0,OWNER_CONTEXT):
@@ -161,7 +164,8 @@ class FixtureOwner:
                 raise Fault('fixture descriptor points outside its assigned payload')
             stride,width,height = [m.memory.read(JOB+offset+n,2) for n in (10,12,14)]
             size = stride*height*2  # Declared two-byte fixture layout only.
-            if not (0 < width <= stride <= 4608 and 0 < height <= 3456):
+            max_stride,max_height=self.source_bounds if descriptor_id==1 else (4608,3456)
+            if not (0 < width <= stride <= max_stride and 0 < height <= max_height):
                 raise Fault('missing or invalid fixture descriptor dimensions')
             if not any(r.address <= pointer and pointer+size <= r.address+len(r.data)
                        and (descriptor_id == 1 or r.writable) for r in m.memory.regions):
@@ -562,11 +566,22 @@ def cache_experiment(image,code):
                 scope='only native cache comparator/update, not downstream behavior',events=m.events)
 
 
+def validate_bayer_source(source,width,height,fmt):
+    """Bound the explicit owner's expanded mosaic without assigning HW packing."""
+    sw,sh,stride=source['width'],source['height'],source['stride']
+    if fmt not in (0x108,0x109) or not (0<width<=sw<=stride<=4672 and 0<height<=sh<=3472):
+        raise ValueError('undeclared expanded 12-bit source geometry/format')
+    if stride%64 or len(source['data'])!=stride*sh*2 or len(source['data'])>32*1024*1024:
+        raise ValueError('expanded source extent/alignment mismatch')
+    if not isinstance(source['data'],bytes):
+        raise ValueError('source payload must be immutable bytes')
+
+
 def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
-               legacy_output_offsets=False):
+               legacy_output_offsets=False, source_fixture=None):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
@@ -576,7 +591,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     params[19] = 1  # Explicit ROM dimension-table selector, not a null entry.
     params[21] = selector
     struct.pack_into('<2I',params,0,OWNER_CALLBACK,OWNER_CONTEXT)
-    owner = FixtureOwner(continue_processing,accept_request,provide_slot)
+    source_bounds=(source_fixture['stride'],source_fixture['height']) if source_fixture else (4608,3456)
+    owner = FixtureOwner(continue_processing,accept_request,provide_slot,source_bounds)
     pool = FixturePool()
     consumer_id = FixtureConsumerSlot('id')
     workspace = FixtureConsumerSlot('workspace',consumer_id)
@@ -608,6 +624,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             output_address_writes.append(dict(pc=hex(m.trace[-1]),value=hex(value&0xffffffff)))
         native_write(operand,value,size)
     m.write=observe_output_address
+    source_reads=[]
+    native_read=m.read
+    def observe_source_read(operand,size=4):
+        if operand.startswith('(') and SOURCE<=m.address(operand)<SOURCE+32*1024*1024:
+            source_reads.append(dict(pc=hex(m.trace[-1]),address=hex(m.address(operand)),bytes=size))
+        return native_read(operand,size)
+    m.read=observe_source_read
     # Host redirects only the Watercolor-specific branch and retains early paths.
     result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
     redirected = result.get('pc') == 0x60752202
@@ -640,7 +663,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     width,height = (640,480) if kind == 0x40 else (4608,3456)
     # Buffer layout/format are a synthetic caller fixture, not decoded sensor data.
     input_format=kind if input_format is None else input_format
-    if input_format not in (0x40,0x100,0x200):
+    if input_format not in (0x40,0x100,0x107,0x108,0x109,0x200):
         raise ValueError('undeclared synthetic input format')
     report['input_format']=hex(input_format)
     descriptors = [(36,SOURCE,input_format),(100,OUTPUT,0x0302)]
@@ -659,8 +682,19 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
         raise ValueError('input fixture requires a bounded 64-unit aligned stride')
     struct.pack_into('<H',job,46,stride)
     source_bytes=stride*height*2
+    source_data=bytearray(source_bytes)
+    if source_fixture is not None:
+        validate_bayer_source(source_fixture,width,height,input_format)
+        stride=source_fixture['stride']
+        source_data=source_fixture['data']
+        source_bytes=len(source_data)
+        struct.pack_into('<H',job,46,stride)
+        struct.pack_into('<2H',job,52,source_fixture['width'],source_fixture['height'])
+        report['source_fixture']=dict(width=source_fixture['width'],height=source_fixture['height'],
+            stride=stride,use_width=width,use_height=height,window_origin=[0,0],
+            camera_crop_verified=False,sha256=hashlib.sha256(source_data).hexdigest())
     report['source_allocation_bytes']=source_bytes
-    m.memory = Memory([*m.memory.regions,Region(SOURCE,bytearray(source_bytes),False,'synthetic source'),
+    m.memory = Memory([*m.memory.regions,Region(SOURCE,source_data,False,'declared source payload'),
                        Region(OUTPUT,bytearray([0xcd])*(width*height*2),True,'synthetic destination')])
     if start_frame:
         report['start'] = invoke(m,0x6074e348,0xf0,96,{'d0':JOB})
@@ -761,8 +795,10 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     output_region = next(r for r in m.memory.regions if r.address == OUTPUT)
     report['output_changed'] = output_region.data.count(0xcd) != len(output_region.data)
     report['allocation_canaries_intact'] = True
+    report['cpu_source_reads']=source_reads
     report['input_configuration']={str(o):hex(m.memory.read(SCRATCH+o,4))
                                   for o in (112,116,120,124,128,132,136,9260,9264,9308)}
+    report['input_register_words']=[m.memory.read(SCRATCH+112+4*i,4) for i in range(24)]
     if m.trace[-1]==0x6073eafa:
         context=m.r['a3']
         outputs=[m.memory.read(context+32+4*i,4) for i in range(5)]
