@@ -165,6 +165,19 @@ class Machine:
                     if args[0].startswith('d'):
                         value = self.arithmetic(1, self.read(args[0]))
                     self.write(args[0], value)
+                elif op in ('addc','subc'):
+                    if (len(raw)!=2 or raw[0]!=0xf1 or raw[1]>>4 != (4 if op=='addc' else 8)
+                            or any(arg not in ('d0','d1','d2','d3') for arg in args)):
+                        raise Fault('unsupported carry arithmetic encoding')
+                    left,right=map(self.read,args)
+                    old_z,carry=self.z,int(self.c)
+                    value=(right+left+carry if op=='addc' else right-left-carry)&MASK
+                    self.nz(value)
+                    self.z=old_z and self.z
+                    # Follow pinned GNU igen, including its carry formulas.
+                    self.c=(value<left or value<right) if op=='addc' else left>right
+                    self.v=bool((~(right^left) if op=='addc' else right^left)&(right^value)&0x80000000)
+                    self.write(args[1],value)
                 elif op in ('extb', 'exth', 'extbu', 'exthu'):
                     bits = 8 if op in ('extb', 'extbu') else 16
                     value = self.read(args[0])
@@ -209,6 +222,14 @@ class Machine:
                     self.r['mdrq'] = (product >> 32) & MASK
                     self.nz(product)
                     self.c = self.v = False
+                elif op=='ror':
+                    if len(raw)!=2 or raw[0]!=0xf2 or raw[1]&0xfc!=0x84:
+                        raise Fault('unsupported rotate-through-carry encoding')
+                    value=self.read(args[0])
+                    result=(value>>1)|(int(self.c)<<31)
+                    self.write(args[0],result)
+                    self.nz(result)
+                    self.c=bool(value&1); self.v=False
                 elif op == 'div':
                     divisor = signed(self.read(args[0]))
                     dividend = signed((self.r['mdr'] << 32) | self.read(args[1]), 64)
@@ -235,6 +256,10 @@ class Machine:
                     self.c = self.v = False
                 elif op == 'setlb':
                     self.loop = nxt  # GNU LAR=PC+5; loop target=LAR-4.
+                elif op=='lra':
+                    if raw!=b'\xda' or self.loop is None:
+                        raise Fault('unconditional loop without supported setlb')
+                    nxt=self.loop
                 elif op in ('jmp', 'bra'):
                     nxt = self.address(args[0]) if args[0].startswith('(') else self.read(args[0])
                 elif op.startswith('b') and self.condition(op[1:]):

@@ -113,9 +113,11 @@ def build_color(image, code, saturation=None, full=False, overrides=()):
     return output, table, result
 
 
-def check_packing(output, table, saturation_values):
+def check_packing(output, table, saturation_values, *, initial=None, table_address=TABLE):
     """Independent field-layout oracle; no instruction interpretation."""
-    expected = bytearray(5200)
+    expected = bytearray(5200) if initial is None else bytearray(initial)
+    if len(expected) != 5200 or len(output) != 5200:
+        raise ValueError('complete 5200-byte output and initial state required')
     for record in range(12):
         source, dest = record*28, 688+record*24
         expected[dest:dest+12] = table[source:source+12]
@@ -128,7 +130,7 @@ def check_packing(output, table, saturation_values):
     offsets = {3124:336, 3128:1680, 3132:720, 3136:1104, 3140:2064,
                3144:2448, 3148:1296, 3152:2640, 3156:1488, 3160:2832}
     for dest, relative in offsets.items():
-        struct.pack_into('<I', expected, dest, TABLE+relative)
+        struct.pack_into('<I', expected, dest, table_address+relative)
     if output != expected:
         mismatches = [i for i, (a, b) in enumerate(zip(output, expected)) if a != b]
         raise ValueError(f'color packing mismatch at {mismatches[:12]}')

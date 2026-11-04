@@ -4,7 +4,7 @@
 
 The revised host experiment removes the four schedule regressions found in the first prototype. It also runs the worklist builder from its actual entry, preserving earlier optimized paths that the original branch-only experiment did not reach. Both recipe slots execute native COLOR selection, table packing and returns with a complete 5200-byte output comparison.
 
-**The complete image-processing cycle has not passed.** The latest [connected-job follow-up](#connected-constructor-frame-start-and-consumer-2026-11-02) completes the constructor and frame start, executes the cache comparator and reaches processing configuration in eight synthetic cases. Four others require additional owner buffers. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
+**The complete image-processing cycle has not passed.** The [hardware-boundary follow-up](#native-parameter-object-color-and-hardware-boundary-2026-11-02) connects job creation, frame start, native parameter-object construction, cache comparison and COLOR execution. Eight cases with attached diagnostic tables reach the first unmapped peripheral write. The later owner-slot follow-up below supplies the missing outputs for four further cases and traces their configuration rejection through consumer cleanup to an OS event wait. No pixel image, JPEG, live view or calibrated Gold/Portra rendering was produced. This is offline analysis, not a firmware patch. Earlier stopping points below are retained as historical results.
 
 ## Inputs and execution boundary
 
@@ -107,6 +107,8 @@ Retained final follow-up run: `local/integrated-probe-20261102-v5/results.json`.
 
 ## Connected constructor, frame start and consumer, 2026-11-02
 
+This checkpoint is retained for provenance; the later hardware-boundary results below supersede its configuration-call stopping points.
+
 `scripts/epl9_job_probe.py` now connects the **native constructor → native frame start → native worklist executor → request creation → consumer configuration**, with explicitly modeled host resources. It does not claim that a request returning zero, a cursor advancing, or an allocated event token constitutes pixel completion. The input is the same exact E-PL9 1.1/build-1101 main identified above; all work is offline.
 
 ### Second object and frame lifecycle
@@ -182,3 +184,165 @@ Revalidated after the engine changes: all 120 full-builder pairs, both 5200-byte
 ```
 
 Use a new ignored output directory and keep assertions enabled. Retained run: `local/job-probe-20261102-final/results.json`. The report records 53 decode anchors, loaded windows, source hashes, exact stock/main identities, native/model events, stop registers, request pointers, guards and negative controls. Follow-up should resolve the two configuration callees and the `0xff07` owner buffer from actual caller contracts, then trace submission/completion and pixel consumption. Do not replace those boundaries with successful no-ops.
+
+## Native parameter object, COLOR and hardware boundary, 2026-11-02
+
+The connected runner now executes the previously absent configuration functions and reaches `0x6073eafa`, which attempts to write `0x800` to **`0x9880014c`**. This address is deliberately unmapped. It is in the hardware-start chain `0x6072fd27 → 0x6073f74f → 0x6073eaea`, followed by accesses to other peripheral addresses. This is a concrete hardware-emulation boundary in the offline run, not a camera failure. Treating these registers as ordinary writable RAM would not implement image processing or completion.
+
+### Build the companion object with native code
+
+A COLOR-only object is insufficient for the connected pipeline. Besides its table and comparison token, downstream stages consume gamma, tone, chroma, a variant byte and inline configuration data. The native builder **`0x6078ab39`** supplies these together. Slot selection at `0x6074b433` uses a **4184-byte stride** for three owner-managed slots; this is stronger layout evidence than enlarging a synthetic object until faults disappear.
+
+The harness pauses the real job at request-consumer entry `0x6072fd27`. On a private copy of its 1876-byte request, with the existing parameter pointer cleared, it runs `0x6078ab39` through its native return on a separate stack. The routine intentionally changes that private request's effective key to 2 while selecting some companion data. The live job/request remains at key 11. This is an explicit host integration experiment, not execution of the complete native owner lifecycle or a validated key-2/key-11 equivalence.
+
+| Header field | Native builder / connected observation |
+| --- | --- |
+| +0, +4 | Gamma pointer `0x608c37e4`, comparison field 0 |
+| +8, +12 | Tone pointer `0x608cf3ee`, comparison field 0 |
+| +16 | Native HSL selection, subsequently replaced by the diagnostic table pointer |
+| +20 | **Not initialized by this builder**; the harness explicitly supplies comparison token 1 or 2. Its native producer remains open. |
+| +24/+26 | Chroma halfwords from native selector `0x6079dd34` |
+| +28 | Native gamma-variant byte, zero in these requests |
+| +29…+128 | 100 bytes of companion configuration copied from the native selector's result, `0x608bf944` in the tested state |
+
+Both companion curve pointers reference valid ROM spans in all eight attachment cases. The builder initializes only the header in these cases: bytes +129 through the end of the 4184-byte slot and its 16-byte guard retain poison. The connected consumer is therefore given **only the 129-byte header as readable, read-only memory**, plus the separate read-only 3028-byte diagnostic table. Any access past that established header stops. Other builder paths can use in-slot curve storage; this fixture does not claim to cover them.
+
+The old 20-byte isolated COLOR fixture and 24-byte cache-comparator fixture remain valid for their narrower consumers. Neither represents a complete parameter object. Native owner acquisition/release, switching between live objects and the lifetime of in-slot curves are still not integrated. The host retains the header/table through the stopped request.
+
+### Connected table verification
+
+Both replacement identities, input types `0x0200`/`0x0100` and selectors 0/2 form **eight attachment cases**. Each copies a stock HSL table and puts a diagnostic signed marker of +50 or −50 into its first saturation field. These are distinguishable test tables, **not Gold 200 or Portra 400 recipes**.
+
+The native request copies the object pointer, native cache comparison sets rebuild bit `0x10000000`, and the actual common pipeline calls COLOR at `0x6079fc15 → 0x6079ebcc → 0x6079e50e`. Its five-byte CALL returns to `0x6079fc1a`; stack return and decoded instruction length are checked. All **5200 configuration bytes** match the independent packing oracle, including preservation of data produced by earlier stages and relocation of ten table pointers. Different input types legitimately retain different unrelated configuration bytes. Within each type, the two markers produce distinct configuration hashes.
+
+After COLOR returns, the native configuration chain continues to the peripheral boundary in all eight cases. Pixel destinations remain entirely poisoned with `0xcd`; no rendered-image comparison is claimed.
+
+### Additional input and callback requirements
+
+The type-`0x0100` path exposed missing reference dimensions in the old fixture. Request construction at `0x6074f354…0x6074f36a` copies `job+3746` to `request+1576`; the next record comes from `job+3754` to `request+1584`. A later routine reads the first pair and divides by the second halfword at `0x60795691`. Zero-filled fields cause division by zero. The fixture now explicitly supplies four-halfword records `(640,480,640,480)` at both locations. These are declared test values, not measured sensor geometry. Two negative controls retain the zeros and reproduce the exact stop.
+
+Native matrix setup at `0x6079c026` offers nine halfword coefficients to **owner event 2** before packing them. The host accepts only this identified caller with a valid nonoverlapping stack span and leaves all nine values unchanged. This models an owner without additional coefficient correction. The native caller does not inspect that callback's return value. Unknown callbacks, including event 31, still stop unless separately modeled under their established contract.
+
+Two additional host models permit one uncontended acquisition each: resource mask 16 at `0x607a17b7`, and hardware guard mask 8 at `0x607a1841`. Wrong key/ABI or repeated acquisition stops. Five synchronization-counter bytes at `0x8ff001b0` start at declared zero. These models assume one thread and volatile-register preservation; they neither execute RTOS/interrupt code nor release locks, signal events or complete requests. Peripheral memory remains absent.
+
+### Current results and reproduction
+
+| Cases | Result |
+| --- | --- |
+| Baseline two slots × three types × two selectors | All 12 constructors/frame starts return; eight reach the peripheral write; four type-`0x0040` cases stop at undeclared owner descriptor `0xff07` |
+| Two slots × types `0x0200`/`0x0100` × selectors 0/2, attached tables | Eight native object builds, eight complete COLOR configuration comparisons, eight identical peripheral boundaries |
+| Five negative controls per slot | Missing frame start, owner cancellation, request rejection, absent long output, and absent reference dimensions reproduce their expected failures |
+| Native cache initialize/compare/update audit | Previous pointer/token findings remain unchanged |
+
+Native service routines map descriptor `0xff07` to the first slot at `job+4960`; the associated caller-owned payload and activation notifications still need a complete contract. Its four cases are not included in the attachment success count. Request completion, subsequent worklist entries, final output handoff, balanced releases after processing and ISP pixel behavior remain open.
+
+Retained result: `local/job-probe-20261102-hardware-v1/results.json`, **63 decode anchors**, exact input/source hashes, native and modeled calls, and unchanged destination guards. Twelve job-fixture unit tests pass, including new owner-coefficient, lock and packing-oracle rejection checks. Full workspace discovery passed 77 tests, of which 53 cover this ART/tooling lineage; independent Wi-Fi/video/color-audit tests are separate work. The original prototype again passes 30 route pairs, 180 saturation cases, two full tables and 1050 flag-route cases with zero new ordinary-schedule changes. The integrated regression again passes 120 full-builder pairs, both COLOR results, 12 pre-cancellation paths and 11 service checks.
+
+Reproduce with the connected-job command above and a new ignored output directory. No source firmware bytes or camera state were changed. `full_pixel_cycle_passed` remains **false**. Further work must establish the remaining caller contracts and actual ISP/DMA/interrupt/completion behavior; extending the CPU instruction subset alone does not produce a pixel cycle.
+
+## Owner output slots and failure completion, 2026-11-02
+
+The owner has directed further work toward the software chain; update/install risk assessment belongs to the separate risk discussion. This follow-up makes no new firmware-installation or recovery claim.
+
+The type-`0x0040` stop was not solved by acknowledging descriptor `0xff07`: without caller outputs, its requested dimensions are zero. Native `0x60762916…0x6076296b` examines five optional output descriptors beginning at **job+3984**, with 56-byte stride. Their IDs are `0xff00…0xff04` in the exact ROM table at `0x608f20bc`. The new opt-in fixture supplies the first descriptor with a bounded 640×480, two-byte-per-pixel output and format `0x0302`. This is synthetic caller data, not a measured capture format or proof that type `0x0040` is a camera preview mode.
+
+Native code then distinguishes two cases, both now exercised for both recipe identities:
+
+| Selector | Native output-slot behavior | Host-owned allocation requests |
+| --- | --- | --- |
+| 0 | Copies the provided output into slot `job+4960`, ID `0xff07`, then notifies owner event 23 | Borrows the existing destination; additional slot `job+5200`, ID `0xff0b`, requires 2560 bytes |
+| 2 | Calls `0x6074fbed` to build slot `0xff07` with aligned dimensions | Allocates 614400 bytes for `0xff07`, then 2560 bytes for `0xff0b` |
+
+The second slot is built through `0x6074fc57`, with dimensions reduced by the native caller and stride aligned to 32. Payload meaning remains unverified. The owner model accepts only these declared formats/IDs, checks the full writable range, rejects zero dimensions, overlap, changed payloads and activation before allocation, and allocates disjoint poisoned regions with guards. Borrowed output is not added to its owned allocations. Event 23 activation is tracked independently; repeated activation is outside this finite fixture. Other owner events are not blanket successes.
+
+All four runs proceed into the request consumer. The current synthetic input format then returns **`0x9e40`**, recorded directly before native processor return at `0x6072fdd3`. This is a configuration rejection, not a completed image. The native cleanup at `0x6073f566` executes the cache update and calls the workspace release front. A bounded model for `0x607a06d2` requires the previously allocated live workspace and changes its +9592 state from 1 to 2, matching the inspected front's state transition. It does not free the consumer ID or complete pixels; native pool-lock scanning is not emulated.
+
+The native submission error path invokes `0x6074af81`. Its external event front `0x6074af2c` has a finite host model which accepts only one allocated, previously unsignalled bit for task 0. It records the signal and returns zero; this models a notification of an already failed request, **not successful processing**. The native caller retains its failure status and enters pending-request cleanup `0x6074edd9 → 0x6074b125 → 0x6074b068 → 0x6074af9e`.
+
+The new exact boundary is **`0x6074b02f → 0x60418b31`**, the OS event-wait call. No success result is supplied there. Pending owner/request/consumer-ID/token fields remain intact. Event clearing, token release, consumer-ID release, owner event 22 and final record clearing lie after this wait and have **not** executed. Owned output slots also remain allocated. The current evidence must not be described as complete request cleanup.
+
+Retained report: `local/job-probe-20261102-slots-final/results.json`. It contains the old 12 baseline cases (retained without extra outputs), eight attached COLOR cases, ten negative controls, and four new `owner_slot_cases`. All expected boundaries, processor error codes, workspace states, activation IDs, allocation sizes and unchanged pixel guards passed. Sixteen job-fixture unit tests pass, including four new tests for allocation/activation, borrowed buffers, release preconditions and event signalling. Full workspace discovery passed 90 tests after placing test temporary files in ignored `local/test-temp`; the initial discovery hit a sandbox temporary-directory permission error in an unrelated OSD test. No shared engine semantics were changed.
+
+Next software work is the event-wait/clear/release contract and a valid input-format fixture for the type-`0x0040` path. Preserve the native error result and do not clear pending ownership before the corresponding wait outcome is known. Neither the failure-path progress nor the eight unchanged COLOR cases establishes normal frame completion.
+
+## Failed-request teardown and independent short input format, 2026-11-02
+
+This follow-up supersedes the preceding event-wait boundary. Exact E-PL9 1.1/build 1101 inputs and hashes are unchanged. Reproduction: `python scripts/epl9_job_probe.py --out local/<new-directory>`. Retained report: `local/job-probe-completion-20261102/results.json`.
+
+The native wait/cleanup wrappers now execute through the final return in all four short-route configuration-rejection cases. The OS and finite pool fronts are explicit host models, not an emulated RTOS:
+
+- `0x60418b31` waits for event ID `0xe3`, OR mode 1, timeout argument 1000. The inspected native immediate-success branch writes the full event word. The fixture declares a non-autoclearing event and only accepts an already-signalled allocated bit; an unsignalled wait stops rather than inventing scheduler progress or elapsed time.
+- Native `0x6074b125` invokes `0x6074b0f5 → 0x6074b0ce`, supplying the complemented token to `0x60410a51`. That OS front ANDs the current bits with the supplied mask (`0x60410afd…0x60410b02`). The bounded model clears only a live signalled token.
+- The `0x6074aef3` front returns the cleared token to the fixture pool. Double release and release before event clearing fail. The real critical section and global pool bitmap are not emulated.
+- Native `0x6072fac5` calls consumer teardown `0x60740038`, workspace unlink `0x607a08aa`, then ID free `0x60749116`. These finite models accept only ID `0x8000`, the declared live workspace, and the measured processor result `0x9e40`. They do not claim hardware teardown after successful processing. Workspace task/ID/state fields +9584/+9588/+9592 become zero, matching native `0x607a091f…0x607a0925`; the ID becomes available only afterward.
+- Native pending cleanup delivers owner event 22, releases its stored descriptor reference through event 16 (`0x6074ae70`), then clears the full 56-byte record through the fill front. The fixture tracks reference returns separately from slot activation. A supplied `0xff00` reference exists before dispatch: selector 2 returns it without a preceding event-14 fetch. This initial ownership is a declared caller assumption, not proof of the camera owner's complete refcount scheme.
+
+All four cases return **`0x9e40`**, preserve the caller stack, have no allocated/signalled event bits or live consumer ID, and leave all 56 bytes of the pending record zero. **This completes this failed-request path under the declared host contracts only.** Output slots `0xff07`/`0xff0b` remain active and retained by the job/owner; final job destruction and full buffer lifecycle are not established. No payload bytes change. Neither owner event 22 nor the return is evidence of successful image processing.
+
+### Short path: route selector is not a pixel format
+
+The fixture previously used routing kind `0x0040` as the input descriptor format too. These are now independently selectable. Native `0x60799f63…0x60799f71` reads **request+28**, shifts the format by eight bits, and for request kinds 0/16 selects family 1 (`0x607a01b1`) or family 2 (`0x607a02dc`). A format of `0x0040` has family zero and takes the rejection branch. This is a concrete fixture error, not evidence that the short schedule itself cannot work.
+
+| Short routing kind | Independent input format | Both identities × both selectors |
+| --- | --- | --- |
+| `0x0040` | `0x0040` | Native configuration rejection followed by complete failed-request teardown |
+| `0x0040` | `0x0100` | Passes input-family dispatch; stops at unmodeled helper `0x6073920e → 0x604bbfac` |
+| `0x0040` | `0x0200` | Passes configuration and reaches the same peripheral write at `0x6073eafa → 0x9880014c` as the long paths |
+
+The short family-2 route requests resource mask 32 rather than the long fixture's 16. Its host lock accepts only that one exact uncontended acquisition; no scheduler/MMIO completion is added. Source remains a synthetic 640×480 two-byte allocation, destination format `0x0302`. **Actual pixel packing, channel order, bit depth, planes and camera-buffer provenance remain unverified**; successful configuration cannot establish them. These new short cases use stock configuration, not the attached diagnostic table oracle.
+
+Validation: the full job probe passes the previous 12 baseline cases, eight attached COLOR comparisons, ten negative controls, four revised failure-cleanup cases, eight independent-input comparisons and cache audit. All 93 workspace unit tests pass, including three new tests for absent signals/invalid output pointers, event-clear/release ordering/double release, and consumer teardown preconditions. `full_pixel_cycle_passed` remains false. Next work is the remaining format-specific helper and actual buffer layout/ISP contract, followed by successful completion and job-owned buffer release; those cannot be inferred from error cleanup.
+
+## Input stride and job-buffer ownership, 2026-11-02
+
+Same exact E-PL9 stock input and hashes as above. The new retained report is `local/job-probe-packing-release-20261102/results.json`; reproduce with the job probe and a fresh ignored output directory.
+
+### Format 0x0200: measured memory configuration
+
+Eight native runs cover both recipe identities, selectors 0/2 and descriptor strides 640/704, with active dimensions 640×480. They stop at the existing peripheral boundary without processing source pixels. The configuration measured at the 9596-byte workspace is:
+
+| Workspace offset | Stride 640 | Stride 704 | Evidence scope |
+| --- | --- | --- | --- |
+| +112 | 1280 | 1408 | Native programmed row step, two bytes per descriptor stride unit |
+| +120 | `0x76543210` | same | Native reorder/configuration word; semantic channel labels unknown |
+| +128 / +132 / +136 | `0x01000d00` / 4 / `0x00040001` | same | Exact selected memory-interface configuration |
+| +9260 | source base | source base | Zero-origin base-address selection |
+| +9264 | 614400 | 675840 | Native size/plane-offset field equals `stride × height × 2`; not independently a validated DMA allocation bound |
+
+`0x6073b330` classifies the descriptor; `0x6073b033` derives the row step and source addressing. In the measured branch the stride calculation at `0x6073b1d6…0x6073b1e3` gives two bytes per unit. The descriptor stride at +10 is distinct from active width +12; padding changes the row step while active width remains 640. The fixture now accepts an independent bounded, 64-unit-aligned input stride and sizes its source accordingly. This alignment is a conservative fixture constraint, not a proven minimum hardware alignment. The configuration words are captured as regression evidence.
+
+This narrows the memory contract but **does not identify RGB565, YUYV/UYVY, Bayer order, effective sample precision, or byte/channel order**. In particular, neither a two-byte step nor `0x76543210` assigns channel names. The payload has not been read by modeled hardware. Cropped/nonzero-origin addressing, other format variants and actual camera-produced samples still need qualification. Do not use the input-format code as a JPEG/RAW file-format label.
+
+### Two cleanup levels, plus owner-managed output slots
+
+Native destructor `0x6074e2fd` calls mode cleanup `0x6074ed61`, buffer sweep `0x6074accb`, cache destructor `0x6073e57a`, then pool free `0x604023b2` for the job. Four post-error experiments now execute this chain and return with balanced stack and no live JOB/CACHE slots. A finite pool-free model rejects unknown/double releases and any nonzero pending record; it retains bytes solely for inspection. This covers the already-returned `0x9e40` path, not destruction while ISP work remains active.
+
+The native sweep visits 48 88-byte records plus two auxiliary records. A new isolated native audit places one owned and one borrowed allocation in the main table:
+
+- A nonzero pointer at record+64 with byte+84 zero and no internal-pool flag routes through `0x6074ad9f` to **owner event 20**, then clears the first 84 bytes and ID. The host accepts only the exact live allocation's pointer, size and ID.
+- A nonzero borrowed record with byte+84 set takes `0x6074abee`, clears all 88 record bytes and never sends event 20. Its caller payload remains unchanged.
+- A repeat sweep sends no additional release. Internal-pool flag `0x20000` and nonempty auxiliary pools are separate branches and are not covered by this two-record audit.
+
+Output slots `0xff07`/`0xff0b` are **not** these sweep records. Both remain active after the tested destructor, so no claim of complete owner-buffer reclamation is made. Native `0x6074fbd3` emits **event 24**. One caller is the pending callback's event-10 branch (`0x6075056b`): with owner flag job+10396 set, it reads slot IDs at pending-record+36/+38 and notifies the owner through calls at `0x607505a9`/`0x607505c9`; it later signals completion. Other callers include `0x60763dbb/0x60763dca` and `0x60765cc4/0x60765cd3`. This establishes a separate lifecycle notification, not that event 24 necessarily frees physical storage for every real owner. It is not fabricated on the current error path to make counters reach zero.
+
+Validation: previous job regressions pass, plus eight stride cases, four destructor cases and the owned/borrowed/repeat sweep audit. Full workspace discovery passes 116 tests (including independently added tests from other work); two new job unit tests reject pending/double pool release and borrowed/mismatched/double owner-buffer release. One initial audit run failed due to a Python assertion accessing a tuple as a Region; the assertion was corrected and the full probe rerun successfully. Next work is to trace the real owner's event-24 handling and the format's producer/hardware unpacking. Full pixel output and normal completion remain unverified.
+
+## Native completion and Bayer follow-up, 2026-11-04
+
+The [completion-contract audit](epl9-completion-contracts.md) adds native owner callbacks, notification ordering, format-family identification and wide arithmetic. It supersedes the unresolved short-Bayer helper boundary above: all four short Bayer cases now reach the same first peripheral write as the other processing cases. The change executes native arithmetic and configuration; it does not synthesize pixels or hardware readiness.
+
+The exact diagnostic code labels **`0x0200` as 4AspectsData**, **`0x0100` as Bayer/8-bit**, and **`0x0302` as YCC422**. The two-byte stride measurement for `0x0200` remains valid, but its pixel interpretation is still unverified. For two native owners, events 23/24 return the owner's status without freeing physical storage. Separate component runs execute notification → signal → wait → cleanup with supplied status 0/`0x9e40`; these are software-injected notifications, not successful image jobs.
+
+The full job regressions, 330 native arithmetic comparisons, historical route/COLOR checks and 121 workspace unit tests pass. No complete pixel pipeline or deployable film patch is established. See the linked audit for exact input hashes, addresses, host assumptions, reproduction and the remaining peripheral/data-flow boundary.
+
+## Hardware status and destination offsets, 2026-11-04
+
+The [hardware-completion follow-up](epl9-hardware-completion.md) fixes a fixture error affecting the earlier output-address evidence: destination +16/+18 are H/V offsets, while source +16/+18 are area dimensions. Native diagnostic names confirm the distinction. Supplying width/height as destination offsets placed the short-path base exactly beyond its allocation. Zero-origin destination fields now produce the expected base; two negative controls preserve and reproduce the old error. Earlier peripheral-boundary results do not prove valid output addressing or pixels.
+
+The native hardware-status handler `0x607491e9` now runs through native request notification, signal and pending cleanup for 24 explicitly synthetic register scenarios, with masked/empty/busy states retaining the request. Actual registers, DMA/ISP transformation and output pixels remain unexecuted. The report distinguishes native code, finite read/write replay and physical-camera evidence; no complete image or deployable replacement is claimed.
+
+## Real RAW input qualification, 2026-11-04
+
+The [real-RAW boundary report](epl9-real-raw-boundary.md) maps the owner's complete decoded mosaic into read-only backing and executes eight cases for the two replacement slots, selectors 0/2 and 12-bit input candidates `0x0108`/`0x0109`. Native source stride becomes 9344 bytes, the additional area-geometry helper executes, and all cases retain the configuration oracle/output-base checks before the peripheral stop. The active window is a declared test choice, not a verified camera crop or pixel-packing contract.
+
+The observer records zero native source-pixel reads before that stop; replacing the mosaic with zeros yields the same configuration and unchanged output. A native 24-word upload test confirms transfer of settings into device registers, without supplying a pixel engine. No TruePic-developed Gold/Portra output has been produced; existing slot tables remain diagnostic markers and full processing remains unfinished.
