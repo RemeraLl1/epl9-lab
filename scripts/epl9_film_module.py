@@ -108,7 +108,7 @@ def emit_files(module, out, reader=None):
         module_base=hex(module['base']), placement='synthetic; camera placement unqualified',
         module_bytes=len(module['data']), code_bytes=module['code_bytes'],
         module_sha256=sha(module['data']), source_sha256=sha(module['source'].encode()),
-        template_sha256=sha(TEMPLATE.read_bytes()), definitions=module['definitions'],
+        template_sha256=sha(module.get('template',TEMPLATE).read_bytes()), definitions=module['definitions'],
         symbols={k:hex(v) for k,v in module['symbols'].items()},
         candidate_patches=[dict(address=hex(p['address']),before=p['before'],after=p['after']) for p in module['patches']],
         owner_call_sites_bound=False, firmware_container_created=False, camera_accessed=False,
@@ -116,6 +116,7 @@ def emit_files(module, out, reader=None):
         diagnostic_rgb=module['diagnostic_rgb'], native_wb_bias_implemented=False,
         native_matrix_preserved=True, film_calibrated=False,
         note='Experimental native glue using v2 HSL/tone direction. Stock RGB by default; no camera proof.')
+    report.update(module.get('metadata',{}))
     (out/'manifest.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     return code, report
 

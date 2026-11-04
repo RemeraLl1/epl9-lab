@@ -225,8 +225,9 @@ def matrix_oracle(source):
 
 
 def pipeline(image, code, bundles, selected, fmt=0x200, hook=True, state=None, dirty=True,
-             original_key=None, live_tone=False):
-    r, c, controls = base_request(fmt=fmt), bytearray(128), bytearray(16)
+             original_key=None, live_tone=False, processing_key=11):
+    require(processing_key in (11,selected['key']), 'incoherent processing identity')
+    r, c, controls = base_request(processing_key,fmt), bytearray(128), bytearray(16)
     output, aux = state if state is not None else (bytearray(5200), bytearray(6000))
     struct.pack_into('<I', r, 1484, AUX)
     struct.pack_into('<I', r, 1524, selected['address']+OBJECT_OFFSET)
@@ -236,7 +237,7 @@ def pipeline(image, code, bundles, selected, fmt=0x200, hook=True, state=None, d
     for index, field in ((2, 'highlights'), (3, 'midtones'), (4, 'shadows')):
         struct.pack_into('<h', controls, index*2, selected['tone_fields'][field])
     struct.pack_into('<9h', r, 1592, *selected['matrix'])
-    for at, value in ((4, REQUEST), (12, OUTPUT), (52, 11), (60, 0x10000000 if dirty else 0)):
+    for at, value in ((4, REQUEST), (12, OUTPUT), (52, processing_key), (60, 0x10000000 if dirty else 0)):
         struct.pack_into('<I', c, at, value)
     original_key = selected['key'] if original_key is None else original_key
     bundle_regions = []

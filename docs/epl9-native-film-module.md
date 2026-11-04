@@ -1,5 +1,7 @@
 # E-PL9: MULQIU resolution and first native film module
 
+The later [late native integration](epl9-late-film-integration.md) supersedes this page's early owner attachment and commit/prepare strategy. This page retains the original instruction investigation and module experiment; its unresolved early-owner binding is not the current implementation approach.
+
 ## Outcome, 2026-11-04
 
 The active-H/S/M instruction boundary is resolved from Panasonic's instruction specification. The complete color-configuration chain now returns with active controls for both accepted slots. An **original native machine-code module** has also been emitted and executed with the exact downloaded E-PL9 code, replacing the former Python interventions for routing, job key handoff, recipe parameter preparation and three-pointer gamma selection.

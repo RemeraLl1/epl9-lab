@@ -581,9 +581,11 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
-               legacy_output_offsets=False, source_fixture=None):
+               legacy_output_offsets=False, source_fixture=None, native_module=None):
     if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
+    if native_module is not None and attach_table:
+        raise ValueError('native late hook must not be mixed with host table attachment')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
     params = bytearray(32)
     params[8:12] = header(key)
@@ -607,6 +609,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(OWNER_CONTEXT,bytearray(4)),
                      Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
+    if native_module is not None:
+        memory = Memory([*memory.regions,Region(native_module['base'],native_module['data'],False,'native film module')])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
                     models={**completion,0x60402595:pool,0x604023b2:FixturePoolFree(pool),
                             0x4700111e:FillModel(),OWNER_CALLBACK:owner,
@@ -631,8 +635,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             source_reads.append(dict(pc=hex(m.trace[-1]),address=hex(m.address(operand)),bytes=size))
         return native_read(operand,size)
     m.read=observe_source_read
-    # Host redirects only the Watercolor-specific branch and retains early paths.
-    result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
+    # Historical host routing is disabled when the emitted native gate is used.
+    result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[] if native_module is not None else [0x60752202])
     redirected = result.get('pc') == 0x60752202
     if redirected:
         result = resume(m,0x607523a5)
@@ -703,8 +707,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             return report
     report['index_before_executor'] = memory.read(JOB+10388,2)
     # Mode handoff after the complete constructor, before execution.
-    job[12:16] = header(11)
-    struct.pack_into('<I',job,10384,11)
+    if native_module is None:
+        job[12:16] = header(11)
+        struct.pack_into('<I',job,10384,11)
     if attach_table:
         memory.write(JOB+12320,PARAMETER_OBJECT,4)
         preparation=invoke(m,0x6074e6eb,0xf0,32,{'d0':JOB,'d1':count},[0x6072fd27])
@@ -782,6 +787,16 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['cache_compare_executed'] = 0x6073e6ac in m.trace and 0x6073e950 in m.trace
     report['processor_entered'] = 0x60734068 in m.trace
     report['native_color_entered'] = 0x6079ebcc in m.trace
+    if native_module is not None:
+        report['native_film'] = dict(route_gate=native_module['symbols']['film_route_gate'] in m.trace,
+            color_entry=native_module['symbols']['film_color_entry'] in m.trace,
+            recipe_applied=native_module['symbols']['color_post_hsl'] in m.trace,
+            gamma_hook=native_module['symbols']['film_gamma_hook'] in m.trace,
+            job_header_unchanged=job[12:16] == header(key),
+            cached_key_unchanged=memory.read(JOB+10384,4) == key,
+            request_header=job[10448:10452].hex(),
+            request_fields={str(o):memory.read(JOB+10440+o,s) for o,s in ((14,2),(28,2),(48,1),(1832,2))},
+            gamma_pointers=[hex(memory.read(CACHE+2596+i*4,4)) for i in range(3)])
     report['pending_record'] = {str(o):hex(m.memory.read(JOB+13640+o,4)) for o in (0,8,12,16)}
     report['pending_record_zero']=not any(job[13640:13640+56])
     report['cancelled'] = memory.read(JOB+10394,2)

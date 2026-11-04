@@ -3,7 +3,7 @@ import struct
 import unittest
 
 from epl9_job_probe import (FixtureOwner, FixturePool, FixturePoolFree, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal, FixtureCompletion,
-                            JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT)
+                            JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT, experiment)
 from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
 from mn103_subset import Memory, Region, Fault
@@ -31,6 +31,10 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_native_late_module_rejects_host_recipe_attachment_before_execution(self):
+        with self.assertRaisesRegex(ValueError,'must not be mixed'):
+            experiment(b'',{},0x01010078,0x200,0,native_module={},attach_table=True)
+
     def test_pool_free_rejects_pending_and_double_free(self):
         m=fixture(); pool=FixturePool(); pool.live=[JOB,CACHE]
         release=FixturePoolFree(pool); m.r['a0']=CACHE
