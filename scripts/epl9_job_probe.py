@@ -31,6 +31,7 @@ JOB_WINDOWS = {
     'job_services': (0x6074eca0, 0x6074ed70),
     'job_builder_wrappers': (0x607507b9, 0x60750808),
     'job_effect_objects': (0x60752b86, 0x60752f56),
+    'job_effect_cleanup': (0x60752f56, 0x60753040),
     'dimension_tables': (0x60749187, 0x607491e9),
     'request_parameter_views': (0x60750498, 0x607504f6),
     'buffer_allocation': (0x6074a824, 0x6074aaa5),
@@ -583,8 +584,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
                legacy_output_offsets=False, source_fixture=None, native_module=None, machine_observer=None,
-               gain_fixture=None):
-    if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
+               gain_fixture=None, parameter_fixture=None):
+    kinds=(0x200,0x100,0x40,0x1000) if parameter_fixture is not None else (0x200,0x100,0x40)
+    if key not in RECIPES or kind not in kinds or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
     if native_module is not None and attach_table:
         raise ValueError('native late hook must not be mixed with host table attachment')
@@ -595,6 +597,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     params[19] = 1  # Explicit ROM dimension-table selector, not a null entry.
     params[21] = selector
     struct.pack_into('<2I',params,0,OWNER_CALLBACK,OWNER_CONTEXT)
+    if parameter_fixture is not None:
+        if (not isinstance(parameter_fixture,bytes) or len(parameter_fixture)!=32 or
+                parameter_fixture[8:12]!=header(key) or
+                struct.unpack_from('<H',parameter_fixture,16)[0]!=kind or
+                parameter_fixture[21]!=selector or not all(struct.unpack_from('<2I',parameter_fixture))):
+            raise ValueError('native parameter fixture identity/size mismatch')
+        params[:]=parameter_fixture
     source_bounds=(source_fixture['stride'],source_fixture['height']) if source_fixture else (4608,3456)
     owner = FixtureOwner(continue_processing,accept_request,provide_slot,source_bounds)
     pool = FixturePool()
@@ -645,6 +654,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     if redirected:
         result = resume(m,0x607523a5)
     report = dict(key=hex(key),kind=hex(kind),selector=selector,constructor=result,
+                  parameter_fixture=parameter_fixture.hex() if parameter_fixture is not None else None,
                   redirected=redirected,events=list(m.events),
                   cache_pointer=hex(memory.read(JOB+12316,4)),
                   error=hex(memory.read(ERROR,2)),allocations=list(pool.live))

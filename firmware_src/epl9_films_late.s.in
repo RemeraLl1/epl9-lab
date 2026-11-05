@@ -50,6 +50,8 @@ color_format_check:
  beq color_secondary_check
  cmp 64,d1
  beq color_secondary_check
+ cmp 4096,d1
+ beq color_secondary_check
  jmp color_exit_check
 color_secondary_check:
  movhu (28,a1),d1
@@ -286,6 +288,8 @@ film_gamma_hook:
  cmp 256,d1
  beq gamma_secondary
  cmp 64,d1
+ beq gamma_secondary
+ cmp 4096,d1
  beq gamma_secondary
  jmp gamma_done
 gamma_secondary:

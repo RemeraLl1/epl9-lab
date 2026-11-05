@@ -1,5 +1,10 @@
 # E-PL9: native matrix owners and early load sequence
 
+Follow-up: [native parameter binding and request-kind correction](epl9-native-owner-binding.md)
+finds and fixes the missing `0x1000` gate, binds two stock producers through the
+constructor, and executes their control/cancellation callbacks with that context.
+The module hash and synthetic-only owner binding below describe the earlier pass.
+
 ## Outcome — 2026-11-05
 
 The Gold 200 / Portra 400 integration now has **18 connected checks with three

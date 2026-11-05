@@ -80,7 +80,9 @@ def invoke(m, entry, mask, frame, regs=None, stops=()):
 
 
 def base_request(key=11, fmt=0x200):
-    require(fmt in (0x200, 0x100, 0x40), 'unqualified synthetic format')
+    # 0x1000 is the request kind emitted by the primary ART owner producer,
+    # not a pixel encoding. Source format is carried separately at +28.
+    require(fmt in (0x200, 0x100, 0x40, 0x1000), 'unqualified synthetic format')
     r = bytearray(1876)
     r[8:12] = header(key)
     struct.pack_into('<H', r, 14, fmt)

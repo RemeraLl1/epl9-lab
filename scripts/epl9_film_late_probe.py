@@ -146,7 +146,7 @@ def cache_sequence(image,code,original_image,original_code,module):
 def passthrough_cases(image,code,original_image,original_code,module):
     rows = []
     for key in (1,11,0x01030078):
-        for fmt in (0x200,0x100,0x40):
+        for fmt in (0x200,0x100,0x40,0x1000):
             r,obj = frame_inputs(original_image,original_code,key,fmt,0,(0,)*5,True)
             m,request,c,before_c,result,_ = run_color(image,code,module,r,obj,(0,)*5,key)
             expected = run_color(original_image,original_code,module,r,obj,(0,)*5,key)[4]
@@ -349,7 +349,7 @@ def main():
     crosscheck = original_key_crosscheck(image,original_code)
     frames = []
     for recipe in module['recipes']:
-        for fmt in (0x200,0x100,0x40):
+        for fmt in (0x200,0x100,0x40,0x1000):
             for secondary in (0x100,0x200):
                 for owner in (False,True):
                     row,_ = frame_case(modified,code,image,original_code,module,recipe,fmt,

@@ -12,7 +12,7 @@ def boundaries(image,code,module):
     if module.get('wb_controls') is None: return []
     cases=[]
     for key in (0x01010078,0x01020078,1,11,0x01030078):
-        for kind in (0x200,0x100,0x40,0x107):
+        for kind in (0x200,0x100,0x40,0x1000,0x107):
             values=[(v,v,v,v) for v in (0,1,2,1023,1024,32767,65534,65535)]
             values += [(2048,1536,0,1024),(2048,1536,1024,0),(2048,1536,1024,1056)]
             for record in values:
@@ -30,7 +30,7 @@ def boundaries(image,code,module):
                 require(m.r['d0']==m.r['d2']==0 and m.r['a1']==3710,'displaced instructions not replayed')
                 expected=bytearray(before)
                 gains=module['wb_controls'].get(f'0x{key:08x}')
-                if gains and kind in (0x200,0x100,0x40):
+                if gains and kind in (0x200,0x100,0x40,0x1000):
                     struct.pack_into('<4H',expected,1568,*adjusted(record,gains))
                 require(request==expected,'early hook differs from scalar oracle or changed unrelated bytes')
                 cases.append(dict(key=hex(key),kind=hex(kind),input=record,

@@ -35,7 +35,7 @@ def assembly(rows):
     # four before reading them. No stack, multiply, divide, MDR/MDRQ or LB
     # operations; the next native setlb establishes the next loop cache.
     lines=['film_wb_entry:',' movhu (14,a2),d0']
-    for value in (0x200,0x100,0x40):
+    for value in (0x200,0x100,0x40,0x1000):
         lines += [f' cmp {value},d0',' beq wb_key_check']
     lines += [' jmp wb_resume','wb_key_check:',' mov (8,a2),d0',
               ' cmp 7864577,d0',' beq wb_gold_gate',
