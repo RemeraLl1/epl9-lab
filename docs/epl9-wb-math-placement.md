@@ -1,5 +1,10 @@
 # E-PL9: WB math, early-load placement and callback consistency
 
+Follow-up: [native owner and load-sequence validation](epl9-native-owner-load-validation.md)
+executes three complete event-2 handler paths under declared state, including
+native logging gates, and checks early-read chunk arithmetic. Its scope replaces
+the copy-tail-only coverage below without establishing camera installation readiness.
+
 ## Outcome — 2026-11-04 follow-up
 
 The two replacement slots now run in the offline model at **`604a1300`**, inside
