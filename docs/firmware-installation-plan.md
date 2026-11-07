@@ -10,11 +10,17 @@ The diagram is an original planning illustration. It does not show a tested E-PL
 
 ## Research update, 2026-11-04
 
-The latest recovery chat reports E-PL9-specific SD-client/service and package-validation execution, beyond the related-model references below. Its report and tests are not yet present in the public baseline reviewed here; these are **reported offline findings, not reproduced installation evidence**. See [source status](project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction).
+The recovery chat reports E-PL9-specific SD-client/service and package-validation execution, beyond the related-model references below. Its report and tests are not yet present in the public baseline reviewed here; these are **reported offline findings, not reproduced installation evidence**. See [source status](project-status.md#other-reported-work-separate-from-the-first-package).
 
 Fifteen intercepted-write scenarios reportedly accept build-1101 main without a version bump, reject bad checksums including a later corrupt component before a write request, and request full-component restoration. They also expose two host-side safeguards to require: reject duplicate components (the tested native service selects the last main), and retain lower-layer write failures rather than trusting an outer success wrapper. Small in-memory packages and intercepted requests do not validate full-size programming, power-loss behavior or the actual storage hardware.
 
 The SD client/service reportedly reside inside main. The **early physical entry, which code must survive damaged main, lamp/error/completion behavior and actual restore capability remain unresolved**. An ordinary install/restore on an intact test body would cover only that tested state, not every brick. Restoration must cover all changed components: main, OSD/icons and picture resources as applicable. A main-only restore is insufficient for a multi-component modification.
+
+## Current package work, 2026-11-07
+
+Native film hooks, a candidate early-load slot and partial native-menu icon validation are now published. The integration chat is assembling install and stock-return containers for the frozen Gold/Portra v3 direction, using main plus OSD/icons and retaining existing large example photographs. It plans full-size checks through the native validator with write requests intercepted. This is active work, not a passing package report or a camera-ready release.
+
+Use [first-integration readiness](first-integration-readiness.md) to distinguish completed offline integration from the remaining package/runtime/update-entry/recovery gates. The host-probe MMIO boundary is not a physical camera failure; the menu route does not execute the processing hooks. No full BOOT dump, independent rescue path or harmless diagnostic-session entry is established.
 
 ## 1. Two routes with different evidence
 
@@ -54,7 +60,7 @@ Before documenting E-PL9 startup steps, publish/review the reported validator an
 
 ## 2. What a future release must contain
 
-We intend to distribute original patch/build material and instructions, with users obtaining authorized stock input separately. Manufacturer firmware and extracted photographs remain outside the public repository. No builder or install package described below exists yet.
+We intend to distribute original patch/build material and instructions, with users obtaining authorized stock input separately. Manufacturer firmware and extracted photographs remain outside the public repository. Published module and offline-overlay builders now exist; the active install/stock-return container work must still publish its exact outputs and qualified validation. No camera-tested release is established.
 
 | Required item | Purpose |
 | --- | --- |
@@ -107,6 +113,8 @@ After verified successful completion, remove or archive the updater payload usin
 | Normal boot and stable official USB recognition | Manufacturer support/update route, where it offers an applicable stock update | Same-version reinstall and rollback may be unavailable |
 | Normal boot fails, independently confirmed SD entry still works | An exactly identified stock package via that validated SD path | Only the tested failure states are covered; a candidate path alone is insufficient |
 | Neither confirmed update entry works | Qualified service assessment; hardware research only as a separate project | No ready-to-use E-PL9 programmer or universal recovery procedure here |
+
+The reported first package writes main and OSD only and retains the picture component. Its stock-return material must restore both changed components; do not silently reuse an older main-only restore.
 
 An update image may omit boot/storage/calibration regions. Preserving it does not preserve every device-specific byte. Never call this plan "brick-proof" or imply that a failed main application always leaves an independent rescue loader intact.
 

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
-<title id="title">E-PL9 research evidence on 2026-11-04</title><desc id="desc">Three distinct paths: actual desktop v2 color, tone and white-balance TIFF renders, native CPU configuration stopping before ISP pixels, and reported offline update validation without a validated physical install or recovery procedure.</desc>
+<title id="title">E-PL9 research evidence on 2026-11-07</title><desc id="desc">Three distinct paths: published desktop v2 rendering with newer v3 review reported separately; native film hooks and configuration stopping before ISP pixels; and active package work without a validated physical install or recovery procedure. Partial native GUI validation is a separate result.</desc>
 <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8z" fill="#506273"/></marker></defs>
 <rect width="1400" height="980" fill="#f5f3ed"/>
 <text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
-<tspan x="54" dy="0">E-PL9 LAB / EVIDENCE MAP / 2026-11-04</tspan>
+<tspan x="54" dy="0">E-PL9 LAB / EVIDENCE MAP / 2026-11-07</tspan>
 </text>
 <text x="54" y="102" font-family="DejaVu Sans, Arial, sans-serif" font-size="39" font-weight="700" fill="#14283c">
 <tspan x="54" dy="0">Different paths. Different conclusions.</tspan>
@@ -55,10 +55,10 @@
 </text>
 <rect x="76" y="474" width="296" height="93" rx="10" fill="#f4f7f7" stroke="#ae7b22" stroke-width="2"/>
 <text x="91" y="505" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#14283c">
-<tspan x="91" dy="0">Actual mosaic backing</tspan>
+<tspan x="91" dy="0">Emitted native hooks</tspan>
 </text>
 <text x="91" y="540" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
-<tspan x="91" dy="0">Candidate input layout</tspan>
+<tspan x="91" dy="0">Producer / owner checks</tspan>
 </text>
 <path d="M375 520 L394 520" stroke="#506273" stroke-width="2" marker-end="url(#arrow)"/>
 <rect x="399" y="474" width="296" height="93" rx="10" fill="#f4f7f7" stroke="#ae7b22" stroke-width="2"/>
@@ -89,14 +89,14 @@
 </text>
 <rect x="54" y="654" width="1292" height="210" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="76" y="686" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="700" fill="#a54339">
-<tspan x="76" dy="0">INSTALL / REPORTED AUDIT</tspan>
+<tspan x="76" dy="0">INSTALL / PACKAGE WORK ACTIVE</tspan>
 </text>
 <rect x="76" y="707" width="296" height="93" rx="10" fill="#f4f7f7" stroke="#a54339" stroke-width="2"/>
 <text x="91" y="738" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#14283c">
 <tspan x="91" dy="0">Offline package checks</tspan>
 </text>
 <text x="91" y="773" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
-<tspan x="91" dy="0">No installer available</tspan>
+<tspan x="91" dy="0">Exact containers in progress</tspan>
 </text>
 <path d="M375 753 L394 753" stroke="#506273" stroke-width="2" marker-end="url(#arrow)"/>
 <rect x="399" y="707" width="296" height="93" rx="10" fill="#f4f7f7" stroke="#a54339" stroke-width="2"/>
@@ -127,6 +127,6 @@
 </text>
 <rect x="54" y="893" width="1292" height="53" rx="16" fill="#14283c" stroke="none" stroke-width="2"/>
 <text x="76" y="927" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="white">
-<tspan x="76" dy="0">Wi-Fi, timing/gyro, deeper color and recovery reports still await source and reproducible evidence.</tspan>
+<tspan x="76" dy="0">Partial native GUI checks are separate: that menu route has zero processing-hook hits.</tspan>
 </text>
 </svg>

@@ -1,6 +1,6 @@
 # Documentation directory
 
-Start with [project status, 2026-11-04](project-status.md). It reconciles the latest published source with newer reported work and explains why real Workspace draft images do not imply a complete modified-camera pixel cycle. Older dates and test totals belong to their original runs, not to every later checkout.
+Start with [first-integration readiness, 2026-11-07](first-integration-readiness.md) and [current project status](project-status.md). It reconciles the latest published source with newer reported work and explains why real Workspace draft images do not imply a complete modified-camera pixel cycle. Older dates and test totals belong to their original runs, not to every later checkout.
 
 The [evidence-map illustration](../assets/docs/research-progress.svg) separates those execution paths; it is a technical diagram, not a camera screenshot.
 
@@ -8,6 +8,7 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 
 | Document | Purpose |
 | --- | --- |
+| [First-integration readiness](first-integration-readiness.md) | Published integration progress, active v3 package work and gates before a camera trial |
 | [Research scope](research-scope.md) | Accepted goals, two-slot baseline, wider design requests and current write restrictions |
 | [Risks and limitations](risks-and-limitations.md) | Amateur/AI-assisted status, concrete risks and evidence categories |
 | [Future installation and recovery](firmware-installation-plan.md) | Official stock USB route, candidate SD route and recovery preconditions |
@@ -26,7 +27,8 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [Gold / Portra draft trials](epl9-film-draft-trials.md) | Versioned v0 coefficients, actual TIFF results and calibration limits |
 | [Neutral balance and tonal v1/v2 trials](epl9-tonal-neutral-trials.md) | Current v2 desktop drafts, native curve checks and the negative v1 gamma control |
 | [Icon resources](epl9-watercolor-icons.md) | Existing resources, draft G200/P400 encodings and screen/palette limits |
-| [Menu example pictures](epl9-art-example-pictures.md) | Picture extraction, unresolved runtime bindings and photo provenance |
+| [Menu example pictures](epl9-art-example-pictures.md) | Historical extraction/provenance; stock examples are retained for the first integration |
+| [Native GUI/icon validation](epl9-omemu-ui-validation.md) | Corrected row-bounded RLE, three controlled 41-frame routes, observed screens and emulator limits |
 
 ## Native processing and historical audits
 
@@ -37,6 +39,13 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [Service dependencies](epl9-service-dependencies.md) | Callbacks, pending/completion, buffers and reference counts |
 | [First offline prototype](epl9-offline-prototype.md) | Historical experiment and preserved negative schedule regressions |
 | [Integrated prototype](epl9-integrated-prototype.md) | Chronological native-job, attachment and cleanup follow-ups |
+| [Native film handoff](epl9-film-native-handoff.md) | Historical full-color-builder experiment and retained parameter bundles |
+| [First emitted native module](epl9-native-film-module.md) | MULQIU qualification and original module, before the late strategy |
+| [Late native integration](epl9-late-film-integration.md) | Current owner-preserving strategy and bounded hook execution |
+| [Extended color/deployment](epl9-film-deployment-color.md) | Gain, matrix/six-axis, icon embedding and deployment checks |
+| [WB math and placement](epl9-wb-math-placement.md) | Candidate early slot, arithmetic and observed lifecycle limits |
+| [Native owners and load sequence](epl9-native-owner-load-validation.md) | Selected native callbacks and planned early-load chunk checks |
+| [Native producer/owner binding](epl9-native-owner-binding.md) | Exact ART kind 0x1000 fix and connected cancellation/cleanup checks |
 | [Completion contracts](epl9-completion-contracts.md) | Native format labels, arithmetic and notification/cleanup component checks |
 | [Hardware completion](epl9-hardware-completion.md) | Corrected destination fields and bounded status replay, not ISP execution |
 | [Real RAW boundary](epl9-real-raw-boundary.md) | Actual input mosaic, CPU configuration versus the missing pixel executor |
@@ -49,6 +58,6 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [MN103 tooling](mn103-tooling.md) | Pinned Windows reader, upstream licenses and validation boundaries |
 | [Offline browser client](offline-browser-client.md) | Cached UI versus camera-network transport and current research status |
 
-Newer Wi-Fi, video/gyro, deep-color and E-PL9 recovery reports mentioned by other chats are listed in [the pending-evidence section](project-status.md#newer-reported-work-awaiting-publication-or-independent-reproduction). They are not supplied by this checkout unless separately published. Do not add broken links or pretend their scripts were synchronized.
+Newer Wi-Fi, video/gyro, deep-color and E-PL9 recovery reports mentioned by other chats are listed in [the reported-work section](project-status.md#other-reported-work-separate-from-the-first-package). They are not supplied by this checkout unless separately published. Do not add broken links or pretend their scripts were synchronized.
 
 Project-wide records: [README](../README.md), [CHANGELOG](../CHANGELOG.md), [contribution rules](../CONTRIBUTING.md), and [agent guidance](../AGENTS.md). Raw firmware, original photographs, generated examples and private reports remain ignored.

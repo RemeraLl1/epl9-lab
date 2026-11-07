@@ -1,66 +1,55 @@
-# Project status: 2026-11-04
+# Project status: 2026-11-07
 
-This is the current cross-project handoff. Read it before treating an older report's "next step" as the present blocker. The November 2 reports retain their original observations; this page distinguishes subsequent native-code progress, actual desktop images, and newer results reported by other chats.
+**Native offline integration and partial native-menu UI integration now exist. The install/stock-restore package work is active; the first physical camera integration has not occurred.** No on-camera Gold/Portra image, complete modified-job ISP cycle or universal recovery path is established.
 
-**No modified firmware has been installed by this project, and no complete modified-camera pixel cycle or validated E-PL9 recovery procedure is established. Real full-resolution desktop Gold/Portra color/tone/WB draft images do exist.** These statements describe different execution paths.
+Start with [first-integration readiness](first-integration-readiness.md) for the concrete milestone and blocking checks. "Closer" means the work has advanced from isolated host experiments to emitted native hooks, owner binding, candidate loading and controlled emulator UI results. It does not support a percentage, ETA or claim that preparing a file makes installation safe.
 
-![Evidence map separating actual desktop TIFFs, native configuration without ISP pixels, and reported update validation without physical installation](../assets/docs/research-progress.svg)
+![Evidence map separating desktop rendering, native configuration and physical installation](../assets/docs/research-progress.svg)
 
 ## Evidence reviewed
 
-- Published research baseline: main commit `a399202a0d7ded05eedc4120b5e4676fcf059a70`, including native completion/hardware/RAW audits, the Workspace CMIO bridge and versioned v0/v1/v2 recipes. The tone/WB follow-up was published during this refresh and is now integrated, rather than remaining a pending chat claim.
-- Later source commits, if merged into this branch, remain the authority for their detailed reports. The commit above identifies the evidence reviewed for this summary, not a claim that development has stopped.
-- Recent processing, color, Wi-Fi, video, installation/recovery and recipe-design chats were reviewed on 2026-11-04. Findings without corresponding public files are recorded separately below as **reported, not reproduced here**. Private chat identifiers and original media are not published.
-- The current cloud checkout runs **99 tests successfully** after acquiring the pinned external OSD decoder with its recorded CRLF bytes and importing the ten published tone/WB tests. The earlier pre-tonal cloud run passed 89; the latest reported 167-test Windows total includes other workspace tests and is not this public checkout's count. No exact-image audit, Windows DLL invocation, owner-image export or physical-camera test was rerun during this documentation refresh.
+- Published baseline: main `1f4dc523fc8db1a61863da66a09413627d5eb8e8`, including native integration, WB/placement, producer/owner fixes and the November 7 OM-Emu icon validation.
+- Active integration, recipe-review, SD-loading, video, Wi-Fi and recovery chats were checked on 2026-11-07. Unpublished reports or private recipe inputs remain explicitly reported evidence, not source delivered by this checkout.
+- This synchronized cloud checkout passes **147 Python unit tests**. Historical Windows-wide totals and narrower selected suites belong to their recorded runs; they must not be reused as this count. No exact-image probe, OM-Emu camera session, private TIFF export, package audit or physical-camera test was rerun for this documentation update.
+- All firmware-specific published work identifies E-PL9 1.1/build 1101, downloaded stock input rather than an installed-body dump. See [exact input identity](epl9-1.1-initial-findings.md#exact-stock-input).
 
-All firmware-specific published work uses the identified Olympus E-PL9 1.1/build 1101 input, not a dump of the installed body. See [exact input identity](epl9-1.1-initial-findings.md#exact-stock-input). Matching hashes identify files, not compatibility or safe installation.
+## What has been established
 
-## Published results that can be inspected from this checkout
-
-| Area | Latest established result | Remaining limit / next question |
+| Area | Current evidence | Remaining limit |
 | --- | --- | --- |
-| Native ART processing | The connected job constructs native objects, attaches table state, builds requests and reaches hardware configuration. Completion/error/teardown contracts have separate executed checks. | Separate status replay is not real ISP completion; no complete modified-firmware image is produced. |
-| Source/destination descriptors | The host destination-offset error was corrected and preserved as a negative control. Native terminology distinguishes Bayer, 4AspectsData and YCC. | Stride or an oversized allocation does not establish actual pixel packing, crop or CFA. |
-| Real ORF input | Actual expanded mosaic samples reach eight native configuration cases. The prefix makes zero source-pixel instruction reads and leaves destinations poisoned. | All cases stop at the unmapped peripheral write `0x6073eafa → 0x9880014c`; actual TruePic processing is missing. |
-| Desktop parameter transport | Owner-made 4608×3456 Workspace TIFF exports respond to changed CMIO coefficients while RAW samples remain identical. A strong desaturation control confirms the route. | This invokes the desktop renderer, not the modified native job or a validated equivalent camera ISP. |
-| Gold / Portra v0 | Both original coefficient proposals are versioned; actual full-size TIFF exports have distinct pixels. Gold is subtle in the supplied scene; Portra reduces the channel-range proxy more. | Color-only drafts, not calibrated film matches. No native hook, installed ART replacement or qualified preview/capture behavior. |
-| Tone / white balance v1/v2 | Published copied-ORF trials preserve RAW data. V1's isolated gamma edit gives zero pixel difference; v2's joint stock contrast/H/S/M route changes actual TIFFs and produces valid native configuration curves. | Not independent validation of each tone field, software/camera equality or a calibrated film look; Gold is too warm in the test scene. |
-| Icons and menu photos | Ten original G200/P400 icon candidates fit and round-trip in checked allocations. External digital-recipe photo references are documented. | Actual screen/palette behavior and large-photo runtime bindings remain open. Linked photos are not licensed public bundle assets. |
+| Native recipe hooks | [Emitted module](epl9-native-film-module.md), followed by [late integration](epl9-late-film-integration.md), replaces earlier Python-only interventions in bounded checks. | Earlier early-object strategies are historical; machine-code execution is not physical-camera execution. |
+| Stock ART producer and owners | [Producer/binding checks](epl9-native-owner-binding.md) found and fixed the missing exact `0x1000` request-kind gate. Tested positive and pre-cancelled paths preserve their contracts. | Remaining creator/resource callbacks, real task/interrupt behavior, concurrency and full output ownership are not exhausted. |
+| WB, placement and loading | [Math/placement](epl9-wb-math-placement.md) and [owner/load](epl9-native-owner-load-validation.md) execute selected native logic and planned early load chunks around `0x604a1300`. | Inferred WB leaves, runtime writers, cache/coherence and physical storage behavior remain scoped assumptions. |
+| Native pixel boundary | Connected positive cases reach `0x6073eafa → 0x9880014c`; the configuration prefix produces no finished pixels or completion signal. | Actual sensor/TruePic/DMA execution and preview/capture/save behavior are not supplied by the host models. |
+| Desktop images | [CMIO controls](epl9-workspace-cmio-bridge.md), [v0 color](epl9-film-draft-trials.md) and [v2 tone/WB](epl9-tonal-neutral-trials.md) provide published full-size TIFF evidence. V1's isolated gamma edit has no observed effect. | Current v3 multi-scene review is reported separately; native camera/desktop equivalence and calibrated film fidelity are not established. |
+| Icons and native GUI | [OM-Emu validation](epl9-omemu-ui-validation.md) corrected row-crossing RLE and compared three 41-frame routes. Six target resources appear in three screen contexts. | Two bitmap pairs and the ART/example-screen format gap remain untested; all five processing-hook counters are zero on the GUI route. |
 
-Read the detailed [completion](epl9-completion-contracts.md), [hardware/descriptor](epl9-hardware-completion.md), [real-RAW](epl9-real-raw-boundary.md), [Workspace](epl9-workspace-cmio-bridge.md), [v0 film-draft](epl9-film-draft-trials.md) and [v1/v2 tone/WB](epl9-tonal-neutral-trials.md) reports. The distinction between CPU configuration and pixel execution must remain visible in every summary.
+## What is being worked on now
 
-The v0 report measures mean absolute RGB changes of **0.5224/255** for Gold and **1.4230/255** for Portra against the neutral desktop control in one scene. Large percentages of changed pixels do not establish a visually strong look or film fidelity. Original images and detailed private manifests remain ignored; this summary does not redistribute them.
+The integration chat is preparing an install candidate and exact stock-return package for the selected **Gold/Portra v3 direction**, with the recipes held fixed. Its stated write set is main plus OSD/icons; existing large ART example photographs remain unchanged. Full-size native-validator checks with writing intercepted are planned/in progress. A passing exact package report is not yet published in this baseline.
 
-The v2 follow-up measures **8.6685/255** and **14.0331/255** against the same neutral control. Portra's v2 input differs from its stock-gamma v1 control in only six bytes within four contrast/H/S/M values, qualifying the joint adjustment under the recorded manual-export conditions. Gold is quite orange and Portra's shadows are substantially lighter in this indoor scene. No tested image reaches channel value 255, so highlight roll-off remains unqualified. V2 is the current public draft; v0 and the negative v1 gamma trial remain historical controls.
+The latest recipe-review chat reports comparisons across eight scenes and prefers Gold/Portra's coherent color/tone character to much of the separate 29-recipe library. Gold can over-warm neutral/skin areas and Portra can create haze in dark foliage. This is reported desktop/visual review, not a license to retune those two frozen recipes or a claim of camera calibration. The public numerical files here remain v0/v1/v2; final v3 source/data bindings must be identified in the package manifest.
 
-## Newer reported work awaiting publication or independent reproduction
+The owner prefers a possible later hybrid library: most recipes built in, with some SD-backed/open slots. Exact numbers and mapping are undecided. A 29-recipe workstream is not 29 implemented camera slots. The immediate priority is still the two Watercolor replacements, not an SD loader or broader menu redesign.
 
-These entries preserve useful handoffs without inventing missing files, commands or verification. Paths below name expected reports in the originating Windows workspace; they are not links to files delivered by this checkout. Test counts are those reported by the originating work, not checks run here.
+## Other reported work, separate from the first package
 
-| Area / expected report | Reported result | What must accompany integration |
+| Direction | Reported finding / current task | Boundary |
 | --- | --- | --- |
-| `epl9-deep-color-controls.md` | Separate RGB curves, a 256-point luminance curve, channel matrix and another color block were identified in selected code. Forty component checks and 29 tool tests were reported. | Publish exact addresses, selection/attachment contracts and tests. The found custom RGB path uses a shared curve for three channels; independent channel selection and whole-image behavior need qualification. No Classic Chrome implementation is established. |
-| `epl9-wifi-offline-prototype.md` | Native `rd` trials reportedly preserve full ORF/MOV bytes while reducing intermediate copying from about 14.69 MB to 165 bytes and 8.11 MB to 456 bytes. A separate ISC reuse model retains waits and reduces per-block resource creation. Twenty-one tests, 144 read cases and six full comparisons were reported. | Publish the isolated scripts and source provenance. Resolve full-sector success semantics and stale duplicate ISC responses. Saved operations are not measured camera throughput; no acceleration is proven. |
-| `epl9-video-timing-sync.md` | The latest chat reports the phase calculation behind `marker+4` and a path connecting `D+44/D+76` to an image owner/stabilizer request. The model uses 144 ticks/µs and gives 43.78 ms for the unmodified FULL template. | Publish current audit revision and distinguish the timing model from measured hardware. TG clock source and IRQ bit-0 physical phase remain unknown; the exposure/video-buffer/MOV-PTS chain is incomplete. No full-field 1920×1440/60 result. |
-| `epl9-gyro-logging.md` | Earlier diagnostic Yaw/Pitch/Roll and CSV paths are leads for recording-time logging. | Establish raw rate, timestamps tied to video, buffer ownership, dropped-sample behavior and simultaneous recording. A diagnostic CSV routine is not a working Gyroflow logger. |
-| `epl9-installation-recovery.md` | Fifteen native-code scenarios with intercepted write requests reportedly identify E-PL9 SD/service validation, accept build 1101 main, reject corrupt later checksums before writes, and request whole-component restoration. Duplicate main selects the last entry; some lower write errors are hidden by an outer wrapper. | Publish the audit/tests and full-size package coverage. The mapped SD client/service live in main; early power-on entry and survival of damaged main remain unresolved. No physical installation, immutable rescue loader or universal restore proof. |
+| SD recipe loading | Investigate a model-specific loader, retained RAM tables and built-in fallback after the two-slot baseline works. | Not implemented on E-PL9; E-P7 formats/timing are reference material, not compatibility evidence. |
+| Wi-Fi | Native rd trials preserve ORF/MOV bytes with much less copying; an ISC reuse model reduces resource creation while retaining waits. | Published source and real timing still needed. Sector-success and stale-response semantics remain unresolved; no measured speedup. |
+| 4:3 video | Aspect handlers reportedly retain 1920×1440 in some paths, but fixed 1920×1080 branches and source-mode fields still need connection to normal FHD60 selection. | Full sensor field at 60 fps, hardware readout and video-buffer/MOV timing are unproven. |
+| Gyro | Diagnostic access and timing/owner leads remain under investigation. | Raw rate, video synchronization, drops and recording-time logging are not established. |
+| Recovery/USB | The native SD validator/service has reported intercepted-write checks; MTP filtering and a diagnostic-session entry have been investigated separately. | No verified full BOOT/flash dump tool, harmless service-session entry or independent rescue path after main corruption. |
+| Broader color/library | Selected deeper controls now have independent native integration checks, while the separate library is being reviewed for character. | Diagnostic matrices/RGB/six-axis values are not final photographic recipes; changes to Gold/Portra are frozen during packaging. |
 
-The recovery work reports a full-main write request of **26214400 bytes**. Keep that reported request length distinct from the **26214336-byte decoded payload**; exact write-span/header accounting belongs in the source audit. Restore planning must cover every changed component, including OSD and picture resources, not only main.
+Expected originating-workspace reports include `epl9-v3-integration-status.md`, `epl9-installation-recovery.md`, `epl9-board-readout.md`, `epl9-wifi-offline-prototype.md`, `epl9-opengate-video.md` and `epl9-video-timing-sync.md`. Those filenames are not links to files supplied here. Preserve source provenance and pending-artifact status when integrating them.
 
-An earlier video update mentioned a calculated 36 MHz CLK_CAMOUT branch. Its relationship to the TG counter was not established. Neither that value nor the later 144-ticks/µs model is a standalone sensor-fps measurement. The model's FULL duration is neither proof of 60 fps nor proof that a different full-field mode is physically impossible.
+## Decisions and next milestone
 
-## Scope and decisions carried forward
+- **First scope:** the two Watercolor replacements and their small icons. Keep stock large example photographs, and do not claim renamed labels: the current native-GUI result retains Watercolor I/II text.
+- **Next milestone:** bind the exact frozen v3 inputs, audit full candidate and matching stock-restore containers, and document remaining runtime/update-entry/recovery limits. See the [readiness gates](first-integration-readiness.md#before-calling-a-package-a-first-test-candidate).
+- **First hardware test:** a future explicitly scoped session. Successful offline code, emulator menus and a stock BIN do not establish safe installation or universal recovery; risk probability is unknown.
+- **Paused:** [Log, 10-bit and HEVC](log-ten-bit-handoff.md). Do not resume automatically.
 
-The first implementation baseline remains Watercolor I → Gold 200-inspired and Watercolor II → Portra 400-inspired, with correct names/icons/examples and unrelated behavior preserved. The owner also requested a broader 31-profile visual catalog and recipe-specific icons. That is a design backlog: 31 working slots, final ART replacement mapping and menu ordering are not demonstrated firmware capabilities. The current video target is full-field **1920×1440 at 60 fps**, with synchronized gyro logging if feasible.
-
-There is no new permission to flash, reset, erase files or issue vendor writes. Documentation changes and successful desktop experiments do not expand that boundary. See the [installation plan](firmware-installation-plan.md) for the updated recovery evidence and remaining preconditions.
-
-## Next concrete work
-
-The owner has [paused Log, 10-bit and HEVC](log-ten-bit-handoff.md) as of 2026-11-04. No demonstrated quality/DR gain or genuine ten-bit output is established; feasibility is unresolved. Preserve the prior findings and do not automatically resume this branch. The following next steps concern the other project directions.
-
-1. Tune the now-published v2 drafts against neutral targets, additional illuminants and highlight-rich scenes. Preserve the negative v1 gamma result, original v0 color controls and distinction between joint tone response and isolated field behavior.
-2. Resolve the true camera input/crop/CFA, ISP/data/coherence and completion contracts. Retain poison checks, pixel-read observations, cache invalidation, ownership and non-target-mode regressions.
-3. Publish the Wi-Fi, deep-color, timing/gyro and recovery audits independently, with exact input identity and reproducible commands; then integrate their qualified conclusions into this index.
-4. Resolve the early E-PL9 SD entry and define restoration for every modified component. Reject duplicate components on the host, verify complete packages and keep lower-level write errors visible.
-5. Update the [changelog](../CHANGELOG.md), [directory index](README.md), [illustrated plan](planned-changes.md) and affected dated reports when new evidence changes a conclusion. Preserve history and the distinction between proposed, reported, locally reproduced and on-camera results.
+The [directory index](README.md), [scope](research-scope.md), [installation plan](firmware-installation-plan.md) and [changelog](../CHANGELOG.md) carry these decisions forward. Older experiments remain dated history; their earlier next steps and test counts are not the present whole-project status.

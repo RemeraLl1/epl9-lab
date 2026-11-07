@@ -18,7 +18,7 @@ This is a larger, tested configuration implementation, **not a calibrated film
 simulation or an installable firmware**. No camera or update media was accessed.
 The module remains at synthetic address `68000000`; no installation container
 was created. This follows the [late integration](epl9-late-film-integration.md),
-[deep-color investigation](epl9-deep-color-controls.md) and
+deep-color investigation (`epl9-deep-color-controls.md`, originating-workspace report not supplied in this checkout) and
 [icon resource audit](epl9-watercolor-icons.md).
 
 ## Exact inputs
@@ -132,7 +132,7 @@ wholly inside a known post-entry loaded section**. The large tail beginning
 `617bd500` lies after section 9's end `617b9000`; the tempting `60600f00` span
 crosses section 1's end `60601000`. Earlier candidates require an unresolved
 pre-main mapping. Section bounds come from `604229df` / the `60405f94` records,
-as executed in the [early-main audit](epl9-early-boot-recovery.md).
+as reported in the early-main audit (`epl9-early-boot-recovery.md`, originating-workspace report not supplied in this checkout). The published load/placement probes below retain their own executable checks; the unavailable report is not newly reproduced here.
 No candidate is approved. FF content and absence of an exact literal pointer
 do not establish loading, execution or absence of computed references.
 

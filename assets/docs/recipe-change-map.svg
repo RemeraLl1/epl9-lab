@@ -9,7 +9,7 @@
 <tspan x="54" dy="0">Two ART slots. Two separate film looks.</tspan>
 </text>
 <text x="54" y="141" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#506273">
-<tspan x="54" dy="0">Desktop v2 tone/color images exist; calibration, camera integration and installation remain unverified.</tspan>
+<tspan x="54" dy="0">Native offline hooks and scoped emulator UI checks exist; the first camera package is in preparation.</tspan>
 </text>
 <rect x="54" y="175" width="164" height="34" rx="8" fill="#14283c" stroke="none" stroke-width="2"/>
 <text x="67" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
@@ -58,7 +58,7 @@
 <tspan x="807" dy="0">Independent recipe identity and parameters</tspan>
 </text>
 <text x="54" y="600" font-family="DejaVu Sans, Arial, sans-serif" font-size="27" font-weight="700" fill="#14283c">
-<tspan x="54" dy="0">A complete change has four linked parts</tspan>
+<tspan x="54" dy="0">First candidate: processing and icons; stock labels and examples stay</tspan>
 </text>
 <rect x="54" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="74" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
@@ -71,30 +71,30 @@
 </text>
 <rect x="382" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="402" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
-<tspan x="402" dy="0">02 / NAME</tspan>
+<tspan x="402" dy="0">02 / STOCK TEXT</tspan>
 </text>
 <text x="402" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
-<tspan x="402" dy="0">Correct recipe labels</tspan>
-<tspan x="402" dy="31">Targeted resource changes</tspan>
-<tspan x="402" dy="31">No global string replacement</tspan>
+<tspan x="402" dy="0">Watercolor I / II retained</tspan>
+<tspan x="402" dy="31">No claimed completed rename</tspan>
+<tspan x="402" dy="31">No unannounced label edits</tspan>
 </text>
 <rect x="710" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="730" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
 <tspan x="730" dy="0">03 / SMALL ICON</tspan>
 </text>
 <text x="730" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
-<tspan x="730" dy="0">G200 and P400 draft badges</tspan>
-<tspan x="730" dy="31">Native sizes / RLE encoding</tspan>
-<tspan x="730" dy="31">Palettes and screens to verify</tspan>
+<tspan x="730" dy="0">Row-bounded RLE corrected</tspan>
+<tspan x="730" dy="31">Three native GUI contexts</tspan>
+<tspan x="730" dy="31">Remaining screens to verify</tspan>
 </text>
 <rect x="1038" y="625" width="310" height="184" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
 <text x="1058" y="662" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#2c7d79">
-<tspan x="1058" dy="0">04 / MENU EXAMPLE</tspan>
+<tspan x="1058" dy="0">04 / STOCK EXAMPLE</tspan>
 </text>
 <text x="1058" y="703" font-family="DejaVu Sans, Arial, sans-serif" font-size="17" font-weight="400" fill="#506273">
-<tspan x="1058" dy="0">Correct runtime resource</tspan>
-<tspan x="1058" dy="31">Authorized sample image</tspan>
-<tspan x="1058" dy="31">No invented output preview</tspan>
+<tspan x="1058" dy="0">Keep original photographs</tspan>
+<tspan x="1058" dy="31">No picture-component write</tspan>
+<tspan x="1058" dy="31">Old shortlist is research only</tspan>
 </text>
 <rect x="54" y="839" width="1292" height="58" rx="18" fill="#14283c" stroke="none" stroke-width="2"/>
 <text x="78" y="875" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="white">

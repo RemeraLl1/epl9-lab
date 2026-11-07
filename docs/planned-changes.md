@@ -1,27 +1,27 @@
 # Illustrated change plan
 
-**The illustrations are concepts, not screenshots or rendered examples.** Actual desktop Gold/Portra v2 color/tone/WB TIFFs now exist in private research artifacts, with public tools and definitions; no installed camera replacement is established. The first integration baseline is the two Watercolor slots. The owner also requested a wider 31-profile visual catalog and icons; that design backlog does not establish 31 working firmware slots or final menu mapping. See [current status, 2026-11-04](project-status.md).
+**The illustrations are concepts, not screenshots or rendered examples.** Public v2 desktop trials and newer reported v3 review exist, alongside actual native-hook and partial emulator UI integration; no installed camera replacement is established. The first integration baseline is the two Watercolor slots. The owner also requested a wider 31-profile visual catalog and icons; that design backlog does not establish 31 working firmware slots or final menu mapping. See [current status, 2026-11-07](project-status.md) and [first-integration readiness](first-integration-readiness.md).
 
 ![Conceptual mapping from Watercolor I and II to separate Gold 200 and Portra 400 recipes, names, icons and example images](../assets/docs/recipe-change-map.svg)
 
-Original schematic; dimensions and arrangement are illustrative. The camera's existing menu structure and unrelated controls are to be preserved for this baseline.
+Original schematic; dimensions and arrangement are illustrative. The camera's existing menu structure and unrelated controls are to be preserved. **For the first package, keep stock large example photographs and current Watercolor text labels.**
 
-## The four changes must agree
+## Processing and UI scope
 
 | Layer | Present / observed | Intended result | Still required |
 | --- | --- | --- | --- |
 | Image processing | Native jobs reach hardware configuration; desktop CMIO and v2 color/tone/WB drafts produce real TIFF pixels | Separate Gold 200-inspired and Portra 400-inspired rendering on the camera, with the Watercolor-specific spatial effect removed where appropriate | Actual ISP execution/coherence, real caller contracts, preview/capture coverage and calibration; desktop output is a separate path |
-| Recipe name | English Watercolor I/II labels are associated with distinct UI values | Names that identify the correct recipe in the applicable screens | Targeted string/resource encoding, language/screen coverage and an audited rebuild |
-| Small icon / inline badge | Separate I/II bitmap and symbol resources were decoded | Distinct G200 / P400 icons in existing native sizes | Runtime palette/screen validation and integration; draft assets fit their checked allocations but are not installed |
-| Large menu example | Picture resources and visual candidates have been extracted; runtime selection is unresolved | A correctly mapped, authorized example image for each slot | Resolve actual resource bindings, choose licensed/owner-approved content, encode within allocation and check on screen |
+| Recipe name | Native GUI checks retain Watercolor I/II text | No unannounced label change in the current candidate | Renaming remains separate unless explicitly included in an approved release scope |
+| Small icon / inline badge | Corrected row-bounded icons now render in three native E133 emulator screen contexts | Distinct G200 / P400 icons in existing allocations | Two bitmap pairs, ART-screen modeling and real-camera rendering remain outside coverage |
+| Large menu example | Historical extraction and binding research is preserved | **Keep the existing examples unchanged for the first integration** | No picture-component modification in the reported first package; future replacement would need new scope and evidence |
 
 A label change alone is not a film look. A new sample photograph does not change processing. A valid icon encoding does not establish a bootable firmware package.
 
-## What the selection screen could show
+## Earlier concept for possible future recipe cards
 
 ![Two schematic future recipe cards, Gold 200 and Portra 400, with existing-style navigation and explicitly unrendered example-image placeholders](../assets/docs/menu-concept.svg)
 
-**Concept only, not a camera capture.** The empty image areas intentionally do not simulate the uncalibrated recipe's output. They represent future authorized example images; the drawing does not specify exact final layout, typography, palette or menu order.
+**Concept only, not a camera capture or the current first-package scope.** The empty image areas do not simulate recipe output. Current native-menu validation is documented separately in [the OM-Emu report](epl9-omemu-ui-validation.md); the first candidate retains stock example photographs and Watercolor I/II text. This earlier concept does not specify final layout, palette or menu order.
 
 Existing original draft artwork is available for inspection:
 
@@ -43,13 +43,13 @@ The native cache comparison reads a parameter object's field at +20 but does not
 
 ## Parallel investigations and how results become part of this plan
 
-Snapshot checked on 2026-11-04. The [source-qualified status report](project-status.md) distinguishes published results from more recent chat reports whose code/manifests are not in this checkout. This document creates no new camera feature commitment.
+Snapshot checked on 2026-11-07. The [readiness review](first-integration-readiness.md) records current package work and the owner's recipe freeze. The [source-qualified status report](project-status.md) distinguishes published results from more recent chat reports whose code/manifests are not in this checkout. This document creates no new camera feature commitment.
 
 | Work area | Current basis | Integration condition |
 | --- | --- | --- |
-| ART processing and resource integration | Published native configuration/RAW/completion audits; actual desktop v2 TIFFs; no complete native pixel cycle | Preserve the desktop/native distinction, complete ISP/data flow and validate target/control modes |
+| ART processing and resource integration | Published emitted late hooks, stock producer/owner and load checks, plus scoped native GUI/icon validation | Bind the frozen v3 data, audit exact candidate/restore packages and review hardware/runtime/recovery limits |
 | Deeper color and tone control | Published v1/v2 definitions, native curves and actual TIFF comparisons; additional independent-channel controls are still reported work | Preserve the zero-effect v1 gamma control, joint-only v2 tone qualification and need for neutral/highlight/illuminant calibration |
-| Larger film-recipe catalog | Requested 31-profile visual catalog and per-film icons | Reconcile actual slot capacity, final mapping/order, image rights and per-profile evidence |
+| Larger film-recipe catalog / later SD slots | Separate 29-recipe review and preference for mostly built-in recipes plus some SD-backed/open slots | Counts/mapping/loader remain undecided; exclude from the first two-slot test and do not retune Gold/Portra |
 | Wi-Fi original-file throughput | Chat reports native rd data-preservation/copy savings and a separate ISC reuse model; no measured acceleration | Publish isolated source and resolve sector/stale-response semantics before camera timing claims |
 | Full-field 1920×1440 at 60 fps | Native timing/marker work is reported; physical TG phase and video-buffer/MOV-PTS link remain open | Verify hardware readout and timing; model constants or unchanged FULL template selection cannot establish a mode |
 | Gyro logging during video | Diagnostic access is a lead; sample/video synchronization is unverified | Establish raw rate, timestamp origin, buffer ownership, drops and recording impact |

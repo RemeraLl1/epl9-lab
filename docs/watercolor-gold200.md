@@ -2,7 +2,9 @@
 
 The owner selected **Watercolor I → Kodak Gold 200** and subsequently added **Watercolor II → Kodak Portra 400** on 2026-11-02. The second decision supersedes the earlier requirement to preserve Watercolor II. Preserve the other ART modes. These are accepted implementation targets, not working patches or calibrated film recipes.
 
-Current follow-up, 2026-11-04: [Workspace v0 controls](epl9-film-draft-trials.md) and [published v2 tone/WB trials](epl9-tonal-neutral-trials.md) provide original definitions and distinct full-size desktop TIFFs, while preserving the negative v1 gamma result. [Project status](project-status.md) separates desktop evidence from the camera implementation. The observations below describe the earlier investigation; native job execution now reaches [the real-RAW hardware boundary](epl9-real-raw-boundary.md), not a complete modified-camera image.
+Current priority, 2026-11-07: hold the selected Gold/Portra v3 direction fixed while preparing the first native two-slot install/stock-return candidate. Keep the stock large example photos. [First-integration readiness](first-integration-readiness.md) distinguishes published native/UI checks from package work and remaining camera risks.
+
+Historical desktop follow-up, 2026-11-04: [Workspace v0 controls](epl9-film-draft-trials.md) and [published v2 tone/WB trials](epl9-tonal-neutral-trials.md) provide original definitions and distinct full-size desktop TIFFs, while preserving the negative v1 gamma result. [Project status](project-status.md) separates desktop evidence from the camera implementation. The observations below describe the earlier investigation; native job execution now reaches [the real-RAW hardware boundary](epl9-real-raw-boundary.md), not a complete modified-camera image.
 
 ## Image target
 

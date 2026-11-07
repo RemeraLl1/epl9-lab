@@ -4,6 +4,15 @@ Record meaningful changes in English. Describe the result, why it changed, the c
 
 ## Unreleased
 
+### Integration readiness refresh, 2026-11-07
+
+- Synchronize published research through `1f4dc523fc8db1a61863da66a09413627d5eb8e8`: emitted native hooks, late owner-preserving integration, gain/matrix/placement/load checks, the exact ART request-kind 0x1000 correction and row-bounded icon/OM-Emu validation. Preserve implementation source unchanged.
+- Add a first-integration readiness review: offline native integration exists, partial native GUI checks pass, and exact install/stock-return container work is active. Separate those milestones from physical ISP output, runtime qualification and recovery coverage; give no invented percentage, ETA or safety probability.
+- Carry forward the owner's v3 recipe freeze, first two-slot priority and current main-plus-OSD package intent. Keep existing large ART example photographs and current stock text labels; the earlier photo-replacement plan is historical.
+- Record the separate 29-recipe review and possible later hybrid built-in/SD slots without claiming implemented menu capacity or E-PL9 file-loader support. Keep Log/10-bit/HEVC paused.
+- Update README, directory index, scope, handoff, installation guidance, diagrams and agent guidance. The public checkout passes **147 unit tests**; exact-image native probes, private recipe exports, full-size package checks, OM-Emu UI sessions and physical-camera tests are not rerun by this documentation work.
+- Review **40 Markdown files and 307 local links/anchors**, complete directory coverage, five parsed/rendered diagrams and JavaScript syntax. Qualify two links to originating-workspace reports that are not supplied by the public checkout. Implementation source and numeric recipe data remain unchanged from published main.
+
 ### Direction paused, 2026-11-04
 
 - Record the owner's decision to pause Log, 10-bit and HEVC work. A useful quality/dynamic-range gain has not been demonstrated, and ten-bit feasibility remains unresolved rather than proven impossible.

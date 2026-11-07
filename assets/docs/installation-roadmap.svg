@@ -34,7 +34,7 @@
 </text>
 <text x="750" y="310" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
 <tspan x="750" dy="0">Build for one identified E-PL9 image.</tspan>
-<tspan x="750" dy="29">A custom installer is not available.</tspan>
+<tspan x="750" dy="29">Exact install/restore work is active.</tspan>
 </text>
 <path d="M1037 370 L1037 388" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-dasharray="9 7"/>
 <rect x="54" y="397" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>

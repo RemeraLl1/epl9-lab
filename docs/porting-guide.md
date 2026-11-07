@@ -6,7 +6,7 @@ This is a guide to continuing research, not a firmware-installation procedure. N
 
 ## Reading order and current handoff
 
-This snapshot incorporates published completion, hardware/RAW and desktop Workspace findings available on 2026-11-04. Start with [current project status](project-status.md) and [the full directory index](README.md); newer chat-reported results are kept separate until their source/evidence is published. Detailed dated reports remain authoritative for their own experiment boundaries.
+This snapshot incorporates published native module/owner/load and OM-Emu UI findings available on 2026-11-07. Read [first-integration readiness](first-integration-readiness.md) for the current package effort and recipe freeze. Start with [current project status](project-status.md) and [the full directory index](README.md); newer chat-reported results are kept separate until their source/evidence is published. Detailed dated reports remain authoritative for their own experiment boundaries.
 
 | Read | Purpose / current result |
 | --- | --- |
@@ -19,11 +19,13 @@ This snapshot incorporates published completion, hardware/RAW and desktop Worksp
 | [Completion contracts](epl9-completion-contracts.md) and [hardware/descriptor audit](epl9-hardware-completion.md) | Native notification/cleanup checks, corrected destination offsets and finite status replay |
 | [Real RAW boundary](epl9-real-raw-boundary.md) | Actual input samples reach configuration; the missing pixel executor is a hardware boundary |
 | [Workspace CMIO bridge](epl9-workspace-cmio-bridge.md) and [draft image trials](epl9-film-draft-trials.md) | Actual desktop TIFF controls and public v0 color-only recipes, separate from modified native jobs |
+| [Late integration](epl9-late-film-integration.md), [owner binding](epl9-native-owner-binding.md) and [owner/load](epl9-native-owner-load-validation.md) | Emitted code, exact 0x1000 ART fix and scoped placement/owner evidence |
+| [OM-Emu UI validation](epl9-omemu-ui-validation.md) | Corrected icon streams and controlled native GUI checks; no processing-hook hits |
 | [Tonal / neutral trials](epl9-tonal-neutral-trials.md) | Current v2 tone/WB definitions and actual exports, plus the preserved negative v1 gamma experiment |
 | [Icons](epl9-watercolor-icons.md) and [example pictures](epl9-art-example-pictures.md) | Draft G200/P400 artwork round-trips; runtime rendering and example-picture bindings remain open |
 | [Tooling](mn103-tooling.md) and [sources](sources.md) | Build prerequisites, pinned dependencies, licenses and upstream research |
 
-The connected native probe now runs beyond the earlier missing-callee stops through object/table attachment, Bayer arithmetic and hardware configuration. Actual-mosaic cases stop at `0x6073eafa → 0x9880014c` with zero CPU source-pixel reads and poisoned output; independent native completion/status checks do not supply ISP pixels. Separately, real Workspace TIFF exports confirm color transport and v2's joint tone/WB route. The isolated v1 gamma remap had zero observed pixel effect. There is still no completed modified-camera pixel cycle or installable package. The next native work concerns real input/crop/CFA/packing, ISP execution/coherence and actual completion; desktop drafts need neutral/highlight/illuminant calibration and owner review. Keep both paths and their evidence separate.
+The connected native probe now runs beyond the earlier missing-callee stops through object/table attachment, Bayer arithmetic and hardware configuration. Actual-mosaic cases stop at `0x6073eafa → 0x9880014c` with zero CPU source-pixel reads and poisoned output; independent native completion/status checks do not supply ISP pixels. Separately, real Workspace TIFF exports confirm color transport and v2's joint tone/WB route. The isolated v1 gamma remap had zero observed pixel effect. There is still no completed modified-camera pixel cycle or installable package. The next native work concerns real input/crop/CFA/packing, ISP execution/coherence and actual completion; the selected v3 direction is frozen during package preparation, with broader photographic/library tuning separate. Current source availability is recorded in the readiness review. Keep both paths and their evidence separate.
 
 The [illustrated change plan](planned-changes.md) explains processing and UI integration; the [future installation plan](firmware-installation-plan.md) separates stock USB updates from the unverified E-PL9 SD route. Track subsequent findings in [CHANGELOG.md](../CHANGELOG.md).
 
