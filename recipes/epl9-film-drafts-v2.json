@@ -1,6 +1,7 @@
 {
   "schema": "epl9-stock-tone-wb-drafts-v2",
-  "status": "Stock contrast/highlight/shadow/midtone metadata with verified relative WB; awaiting isolated Workspace render validation",
+  "status": "Desktop v2 drafts: joint contrast/highlight/shadow/midtone response validated in owner Workspace TIFF exports; relative WB retained; not calibrated or camera-installed",
+  "validation_report": "docs/epl9-tonal-neutral-trials.md",
   "base_hsl_file": "recipes/epl9-film-drafts-v0.json",
   "rgb_gamma": "Original curve retained: the v1 CMIO gamma edit had no pixel effect in the isolated Workspace test",
   "recipes": [

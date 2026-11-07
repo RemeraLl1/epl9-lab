@@ -2,9 +2,9 @@
 
 ## Accepted scope and current evidence
 
-The owner includes the large example pictures in ART selection, in addition to the [small icons and inline symbols](epl9-watercolor-icons.md). Watercolor I's example must eventually represent Gold 200 and Watercolor II's Portra 400, preserving the existing menu and unrelated modes.
+**Current first-integration scope: keep the existing large ART example photographs unchanged.** This later owner instruction supersedes the original request to replace them. Only the two film replacements and small icons are being prepared for the first package; see [readiness](first-integration-readiness.md). The extraction, binding caveats and external-photo shortlist below preserve the earlier research and are not a current picture-component patch plan.
 
-The artwork choice remains open: film cards/icons, owner photographs rendered with the completed recipes, or representative existing photographs. Owner images rendered by our actual recipes would demonstrate their result most directly. No final assets have been selected or generated. Existing firmware examples are research inputs, not newly rendered Gold/Portra output.
+For the earlier replacement proposal, the artwork choice remained open: film cards/icons, owner photographs rendered with the completed recipes, or representative existing photographs. Owner images rendered by our actual recipes would demonstrate their result most directly. No final assets have been selected or generated. Existing firmware examples are research inputs, not newly rendered Gold/Portra output.
 
 ## Exact input and extraction
 

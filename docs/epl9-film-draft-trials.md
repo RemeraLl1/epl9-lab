@@ -1,5 +1,7 @@
 # E-PL9: first Gold 200 / Portra 400 color drafts
 
+Publication status, 2026-11-04: this page preserves the original color-only v0 experiment. The now-published [v1/v2 tonal follow-up](epl9-tonal-neutral-trials.md) supplies newer definitions, actual exports and the negative RGB-remap control. V2 is the current draft; [project status](project-status.md) separates those desktop results from the still-incomplete camera implementation without changing the v0 measurements below.
+
 ## Outcome, 2026-11-04
 
 The owner has now exported **two actual full-resolution RAW developments** with independently specified CMIO coefficient sets using OM Workspace. The first Gold 200-inspired draft is slightly warmer in the supplied scene; the Portra 400-inspired draft is more restrained in chroma. Both have distinct pixels. These are **v0 color-only proposals**, not calibrated film emulations, a Classic Chrome implementation, output from modified camera firmware, or an installed ART replacement.

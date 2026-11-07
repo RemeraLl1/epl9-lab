@@ -1,5 +1,7 @@
 # First bounded offline prototype: E-PL9 ART replacement
 
+Historical experiment and negative regression baseline. Its failures remain useful evidence; [integration](epl9-integrated-prototype.md) and the [2026-11-04 status](project-status.md) describe subsequent fixes, real-input configuration and separate desktop TIFF results. Do not treat this first runner's missing-callee stops or test totals as the current whole-project state.
+
 **Historical baseline and current follow-up:** the first run below is retained as evidence. The revised runner now fixes the four schedule regressions in its tested states and adds 1050 flag cases. The [integrated follow-up](epl9-integrated-prototype.md) executes 120 complete worklist comparisons and both COLOR call chains, including returns. It also records failed full-job attempts; no complete pixel pipeline has passed. The v3 results below must not be confused with the current v4 runner.
 
 The later [native film module](epl9-native-film-module.md) resolves the unsigned-immediate multiply ambiguity using Panasonic's instruction specification. It also executes emitted routing/parameter/gamma code against the same 120/1050 worklist oracles. Historical rejected-immediate descriptions below refer to the earlier subset; no hardware pixel cycle or camera installation is newly established.

@@ -25,3 +25,48 @@ Wireshark can inspect saved capture files without capture drivers. Live network 
 The `oly_fw_analysis` checkout at `539fcf1fa9eda5fdef8ede4deeab94a4691d94c3` imports its analysis tools and passes the container-specific checks on this Windows environment. The complete input-free suite stops at the Wi-Fi client's use of the POSIX-only `fcntl` module. The upstream checkout has not been modified to hide this failure. Its Wi-Fi client is not yet a native Windows-ready component.
 
 The project's own offline identity inspector has been checked against a multi-chunk synthetic input, including confirmation that the source bytes are unchanged. Camera-specific testing remains pending.
+
+## Clean checkout and cloud reproduction, 2026-11-04
+
+The prepared Windows workstation above is historical machine state, not content supplied by a clone. The public checkout now includes native completion/RAW tools, the Workspace CMIO bridge and versioned v0/v1/v2 recipes. Read [current project status](project-status.md) before interpreting older "camera-specific testing pending" language: actual owner media and desktop TIFF exports exist, but modified-camera rendering/installation remain unverified.
+
+For a new Windows environment with Python 3.12 or newer:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# Optional real-RAW tooling, when its private input is available:
+.\.venv\Scripts\python.exe -m pip install -r requirements-raw.txt
+```
+
+Pillow is pinned in `requirements.txt`; NumPy and RawPy are optional pins in `requirements-raw.txt`. Native firmware audits also need the exact input images, pinned GNU reader/compiler and reference files described by their reports. The Workspace bridge's inspected decoder leaf and owner TIFF export require the qualified Windows installation; passing Python tests on Linux does not validate those operations.
+
+The OSD synthetic tests load the separately obtained `tools/osd_extract.py` from the Caduceus E-P7 revision `7d42c1f258737b7196c6b17cec5d643b5080ece6`, under ignored `references/caduceus-ep7/`. Preserve upstream provenance and notices. The project's recorded decoder hash is for **CRLF bytes**, as acquired on the original Windows checkout:
+
+| Form of the pinned source | SHA-256 |
+| --- | --- |
+| LF | `c7fe693c1322553758a7f312c8e31009b9f45016702f83c24eaec6cbd2910396` |
+| CRLF required by the current loader | `16e310d988012e56091ce883ab6ab95d5f1eaf3abb00a0aac733a54edb99a9b8` |
+
+After acquiring that exact revision, a non-Windows checkout may reproduce the recorded bytes using the following bounded conversion. It refuses any other source contents before writing. This is not a bypass or a general acceptance of changed decoder code.
+
+```python
+from pathlib import Path
+import hashlib
+p = Path('references/caduceus-ep7/tools/osd_extract.py')
+lf = p.read_bytes().replace(b'\r\n', b'\n')
+if hashlib.sha256(lf).hexdigest() != 'c7fe693c1322553758a7f312c8e31009b9f45016702f83c24eaec6cbd2910396':
+    raise ValueError('not the pinned decoder source')
+crlf = lf.replace(b'\n', b'\r\n')
+if hashlib.sha256(crlf).hexdigest() != '16e310d988012e56091ce883ab6ab95d5f1eaf3abb00a0aac733a54edb99a9b8':
+    raise ValueError('unexpected byte conversion')
+p.write_bytes(crlf)
+```
+
+With the public dependencies present, from the repository root:
+
+```text
+python -m unittest discover -s scripts -p 'test_*.py' -v
+```
+
+The 2026-11-04 refresh ran **99 tests successfully**, including the ten published tone/WB cases (the earlier pre-tonal run passed 89). The 2026-11-07 synchronized public checkout runs **147 tests**; no native exact-image or OM-Emu UI session was rerun for that documentation refresh. Reports mentioning 121/125/128/136/145/167 tests describe full Windows workspaces that also contained independent unpublished tests. They are source-workspace run counts, not the number delivered by this checkout. Real firmware/image/DLL/camera runs still need their own prerequisites and evidence. Keep generated logs in ignored `local/`.

@@ -1,5 +1,7 @@
 # Offline browser client: architecture decision
 
+Current source status, 2026-11-04: [project status](project-status.md) summarizes newer reported Wi-Fi rd/ISC work and its unpublished-source/throughput limits. The architecture distinction below remains valid; byte-preserving offline optimizations do not establish faster camera downloads or phone/browser firmware installation.
+
 This is the second research priority, after in-camera film looks and ART.
 
 The requested model is feasible for the interface: load a small HTTPS web app once, cache its HTML/CSS/JavaScript and recipe data with a service worker, then open it while connected to the camera's Wi-Fi without internet access. A cached interface still needs a working transport to the camera for new listings and downloads.

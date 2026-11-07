@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1080" viewBox="0 0 1400 1080" role="img" aria-labelledby="title desc">
+<title id="title">Official updating and candidate future custom installation</title><desc id="desc">Official stock updates use OM Workspace over USB. Custom SD updating is a candidate route with no installable package and no validated E-PL9 entry or completion signals. The current project remains offline.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M 0 0 L 9 5 L 0 10 z" fill="#506273"/></marker></defs>
+<rect width="1400" height="1080" fill="#f5f3ed"/>
+<text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
+<tspan x="54" dy="0">E-PL9 LAB / INSTALLATION ROADMAP</tspan>
+</text>
+<text x="54" y="103" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="700" fill="#14283c">
+<tspan x="54" dy="0">One documented stock route. One candidate custom route.</tspan>
+</text>
+<text x="54" y="141" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#506273">
+<tspan x="54" dy="0">Planning only. Neither this picture nor a matching checksum makes a camera experiment safe.</tspan>
+</text>
+<rect x="54" y="175" width="255" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="67" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="67" dy="0">OFFICIAL STOCK UPDATE</tspan>
+</text>
+<rect x="728" y="175" width="295" height="34" rx="8" fill="#a54339" stroke="none" stroke-width="2"/>
+<text x="741" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="741" dy="0">CUSTOM UPDATE / FUTURE</tspan>
+</text>
+<rect x="54" y="235" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="76" y="271" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="76" dy="0">OM Workspace + correct model</tspan>
+</text>
+<text x="76" y="310" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="76" dy="0">Follow the current manufacturer guide.</tspan>
+<tspan x="76" dy="29">Resolve this body&#x27;s USB fault first.</tspan>
+</text>
+<path d="M363 370 L363 388" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="728" y="235" width="618" height="128" rx="18" fill="white" stroke="#dfc7c2" stroke-width="2"/>
+<text x="750" y="271" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="750" dy="0">Exact stock input + patch sources</tspan>
+</text>
+<text x="750" y="310" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="750" dy="0">Build for one identified E-PL9 image.</tspan>
+<tspan x="750" dy="29">Exact install/restore work is active.</tspan>
+</text>
+<path d="M1037 370 L1037 388" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-dasharray="9 7"/>
+<rect x="54" y="397" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="76" y="433" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="76" dy="0">Prepare the official USB session</tspan>
+</text>
+<text x="76" y="472" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="76" dy="0">Charged battery, supplied cable, SD out.</tspan>
+<tspan x="76" dy="29">Use the USB mode specified for E-PL9.</tspan>
+</text>
+<path d="M363 532 L363 550" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="728" y="397" width="618" height="128" rx="18" fill="white" stroke="#dfc7c2" stroke-width="2"/>
+<text x="750" y="433" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="750" dy="0">Audit the complete local output</tspan>
+</text>
+<text x="750" y="472" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="750" dy="0">Hashes, changed ranges, components.</tspan>
+<tspan x="750" dy="29">Passing checks do not prove bootability.</tspan>
+</text>
+<path d="M1037 532 L1037 550" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-dasharray="9 7"/>
+<rect x="54" y="559" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="76" y="595" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="76" dy="0">Follow the offered stock update</tspan>
+</text>
+<text x="76" y="634" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="76" dy="0">Do not interrupt power or connection.</tspan>
+<tspan x="76" dy="29">Wait for the documented camera OK.</tspan>
+</text>
+<path d="M363 694 L363 712" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<rect x="728" y="559" width="618" height="128" rx="18" fill="white" stroke="#dfc7c2" stroke-width="2"/>
+<text x="750" y="595" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="750" dy="0">Qualify the E-PL9 update entry</tspan>
+</text>
+<text x="750" y="634" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="750" dy="0">Native validator scenarios are reported.</tspan>
+<tspan x="750" dy="29">Physical entry and recovery: unverified.</tspan>
+</text>
+<path d="M1037 694 L1037 712" stroke="#506273" stroke-width="3" fill="none" marker-end="url(#arrow)" stroke-dasharray="9 7"/>
+<rect x="54" y="721" width="618" height="128" rx="18" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<text x="76" y="757" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="76" dy="0">Verify stock behavior</tspan>
+</text>
+<text x="76" y="796" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="76" dy="0">This is not a custom-file installer.</tspan>
+<tspan x="76" dy="29">Same-version restore is not assured.</tspan>
+</text>
+<rect x="728" y="721" width="618" height="128" rx="18" fill="white" stroke="#dfc7c2" stroke-width="2"/>
+<text x="750" y="757" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="#14283c">
+<tspan x="750" dy="0">Only then: a separately scoped trial</tspan>
+</text>
+<text x="750" y="796" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#506273">
+<tspan x="750" dy="0">Release-specific instructions required.</tspan>
+<tspan x="750" dy="29">No hardware write is authorized here.</tspan>
+</text>
+<rect x="54" y="902" width="1292" height="112" rx="18" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="78" y="939" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="78" dy="0">CURRENT BOUNDARY: OFFLINE ANALYSIS + READ-ONLY DIAGNOSTICS</tspan>
+</text>
+<text x="78" y="978" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#d6e0e6">
+<tspan x="78" dy="0">No installable E-PL9 modification, validated SD procedure or universal recovery method exists here.</tspan>
+</text>
+</svg>

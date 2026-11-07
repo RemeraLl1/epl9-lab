@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="940" viewBox="0 0 1400 940" role="img" aria-labelledby="title desc">
+<title id="title">Conceptual Gold 200 and Portra 400 selection cards</title><desc id="desc">Original wireframe, not a photograph or camera screenshot. Desktop v2 draft TIFFs exist, but these example-image placeholders are not those renders and no installed camera recipe is demonstrated.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M 0 0 L 9 5 L 0 10 z" fill="#506273"/></marker></defs>
+<rect width="1400" height="940" fill="#f5f3ed"/>
+<text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
+<tspan x="54" dy="0">E-PL9 LAB / INTERFACE CONCEPT</tspan>
+</text>
+<text x="54" y="103" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="700" fill="#14283c">
+<tspan x="54" dy="0">Earlier optional recipe-card concept.</tspan>
+</text>
+<text x="54" y="141" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#506273">
+<tspan x="54" dy="0">Not the first package: it retains Watercolor text and stock example photos. Icons are checked separately.</tspan>
+</text>
+<rect x="54" y="175" width="263" height="34" rx="8" fill="#d5a536" stroke="none" stroke-width="2"/>
+<text x="67" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="67" dy="0">PLANNED / NOT INSTALLED</tspan>
+</text>
+<rect x="54" y="230" width="624" height="490" rx="24" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="79" y="271" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#b9c7d2">
+<tspan x="79" dy="0">ART / FILM LOOK</tspan>
+</text>
+<rect x="79" y="292" width="574" height="306" rx="8" fill="#263d51" stroke="none" stroke-width="2"/>
+<path d="M79 598 L284 400 L394 494 L517 365 L653 497 L653 598 Z" fill="#36556a"/>
+<text x="164" y="420" font-family="DejaVu Sans, Arial, sans-serif" font-size="26" font-weight="700" fill="#e2e9ec">
+<tspan x="164" dy="0">EXAMPLE IMAGE</tspan>
+</text>
+<text x="142" y="462" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#e2e9ec">
+<tspan x="142" dy="0">Future authorized photograph</tspan>
+<tspan x="142" dy="31">Not a rendered recipe result</tspan>
+</text>
+<rect x="79" y="620" width="94" height="34" rx="8" fill="#d5a536" stroke="none" stroke-width="2"/>
+<text x="92" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="92" dy="0">G200</tspan>
+</text>
+<text x="194" y="648" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="white">
+<tspan x="194" dy="0">Gold 200</tspan>
+</text>
+<text x="79" y="694" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#b9c7d2">
+<tspan x="79" dy="0">Previous             Next                  Select</tspan>
+</text>
+<text x="58" y="765" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#14283c">
+<tspan x="58" dy="0">Watercolor I slot / illustrative screen</tspan>
+</text>
+<text x="58" y="799" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="58" dy="0">Draft badge, recipe label and sample must</tspan>
+<tspan x="58" dy="29">all refer to the same selected processing recipe.</tspan>
+</text>
+<rect x="722" y="175" width="263" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="735" y="199" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="735" dy="0">PLANNED / NOT INSTALLED</tspan>
+</text>
+<rect x="722" y="230" width="624" height="490" rx="24" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="747" y="271" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#b9c7d2">
+<tspan x="747" dy="0">ART / FILM LOOK</tspan>
+</text>
+<rect x="747" y="292" width="574" height="306" rx="8" fill="#263d51" stroke="none" stroke-width="2"/>
+<path d="M747 598 L952 400 L1062 494 L1185 365 L1321 497 L1321 598 Z" fill="#36556a"/>
+<text x="832" y="420" font-family="DejaVu Sans, Arial, sans-serif" font-size="26" font-weight="700" fill="#e2e9ec">
+<tspan x="832" dy="0">EXAMPLE IMAGE</tspan>
+</text>
+<text x="810" y="462" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#e2e9ec">
+<tspan x="810" dy="0">Future authorized photograph</tspan>
+<tspan x="810" dy="31">Not a rendered recipe result</tspan>
+</text>
+<rect x="747" y="620" width="94" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="760" y="644" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="760" dy="0">P400</tspan>
+</text>
+<text x="862" y="648" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="700" fill="white">
+<tspan x="862" dy="0">Portra 400</tspan>
+</text>
+<text x="747" y="694" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#b9c7d2">
+<tspan x="747" dy="0">Previous             Next                  Select</tspan>
+</text>
+<text x="726" y="765" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#14283c">
+<tspan x="726" dy="0">Watercolor II slot / illustrative screen</tspan>
+</text>
+<text x="726" y="799" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="726" dy="0">Draft badge, recipe label and sample must</tspan>
+<tspan x="726" dy="29">all refer to the same selected processing recipe.</tspan>
+</text>
+<rect x="54" y="859" width="1292" height="47" rx="18" fill="#e3e8e4" stroke="none" stroke-width="2"/>
+<text x="75" y="890" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#14283c">
+<tspan x="75" dy="0">A new menu image is not evidence of a new image-processing result. No third-party photos are bundled.</tspan>
+</text>
+</svg>

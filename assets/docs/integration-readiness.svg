@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1160" viewBox="0 0 1400 1160" role="img" aria-labelledby="title desc">
+<title id="title">First integration readiness on 2026-11-07</title><desc id="desc">Native offline hooks and partial native GUI checks are established within their documented scope. Binding frozen v3 data and validating install/restore packages are active work. Physical runtime, update entry and recovery remain unverified; no completion percentage is claimed.</desc>
+<rect width="1400" height="1160" fill="#f5f3ed"/>
+<text x="54" y="48" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#506273">
+<tspan x="54" dy="0">E-PL9 LAB / FIRST INTEGRATION / 2026-11-07</tspan>
+</text>
+<text x="54" y="104" font-family="DejaVu Sans, Arial, sans-serif" font-size="36" font-weight="700" fill="#14283c">
+<tspan x="54" dy="0">Offline integration exists. The camera trial is ahead.</tspan>
+</text>
+<text x="54" y="146" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="400" fill="#506273">
+<tspan x="54" dy="0">Exact package and restoration checks are the next milestone; safety is not established by a file.</tspan>
+</text>
+<rect x="54" y="188" width="1292" height="146" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<rect x="74" y="208" width="50" height="46" rx="10" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="83" y="239" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="83" dy="0">01</tspan>
+</text>
+<text x="145" y="235" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="145" dy="0">Native processing hooks</tspan>
+</text>
+<rect x="1018" y="206" width="304" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="1030" y="230" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="1030" dy="0">CHECKED IN SCOPE</tspan>
+</text>
+<text x="145" y="273" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="145" dy="0">Emitted code, late owner-preserving strategy, exact 0x1000 ART-kind fix.</tspan>
+<tspan x="145" dy="28.5">Bounded jobs reach configuration; no completed physical ISP image.</tspan>
+</text>
+<rect x="54" y="352" width="1292" height="146" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<rect x="74" y="372" width="50" height="46" rx="10" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="83" y="403" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="83" dy="0">02</tspan>
+</text>
+<text x="145" y="399" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="145" dy="0">Native E133 menu icons</tspan>
+</text>
+<rect x="1018" y="370" width="304" height="34" rx="8" fill="#2c7d79" stroke="none" stroke-width="2"/>
+<text x="1030" y="394" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="1030" dy="0">PARTIAL UI CHECK</tspan>
+</text>
+<text x="145" y="437" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="145" dy="0">Row-bounded RLE fixed; three 41-frame routes compared to stock.</tspan>
+<tspan x="145" dy="28.5">Three screen contexts; the GUI route has zero processing-hook hits.</tspan>
+</text>
+<rect x="54" y="516" width="1292" height="146" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<rect x="74" y="536" width="50" height="46" rx="10" fill="#ae7b22" stroke="none" stroke-width="2"/>
+<text x="83" y="567" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="83" dy="0">03</tspan>
+</text>
+<text x="145" y="563" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="145" dy="0">Bind the frozen v3 recipe data</tspan>
+</text>
+<rect x="1018" y="534" width="304" height="34" rx="8" fill="#ae7b22" stroke="none" stroke-width="2"/>
+<text x="1030" y="558" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="1030" dy="0">ACTIVE</tspan>
+</text>
+<text x="145" y="601" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="145" dy="0">Keep selected Gold / Portra fixed. Identify exact inputs in the manifest.</tspan>
+<tspan x="145" dy="28.5">Do not ship diagnostic RGB/matrix data as the final photographic recipe.</tspan>
+</text>
+<rect x="54" y="680" width="1292" height="146" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<rect x="74" y="700" width="50" height="46" rx="10" fill="#ae7b22" stroke="none" stroke-width="2"/>
+<text x="83" y="731" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="83" dy="0">04</tspan>
+</text>
+<text x="145" y="727" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="145" dy="0">Validate install + stock-return packages</tspan>
+</text>
+<rect x="1018" y="698" width="304" height="34" rx="8" fill="#ae7b22" stroke="none" stroke-width="2"/>
+<text x="1030" y="722" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="1030" dy="0">ACTIVE</tspan>
+</text>
+<text x="145" y="765" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="145" dy="0">Reported first write set: main + OSD/icons; stock example photos stay.</tspan>
+<tspan x="145" dy="28.5">Audit full-size containers, complete change ranges and matching restoration.</tspan>
+</text>
+<rect x="54" y="844" width="1292" height="146" rx="16" fill="white" stroke="#d8dedf" stroke-width="2"/>
+<rect x="74" y="864" width="50" height="46" rx="10" fill="#a54339" stroke="none" stroke-width="2"/>
+<text x="83" y="895" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" fill="white">
+<tspan x="83" dy="0">05</tspan>
+</text>
+<text x="145" y="891" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700" fill="#14283c">
+<tspan x="145" dy="0">Physical runtime and recovery</tspan>
+</text>
+<rect x="1018" y="862" width="304" height="34" rx="8" fill="#a54339" stroke="none" stroke-width="2"/>
+<text x="1030" y="886" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="white">
+<tspan x="1030" dy="0">NOT YET VERIFIED</tspan>
+</text>
+<text x="145" y="929" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="400" fill="#506273">
+<tspan x="145" dy="0">Actual tasks/interrupts, ISP output, update entry and recovery limits remain.</tspan>
+<tspan x="145" dy="28.5">A later explicitly scoped camera session is separate from documentation.</tspan>
+</text>
+<rect x="54" y="1035" width="1292" height="77" rx="16" fill="#14283c" stroke="none" stroke-width="2"/>
+<text x="76" y="1067" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="700" fill="white">
+<tspan x="76" dy="0">First scope: two Watercolor replacements and small icons. Keep stock text and example photos.</tspan>
+</text>
+<text x="76" y="1095" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="400" fill="#d6e0e6">
+<tspan x="76" dy="0">SD loading and the wider library are later work. Log / 10-bit / HEVC remain paused.</tspan>
+</text>
+</svg>
