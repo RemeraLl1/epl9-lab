@@ -8,6 +8,8 @@ The earlier v1 RGB-gamma experiment did **not** produce a pixel change in its is
 
 This extends [the first color trials](epl9-film-draft-trials.md) and [CMIO bridge](epl9-workspace-cmio-bridge.md). Definitions are in [v1](../recipes/epl9-film-drafts-v1.json) and [v2](../recipes/epl9-film-drafts-v2.json); the reproducible copy-only tool is [epl9_tonal_drafts.py](../scripts/epl9_tonal_drafts.py).
 
+The [native film-parameter handoff follow-up](epl9-film-native-handoff.md) now runs the complete color-configuration builder with the existing HSL/tone and three diagnostic gamma pointers together. It also checks tone composition and records a separate active-control interpreter boundary. It adds no new rendered photograph or on-camera claim.
+
 ## Inputs and preservation
 
 The camera is an Olympus E-PL9, owner-reported displayed body version **1.1**. Analysis uses downloaded build **1101**, not a dump of the installed body:

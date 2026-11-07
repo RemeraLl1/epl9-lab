@@ -1,0 +1,7 @@
+{
+  "schema": "epl9-native-wb-controls-v1",
+  "recipes": [
+    {"watercolor_key": "0x01010078", "gain_q10": [1106, 901]},
+    {"watercolor_key": "0x01020078", "gain_q10": [1060, 963]}
+  ]
+}

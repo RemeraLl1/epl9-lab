@@ -55,7 +55,11 @@ def svg(pixels, width, height, color='#fefefe'):
 
 
 def encode_rle(pixels, width, height, mode=11):
-    """Own encoder from documented bit layout; cross-checked by pinned decoder."""
+    """Encode row-bounded runs; the OSD engine refuses runs across scanlines.
+
+    The independent extraction decoder accepts cross-row runs, so its round-trip
+    alone does not establish that a stream can be drawn (OM-Emu, 2026-11-07).
+    """
     if not 1 <= width <= 1024 or not 1 <= height <= 1024 or len(pixels) != width*height:
         raise ValueError('invalid pixel extent')
     ibits, rbits, tbits = {1: (2,2,4), 11: (8,4,12)}[mode]
@@ -64,7 +68,8 @@ def encode_rle(pixels, width, height, mode=11):
     tokens, pos = [], 0
     while pos < len(pixels):
         value, end = pixels[pos], pos+1
-        while end < min(len(pixels), pos+(1 << rbits)) and pixels[end] == value:
+        row_end = (pos // width + 1) * width
+        while end < min(row_end, pos+(1 << rbits)) and pixels[end] == value:
             end += 1
         tokens.append((value << rbits) | (end-pos-1))
         pos = end

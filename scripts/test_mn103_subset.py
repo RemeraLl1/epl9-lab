@@ -167,12 +167,35 @@ class SubsetTests(unittest.TestCase):
             self.assertTrue(m.run(0x2000)['status'].endswith('_boundary'))
             self.assertEqual(m.r['sp'], 0x9000)
 
-    def test_listing_bytes_and_ambiguous_multiply_rejected(self):
+    def test_listing_bytes_rejected(self):
         with self.assertRaises(ValueError):
             parse_listing('2000\tff\tnop', b'\x00', 0x2000)
-        m, _ = mini([('f914ff', 'udfu01\t255,d0')])
-        with self.assertRaises(Fault):
-            m.run(0x2000)
+
+    def test_panasonic_unsigned_immediate_multiply_zero_extension_and_high_product(self):
+        for width, prefix in ((1,0xf9),(2,0xfb),(4,0xfd)):
+            values = (0,1,(1 << (8*width-1))-1,1 << (8*width-1),(1 << (8*width))-1)
+            if width == 1:
+                values += (182,)
+            for immediate in values:
+                for dest in range(4):
+                    for operand in (0,1,0x7fffffff,0x80000000,MASK):
+                        raw = bytes([prefix,0x14+dest])+immediate.to_bytes(width,'little')
+                        reg = f'd{dest}'
+                        m,end = mini([(raw.hex(),f'udfu01\t{immediate},{reg}')],{reg:operand})
+                        m.run(0x2000,[end])
+                        product = immediate*operand
+                        self.assertEqual((m.r[reg],m.r['mdrq']),(product & MASK, product >> 32))
+                        self.assertEqual((m.z,m.n),((product & MASK)==0,bool(product & 0x80000000)))
+
+    def test_unsigned_immediate_multiply_rejects_bad_opcode_width_register_or_literal(self):
+        for raw, text in [('f914b6','udfu01\t181,d0'),('f904b6','udfu01\t182,d0'),
+                          ('f916b6','udfu01\t182,d0'),('f914b600','udfu01\t182,d0'),
+                          ('f914b6','udfu01\td1,d0'),('f914b6','udfu01\t182,a0')]:
+            m,_ = mini([(raw,text)],{'d0':123,'d1':182})
+            before = dict(m.r)
+            with self.assertRaises(Fault):
+                m.run(0x2000)
+            self.assertEqual(m.r,before)
 
 
 if __name__ == '__main__':

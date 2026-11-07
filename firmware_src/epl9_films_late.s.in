@@ -1,0 +1,389 @@
+# E-PL9 1101: preserve ART identity and native owner objects.
+# Only synchronous, native-owned color configuration is modified.
+# Frame entry has the original native [d2,d3,a2,a3],40 save convention.
+
+film_route_gate:
+ mov (4,sp),a0
+ mov (10384,a0),d1
+ cmp $GOLD_KEY,d1
+ beq route_recipe
+ cmp $PORTRA_KEY,d1
+ beq route_recipe
+ mov d2,d0
+ exthu d0
+ udfu01 12,d0
+ jmp 0x60752207
+route_recipe:
+ jmp 0x607523a5
+
+# Replays the five displaced entry bytes with the original 40-byte frame.
+film_color_original:
+ mov a0,d3
+ mov d3,a3
+ inc4 a3
+ jmp 0x6079fb8d
+
+film_color_entry:
+ mov (52,a0),d0
+ cmp $GOLD_KEY,d0
+ beq color_gold_key
+ cmp $PORTRA_KEY,d0
+ beq color_portra_key
+ jmp color_exit_check
+color_gold_key:
+ mov (4,a0),a1
+ mov (8,a1),d1
+ cmp $GOLD_HEADER,d1
+ beq color_format_check
+ jmp color_exit_check
+color_portra_key:
+ mov (4,a0),a1
+ mov (8,a1),d1
+ cmp $PORTRA_HEADER,d1
+ beq color_format_check
+ jmp color_exit_check
+color_format_check:
+ movhu (14,a1),d1
+ cmp 512,d1
+ beq color_secondary_check
+ cmp 256,d1
+ beq color_secondary_check
+ cmp 64,d1
+ beq color_secondary_check
+ cmp 4096,d1
+ beq color_secondary_check
+ jmp color_exit_check
+color_secondary_check:
+ movhu (28,a1),d1
+ cmp 256,d1
+ beq color_variant_check
+ cmp 512,d1
+ beq color_variant_check
+ jmp color_exit_check
+color_variant_check:
+ movbu (48,a1),d1
+ cmp 0,d1
+ beq color_selector_check
+ jmp color_exit_check
+color_selector_check:
+ movhu (1832,a1),d1
+ cmp 0,d1
+ beq color_select_profile
+ jmp color_exit_check
+color_select_profile:
+ cmp $GOLD_KEY,d0
+ beq color_select_gold
+ mov 2,d1
+ jmp color_save
+color_select_gold:
+ mov 1,d1
+ jmp color_save
+
+# Existing output gamma pointers mark a prior film configuration. On exit,
+# force a native HSL/tone rebuild; retain the native owner and cache contract.
+color_exit_check:
+ mov (12,a0),a1
+ mov (2596,a1),d1
+ cmp $GOLD_RGB0,d1
+ beq color_exit
+ cmp $PORTRA_RGB0,d1
+ beq color_exit
+ jmp film_color_original
+color_exit:
+ mov 0,d1
+
+color_save:
+ add -88,sp
+ mov a0,a3
+ mov (4,a3),a2
+ mov (12,a3),d2
+ mov d1,d3
+ mov (1512,a2),d0
+ mov d0,(4,sp)
+ mov (1524,a2),d0
+ mov d0,(8,sp)
+ movbu (1795,a2),d0
+ mov d0,(12,sp)
+ mov (60,a3),d0
+ mov d0,(16,sp)
+ or 268435458,d0
+ mov d0,(60,a3)
+ mov (64,a3),d0
+ mov d0,(20,sp)
+ mov (68,a3),d0
+ mov d0,(24,sp)
+ mov (72,a3),d0
+ mov d0,(28,sp)
+ mov (76,a3),d0
+ mov d0,(32,sp)
+ mov (8,a2),d0
+ mov d0,(40,sp)
+ mov (52,a3),d0
+ mov d0,(44,sp)
+ cmp 0,d3
+ bne color_bias
+ jmp color_native_call
+color_bias:
+ mov $COLOR_HEADER,d0
+ mov d0,(8,a2)
+ mov 11,d0
+ mov d0,(52,a3)
+ movbu (1795,a2),d0
+ extb d0
+ cmp 1,d3
+ beq color_contrast_gold
+ add $PORTRA_CONTRAST,d0
+ bra color_contrast_clamp
+color_contrast_gold:
+ add $GOLD_CONTRAST,d0
+color_contrast_clamp:
+ cmp 2,d0
+ ble color_contrast_lower
+ mov 2,d0
+color_contrast_lower:
+ cmp -2,d0
+ bge color_contrast_store
+ mov -2,d0
+color_contrast_store:
+ movbu d0,(1795,a2)
+ mov (4,sp),a0
+ mov sp,a1
+ add 64,a1
+ cmp 0,a0
+ beq color_controls_zero
+ movhu (0,a0),d0
+ movhu d0,(0,a1)
+ movhu (2,a0),d0
+ movhu d0,(2,a1)
+ movhu (4,a0),d0
+ movhu d0,(4,a1)
+ movhu (6,a0),d0
+ movhu d0,(6,a1)
+ movhu (8,a0),d0
+ movhu d0,(8,a1)
+ bra color_controls_bias
+color_controls_zero:
+ mov 0,d0
+ movhu d0,(0,a1)
+ movhu d0,(2,a1)
+ movhu d0,(4,a1)
+ movhu d0,(6,a1)
+ movhu d0,(8,a1)
+color_controls_bias:
+ movhu (4,a1),d0
+ exth d0
+ cmp 1,d3
+ beq color_highlights_gold
+ add $PORTRA_HIGHLIGHTS,d0
+ bra color_highlights_clamp
+color_highlights_gold:
+ add $GOLD_HIGHLIGHTS,d0
+color_highlights_clamp:
+ cmp 7,d0
+ ble color_highlights_lower
+ mov 7,d0
+color_highlights_lower:
+ cmp -7,d0
+ bge color_highlights_store
+ mov -7,d0
+color_highlights_store:
+ movhu d0,(4,a1)
+ movhu (6,a1),d0
+ exth d0
+ add 1,d0
+ cmp 7,d0
+ ble color_midtones_lower
+ mov 7,d0
+color_midtones_lower:
+ cmp -7,d0
+ bge color_midtones_store
+ mov -7,d0
+color_midtones_store:
+ movhu d0,(6,a1)
+ movhu (8,a1),d0
+ exth d0
+ cmp 1,d3
+ beq color_shadows_gold
+ add $PORTRA_SHADOWS,d0
+ bra color_shadows_clamp
+color_shadows_gold:
+ add $GOLD_SHADOWS,d0
+color_shadows_clamp:
+ cmp 7,d0
+ ble color_shadows_lower
+ mov 7,d0
+color_shadows_lower:
+ cmp -7,d0
+ bge color_shadows_store
+ mov -7,d0
+color_shadows_store:
+ movhu d0,(8,a1)
+ mov (44,sp),d0
+ mov d0,(12,a1)
+ mov $CONTROL_MAGIC,d0
+ mov d0,(16,a1)
+ mov a1,(1512,a2)
+ mov a1,a0
+ mov a3,a1
+ add 64,a1
+ call 0x6074a061,[],16
+color_native_call:
+ mov a3,a0
+ call film_color_original,[d2,d3,a2,a3],40
+color_after_native_call:
+ mov d0,(36,sp)
+ cmp 0,d3
+ bne color_post_hsl
+ jmp color_restore
+color_post_hsl:
+ cmp 1,d3
+ beq color_post_gold
+ mov $PORTRA_HSL,a0
+ bra color_post_pack
+color_post_gold:
+ mov $GOLD_HSL,a0
+color_post_pack:
+ movhu (3024,a0),d0
+ mov d2,a1
+ call 0x6079e50e,[d2,d3,a2,a3],80
+# Rerun the native tone selector without the owner's old base override. This
+# reconstructs the base for merged contrast, then applies merged H/S/M once.
+ mov 0,d0
+ mov d0,(1524,a2)
+ mov a3,a0
+ call 0x6079f309,[d2,d3,a2,a3],32
+color_restore:
+ mov (4,sp),d0
+ mov d0,(1512,a2)
+ mov (8,sp),d0
+ mov d0,(1524,a2)
+ mov (12,sp),d0
+ movbu d0,(1795,a2)
+ mov (16,sp),d0
+ mov d0,(60,a3)
+ mov (20,sp),d0
+ mov d0,(64,a3)
+ mov (24,sp),d0
+ mov d0,(68,a3)
+ mov (28,sp),d0
+ mov d0,(72,a3)
+ mov (32,sp),d0
+ mov d0,(76,a3)
+ mov (40,sp),d0
+ mov d0,(8,a2)
+ mov (44,sp),d0
+ mov d0,(52,a3)
+ mov (36,sp),d0
+ ret [d2,d3,a2,a3],128
+
+film_gamma_hook:
+ mov a1,d2
+ mov d0,d3
+ mov d1,a2
+ mov a0,a3
+ call 0x6079d328,[d2,d3,a2,a3],28
+ movhu (14,a3),d1
+ cmp 512,d1
+ beq gamma_secondary
+ cmp 256,d1
+ beq gamma_secondary
+ cmp 64,d1
+ beq gamma_secondary
+ cmp 4096,d1
+ beq gamma_secondary
+ jmp gamma_done
+gamma_secondary:
+ movhu (28,a3),d1
+ cmp 256,d1
+ beq gamma_variant
+ cmp 512,d1
+ beq gamma_variant
+ jmp gamma_done
+gamma_variant:
+ movbu (48,a3),d1
+ cmp 0,d1
+ beq gamma_selector
+ jmp gamma_done
+gamma_selector:
+ movhu (1832,a3),d1
+ cmp 0,d1
+ beq gamma_identity
+ jmp gamma_done
+gamma_identity:
+ mov (28,sp),d1
+ cmp 0x6079d7fb,d1
+ beq gamma_caller
+ jmp gamma_done
+gamma_caller:
+ mov (72,sp),a1
+ cmp 0,a1
+ bne gamma_context
+ jmp gamma_done
+gamma_context:
+ mov (4,a1),a0
+ cmp a3,a0
+ beq gamma_header
+ jmp gamma_done
+gamma_header:
+ mov (52,a1),d1
+ cmp 11,d1
+ beq gamma_effective_header
+ jmp gamma_done
+gamma_effective_header:
+ mov (8,a3),d1
+ cmp $COLOR_HEADER,d1
+ beq gamma_temporary_call
+ jmp gamma_done
+# Only the inner call from our extended late wrapper owns this stack record.
+# Gamma frame + 28 + RGB frame 220 + native color frame 40 = late SP + 0.
+gamma_temporary_call:
+ mov sp,a0
+ add 127,a0
+ add 127,a0
+ add 34,a0
+ mov (0,a0),d1
+ cmp color_after_native_call,d1
+ beq gamma_temporary_controls
+ jmp gamma_done
+gamma_temporary_controls:
+ add 64,a0
+ mov (1512,a3),a1
+ cmp a0,a1
+ beq gamma_control_record
+ jmp gamma_done
+gamma_control_record:
+ mov (16,a1),d1
+ cmp $CONTROL_MAGIC,d1
+ beq gamma_original_identity
+ jmp gamma_done
+gamma_original_identity:
+ mov (12,a1),d1
+ cmp $GOLD_KEY,d1
+ beq gamma_gold
+ cmp $PORTRA_KEY,d1
+ beq gamma_portra
+ jmp gamma_done
+gamma_gold:
+ mov d2,a0
+ mov $GOLD_RGB0,d1
+ mov d1,(0,a0)
+ mov d3,a0
+ mov $GOLD_RGB1,d1
+ mov d1,(0,a0)
+ mov a2,a0
+ mov $GOLD_RGB2,d1
+ mov d1,(0,a0)
+ bra gamma_done
+gamma_portra:
+ mov d2,a0
+ mov $PORTRA_RGB0,d1
+ mov d1,(0,a0)
+ mov d3,a0
+ mov $PORTRA_RGB1,d1
+ mov d1,(0,a0)
+ mov a2,a0
+ mov $PORTRA_RGB2,d1
+ mov d1,(0,a0)
+gamma_done:
+ movbu d0,(89,sp)
+ ret [d2,d3,a2,a3],28

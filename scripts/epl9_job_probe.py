@@ -12,6 +12,7 @@ from epl9_offline_prototype import header, RECIPES, check_packing
 from mn103_subset import Memory, Region, Fault, parse_listing
 from mn103_calls import CallMachine
 from mn103_models import FillModel
+from epl9_placement import module_regions
 
 JOB, CACHE = 0x11000000, 0x11010000
 PARAMS, ERROR, STACK, SP = 0x10020000, 0x10030000, 0x10010000, 0x10013c00
@@ -30,6 +31,7 @@ JOB_WINDOWS = {
     'job_services': (0x6074eca0, 0x6074ed70),
     'job_builder_wrappers': (0x607507b9, 0x60750808),
     'job_effect_objects': (0x60752b86, 0x60752f56),
+    'job_effect_cleanup': (0x60752f56, 0x60753040),
     'dimension_tables': (0x60749187, 0x607491e9),
     'request_parameter_views': (0x60750498, 0x607504f6),
     'buffer_allocation': (0x6074a824, 0x6074aaa5),
@@ -581,9 +583,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                continue_processing=True, accept_request=True, provide_long_output=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
-               legacy_output_offsets=False, source_fixture=None):
-    if key not in RECIPES or kind not in (0x200,0x100,0x40) or selector not in (0,2):
+               legacy_output_offsets=False, source_fixture=None, native_module=None, machine_observer=None,
+               gain_fixture=None, parameter_fixture=None):
+    kinds=(0x200,0x100,0x40,0x1000) if parameter_fixture is not None else (0x200,0x100,0x40)
+    if key not in RECIPES or kind not in kinds or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
+    if native_module is not None and attach_table:
+        raise ValueError('native late hook must not be mixed with host table attachment')
     job, cache = bytearray([0xa5])*16384, bytearray([0xa5])*16384
     params = bytearray(32)
     params[8:12] = header(key)
@@ -591,6 +597,13 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     params[19] = 1  # Explicit ROM dimension-table selector, not a null entry.
     params[21] = selector
     struct.pack_into('<2I',params,0,OWNER_CALLBACK,OWNER_CONTEXT)
+    if parameter_fixture is not None:
+        if (not isinstance(parameter_fixture,bytes) or len(parameter_fixture)!=32 or
+                parameter_fixture[8:12]!=header(key) or
+                struct.unpack_from('<H',parameter_fixture,16)[0]!=kind or
+                parameter_fixture[21]!=selector or not all(struct.unpack_from('<2I',parameter_fixture))):
+            raise ValueError('native parameter fixture identity/size mismatch')
+        params[:]=parameter_fixture
     source_bounds=(source_fixture['stride'],source_fixture['height']) if source_fixture else (4608,3456)
     owner = FixtureOwner(continue_processing,accept_request,provide_slot,source_bounds)
     pool = FixturePool()
@@ -607,6 +620,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                      Region(OWNER_CONTEXT,bytearray(4)),
                      Region(0x8ff001b0,bytearray(5),True,'declared zero synchronization counters'),
                      Region(SCRATCH,bytearray(9596),True,'consumer workspace')])
+    if native_module is not None:
+        memory = Memory([*memory.regions,*module_regions(image,native_module)])
     m = CallMachine(code,memory,{'sp':SP,'a0':PARAMS,'a1':ERROR,'d0':0},
                     models={**completion,0x60402595:pool,0x604023b2:FixturePoolFree(pool),
                             0x4700111e:FillModel(),OWNER_CALLBACK:owner,
@@ -625,18 +640,21 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
         native_write(operand,value,size)
     m.write=observe_output_address
     source_reads=[]
+    if machine_observer is not None:
+        machine_observer(m)
     native_read=m.read
     def observe_source_read(operand,size=4):
         if operand.startswith('(') and SOURCE<=m.address(operand)<SOURCE+32*1024*1024:
             source_reads.append(dict(pc=hex(m.trace[-1]),address=hex(m.address(operand)),bytes=size))
         return native_read(operand,size)
     m.read=observe_source_read
-    # Host redirects only the Watercolor-specific branch and retains early paths.
-    result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[0x60752202])
+    # Historical host routing is disabled when the emitted native gate is used.
+    result = resume(m,m.enter(0x6074df04,RETURN,0xf0,44),[] if native_module is not None else [0x60752202])
     redirected = result.get('pc') == 0x60752202
     if redirected:
         result = resume(m,0x607523a5)
     report = dict(key=hex(key),kind=hex(kind),selector=selector,constructor=result,
+                  parameter_fixture=parameter_fixture.hex() if parameter_fixture is not None else None,
                   redirected=redirected,events=list(m.events),
                   cache_pointer=hex(memory.read(JOB+12316,4)),
                   error=hex(memory.read(ERROR,2)),allocations=list(pool.live))
@@ -652,9 +670,17 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['index_after_constructor'] = memory.read(JOB+10388,2)
     report['cache_sentinels'] = {str(o):hex(memory.read(CACHE+o,s))
         for o,s in ((5682,2),(5684,2),(5694,2),(5699,1),(5748,4),(5760,4))}
-    # Explicit synthetic caller data for two crop ratio records; not camera data.
+    # Historical synthetic four-halfword records; not camera data. A fresh
+    # trace shows the +3730 record reaches the color-gain producer, so these
+    # values must not all be interpreted as image geometry.
     for offset in (3730,3738):
         struct.pack_into('<4H',job,offset,640,480,640,480)
+    if gain_fixture is not None:
+        if len(gain_fixture)!=4 or any(type(v) is not int or not 0<=v<=65535 for v in gain_fixture):
+            raise ValueError('four synthetic unsigned coefficient values required')
+        # Caller inputs only. Native stores 607a4499..607a44b6 build +10406;
+        # the native request constructor subsequently copies it to R+1568.
+        for offset in (3730,3738): struct.pack_into('<4H',job,offset,*gain_fixture)
     if provide_reference_dimensions:
         # Copied natively to request+1576/+1584; the first pair is used as
         # reference dimensions by 6079565b/6079565d, not optional zero padding.
@@ -703,8 +729,9 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             return report
     report['index_before_executor'] = memory.read(JOB+10388,2)
     # Mode handoff after the complete constructor, before execution.
-    job[12:16] = header(11)
-    struct.pack_into('<I',job,10384,11)
+    if native_module is None:
+        job[12:16] = header(11)
+        struct.pack_into('<I',job,10384,11)
     if attach_table:
         memory.write(JOB+12320,PARAMETER_OBJECT,4)
         preparation=invoke(m,0x6074e6eb,0xf0,32,{'d0':JOB,'d1':count},[0x6072fd27])
@@ -782,6 +809,20 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
     report['cache_compare_executed'] = 0x6073e6ac in m.trace and 0x6073e950 in m.trace
     report['processor_entered'] = 0x60734068 in m.trace
     report['native_color_entered'] = 0x6079ebcc in m.trace
+    if native_module is not None:
+        report['native_film'] = dict(route_gate=native_module['symbols']['film_route_gate'] in m.trace,
+            color_entry=native_module['symbols']['film_color_entry'] in m.trace,
+            recipe_applied=native_module['symbols']['color_post_hsl'] in m.trace,
+            gamma_hook=native_module['symbols']['film_gamma_hook'] in m.trace,
+            job_header_unchanged=job[12:16] == header(key),
+            cached_key_unchanged=memory.read(JOB+10384,4) == key,
+            request_header=job[10448:10452].hex(),
+            early_gain_hook=native_module['symbols'].get('film_wb_entry') in m.trace,
+            source_gain_record=list(struct.unpack_from('<4H',job,10406)),
+            request_gain_record=list(struct.unpack_from('<4H',job,10440+1568)),
+            matrix_words=list(struct.unpack_from('<9H',cache,80)),
+            request_fields={str(o):memory.read(JOB+10440+o,s) for o,s in ((14,2),(28,2),(48,1),(1832,2))},
+            gamma_pointers=[hex(memory.read(CACHE+2596+i*4,4)) for i in range(3)])
     report['pending_record'] = {str(o):hex(m.memory.read(JOB+13640+o,4)) for o in (0,8,12,16)}
     report['pending_record_zero']=not any(job[13640:13640+56])
     report['cancelled'] = memory.read(JOB+10394,2)

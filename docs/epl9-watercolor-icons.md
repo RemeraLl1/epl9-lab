@@ -1,5 +1,13 @@
 # E-PL9 Watercolor icon resources
 
+**2026-11-07 correction:** the first replacement encoder allowed an RLE run
+to cross a scanline. Its extraction round-trip passed, but OM-Emu's OSD engine
+refused the stream and the replacement icons disappeared. The encoder now
+ends runs at every row boundary. Use the new component and evidence in
+[the OM-Emu validation](epl9-omemu-ui-validation.md), not the November 4 icon
+component. Six of the ten resources have now been observed in three native
+E133 UI contexts under emulation; this is not a camera rendering measurement.
+
 ## Result, 2026-11-02
 
 The exact E-PL9 image contains **separate `ART 12 I` and `ART 12 II` bitmap resources**, in several sizes and color variants. They were decoded and visually inspected. Matched value/label tables associate the two variants with the English Watercolor I/II strings. Separate Gold 200 and Portra 400 artwork can therefore target existing distinct resource slots; a new menu layout is not needed for those slots.
