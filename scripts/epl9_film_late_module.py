@@ -11,6 +11,7 @@ from epl9_tonal_drafts import validate_curve
 from mn103_emit import assemble, encode
 from epl9_color_extension import controls, assembly, matrix_assembly, KEYS
 from epl9_wb_extension import controls as wb_controls, assembly as wb_assembly
+from epl9_native_recipe_inputs import NativeRecipeInputs, bind_midtone_bias
 
 LATE_TEMPLATE = ROOT/'firmware_src/epl9_films_late.s.in'
 
@@ -35,13 +36,28 @@ def rgb_tables(document):
     return result
 
 
-def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None):
+def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,
+                      recipe_inputs=None):
     require(not (diagnostic_rgb and rgb_document is not None),'choose provided RGB tables or diagnostic RGB, not both')
+    require(recipe_inputs is None or type(recipe_inputs) is NativeRecipeInputs, 'requires pinned native recipe inputs')
+    require(recipe_inputs is None or not (diagnostic_rgb or rgb_document is not None or
+        color_document is not None or wb_document is not None), 'native recipe inputs cannot mix with separate or diagnostic overrides')
+    module = build_module(image,base,diagnostic_rgb,recipe_inputs=recipe_inputs)
+    native_inputs = None
+    if recipe_inputs is not None:
+        _, native_inputs = recipe_inputs.decoded()
+        color_document, wb_document = native_inputs['color_document'], native_inputs['wb_document']
+        stock = list(struct.unpack_from('<256H', image, 0x608c37e4-BASE))
+        # Stock is an explicit per-recipe decision, no historical draft data.
+        if any(r['native_rgb_curves'] != 'stock' for r in native_inputs['rows']):
+            rgb_document = dict(schema='epl9-native-rgb-tables-v1', recipes=[dict(
+                watercolor_key=r['watercolor_key'], curves=[stock, stock, stock]
+                if r['native_rgb_curves'] == 'stock' else r['native_rgb_curves']) for r in native_inputs['rows']])
     provided = rgb_tables(rgb_document) if rgb_document is not None else None
-    module = build_module(image,base,diagnostic_rgb)
     constants = dict(module['constants'],GOLD_HEADER=0x00780101,PORTRA_HEADER=0x00780201,
                      CONTROL_MAGIC=0x46504c45)
     source = Template(LATE_TEMPLATE.read_text()).substitute({k:str(v) for k,v in constants.items()})
+    source = bind_midtone_bias(source, module['recipes'], 'd3', 'color_midtone_bias')
     extended=controls(color_document) if color_document is not None else None
     if extended is not None:
         source=source.replace('color_restore:\n',assembly(extended,base)+'color_restore:\n')
@@ -79,13 +95,25 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
         replacement = encode(op,args,at,symbols)+suffix
         require(len(replacement) == len(raw),'late hook length mismatch')
         patches.append(dict(address=at,before=before,after=replacement.hex()))
+    binding = module.get('recipe_binding')
+    if binding is not None:
+        binding = dict(binding, emitted_tables={key: dict(
+            hsl_sha256=sha(data[module['constants'][prefix+'_HSL']-base:
+                module['constants'][prefix+'_HSL']-base+3028]),
+            native_rgb_sha256=[sha(data[constants[f'{prefix}_RGB{n}']-base:
+                constants[f'{prefix}_RGB{n}']-base+512]) for n in range(3)],
+            rgb_stock_requested=row['native_rgb_curves']=='stock',
+            wb_stock_requested=row['native_wb_gain_q10']=='stock')
+            for prefix,key,row in zip(('GOLD','PORTRA'),KEYS,native_inputs['rows'])})
     return dict(module,data=bytes(data),source=source,symbols=symbols,rows=rows,
+        native_recipe_inputs_complete=recipe_inputs is not None,
+        recipe_binding=binding,
         code_bytes=len(code),constants=constants,patches=patches,template=LATE_TEMPLATE,color_controls=extended,wb_controls=wb,
         metadata=dict(generation='late-v2',preserves_original_art_keys=True,
             existing_owner_object_unchanged=True,extra_owner_allocation=False,
             legacy_commit_prepare_interfaces_used=False,extra_stack_bytes=88,
             temporary_color_key=11,request_fields_restored_on_return=True,
-            rgb_data_source='provided' if provided is not None else 'diagnostic' if diagnostic_rgb else 'stock',
+            rgb_data_source='native-inputs' if native_inputs is not None else 'provided' if provided is not None else 'diagnostic' if diagnostic_rgb else 'stock',
             rgb_document_canonical_sha256=rgb_sha,native_curve_channel_order_verified=False,
             color_controls_sha256=sha(json.dumps(color_document,sort_keys=True).encode()) if extended else None,
             wb_controls_sha256=sha(json.dumps(wb_document,sort_keys=True).encode()) if wb else None,
@@ -108,11 +136,17 @@ def main():
     ap.add_argument('--rgb-tables',type=Path,help='Two recipes, three 256-entry native-order curves each')
     ap.add_argument('--color-controls',type=Path)
     ap.add_argument('--wb-controls',type=Path)
+    ap.add_argument('--recipe-inputs',type=Path,help='Complete native v3 inputs; no historical draft fallback')
+    ap.add_argument('--recipe-inputs-sha256',help='Required exact-byte hash for --recipe-inputs')
     args = ap.parse_args()
+    require(bool(args.recipe_inputs) == bool(args.recipe_inputs_sha256),
+            '--recipe-inputs and --recipe-inputs-sha256 must be supplied together')
+    recipe_inputs = NativeRecipeInputs(args.recipe_inputs.read_bytes(), args.recipe_inputs_sha256) if args.recipe_inputs else None
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
     color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
     wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
-    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document,color_document,wb_document)
+    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document,color_document,wb_document,
+        recipe_inputs=recipe_inputs)
     _,report = emit_files(module,args.out)
     print(json.dumps({k:report[k] for k in ('code_bytes','module_sha256','preserves_original_art_keys','extra_owner_allocation')},indent=2))
 

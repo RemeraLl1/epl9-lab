@@ -4,6 +4,18 @@ Record meaningful changes in English. Describe the result, why it changed, the c
 
 ## Unreleased
 
+### Explicit native v3 input path, 2026-11-08
+
+- Close a real native-builder gap: late modules previously always loaded v0 HSL and v2 tone even when external RGB/matrix/WB controls were supplied. Add a complete exact-byte-hash-pinned two-slot input route with no historical numerical fallback or diagnostic mixing. Do not supply or reconstruct the missing final v3 recipes.
+- Feed explicit HSL/RGB data into native module tables and contrast/H/S/M/WB/matrix/six-axis into existing native hooks. Generate separate native midtone biases when the two recipes differ; preserve the old generated source, module bytes and patches for the same historical numbers. Keep ART identities, request restoration, exact `0x1000` gates and assembly templates unchanged.
+- Record exact input and emitted table hashes; refuse partial use of the bundle through the early builder. Add both emitter and exact-image-probe CLI plumbing and a [continuation report](docs/epl9-native-v3-input-binding.md) with the schema, inaccessible source locations, exact stock/reader identities and remaining gates. No flashable container or camera operation is added.
+- Fifteen new synthetic tests pass, including actual native control execution and emitted table-offset checks. With the separate ART gate tests, **164 available tests pass**. Full discovery fails at the missing pinned OSD decoder's setup; its five tests are not run. Exact firmware/reader probes, real frozen-v3 binding, full-size package validation, GUI and physical-camera checks remain unperformed.
+
+### Input-free ART guard regressions, 2026-11-08
+
+- Add seven [synthetic late-hook gate tests](docs/epl9-art-hook-gate-regressions.md) for both recipe keys, exact request kinds including `0x1000`, rejected neighboring kinds, color/gamma caller and control-record guards, and WB arithmetic/state preservation. Three in-memory removal mutations are detected for both slots.
+- Leave production code and all numerical recipes unchanged. The available subset passes **149 tests**; full discovery is blocked by the missing pinned external OSD decoder, so its five tests are not counted as passed. No firmware-dependent, package, GUI or camera check was performed.
+
 ### Integration readiness refresh, 2026-11-07
 
 - Synchronize published research through `1f4dc523fc8db1a61863da66a09413627d5eb8e8`: emitted native hooks, late owner-preserving integration, gain/matrix/placement/load checks, the exact ART request-kind 0x1000 correction and row-bounded icon/OM-Emu validation. Preserve implementation source unchanged.

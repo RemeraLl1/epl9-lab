@@ -1,4 +1,11 @@
-# First integration readiness: 2026-11-07
+# First integration readiness: 2026-11-08
+
+**Source follow-up:** the [explicit native v3 input path](epl9-native-v3-input-binding.md)
+now feeds complete pinned inputs into emitted HSL/tone/RGB/WB/matrix/six-axis
+logic without silently inheriting v0/v2 numerical data. The actual frozen
+v3 files, exact firmware inputs and full-size container results are still
+unavailable here. This source-level integration and its synthetic tests do
+not close the package or physical-camera gates below.
 
 **The first native offline integration already exists. The first camera-test package is being prepared; a camera-ready or demonstrably safe release is not established.** Emitted processing hooks and native-menu icon checks are materially beyond the earlier Python-only experiments, but neither executes the physical sensor/TruePic/storage combination.
 

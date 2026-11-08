@@ -46,6 +46,8 @@ The [evidence-map illustration](../assets/docs/research-progress.svg) separates 
 | [WB math and placement](epl9-wb-math-placement.md) | Candidate early slot, arithmetic and observed lifecycle limits |
 | [Native owners and load sequence](epl9-native-owner-load-validation.md) | Selected native callbacks and planned early-load chunk checks |
 | [Native producer/owner binding](epl9-native-owner-binding.md) | Exact ART kind 0x1000 fix and connected cancellation/cleanup checks |
+| [Input-free ART guard regressions](epl9-art-hook-gate-regressions.md) | Synthetic color/gamma/WB gate checks for both slots, exact request kinds and state preservation; no firmware or v3 inputs |
+| [Explicit native v3 input binding](epl9-native-v3-input-binding.md) | Complete hash-pinned HSL/tone/RGB/WB/matrix/six-axis emission path, separate per-slot midtones, historical compatibility and exact missing-input handoff |
 | [Completion contracts](epl9-completion-contracts.md) | Native format labels, arithmetic and notification/cleanup component checks |
 | [Hardware completion](epl9-hardware-completion.md) | Corrected destination fields and bounded status replay, not ISP execution |
 | [Real RAW boundary](epl9-real-raw-boundary.md) | Actual input mosaic, CPU configuration versus the missing pixel executor |

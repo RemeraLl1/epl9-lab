@@ -1,4 +1,11 @@
-# Project status: 2026-11-07
+# Project status: 2026-11-08
+
+Latest source progress: [explicit native v3 input binding](epl9-native-v3-input-binding.md)
+removes the late builder's hard-coded v0/v2 data dependency when a complete
+hash-pinned native bundle is provided. It also supports separate midtone
+biases for both slots while preserving historical same-number emitted bytes.
+No actual final v3 data, complete install/stock-return package or camera
+result was supplied by this change.
 
 **Native offline integration and partial native-menu UI integration now exist. The install/stock-restore package work is active; the first physical camera integration has not occurred.** No on-camera Gold/Portra image, complete modified-job ISP cycle or universal recovery path is established.
 
@@ -10,7 +17,7 @@ Start with [first-integration readiness](first-integration-readiness.md) for the
 
 - Published baseline: main `1f4dc523fc8db1a61863da66a09413627d5eb8e8`, including native integration, WB/placement, producer/owner fixes and the November 7 OM-Emu icon validation.
 - Active integration, recipe-review, SD-loading, video, Wi-Fi and recovery chats were checked on 2026-11-07. Unpublished reports or private recipe inputs remain explicitly reported evidence, not source delivered by this checkout.
-- This synchronized cloud checkout passes **147 Python unit tests**. Historical Windows-wide totals and narrower selected suites belong to their recorded runs; they must not be reused as this count. No exact-image probe, OM-Emu camera session, private TIFF export, package audit or physical-camera test was rerun for this documentation update.
+- The November 7 synchronized cloud snapshot passed **147 Python unit tests**. The November 8 native-input and ART-gate changes pass **164 available tests**; full discovery currently fails at the absent pinned external OSD decoder's setup, leaving five OSD tests unrun. Historical Windows-wide totals and narrower selected suites belong to their recorded runs. No exact-image probe, OM-Emu session, private TIFF export, full-size package audit or physical-camera test was rerun for this update.
 - All firmware-specific published work identifies E-PL9 1.1/build 1101, downloaded stock input rather than an installed-body dump. See [exact input identity](epl9-1.1-initial-findings.md#exact-stock-input).
 
 ## What has been established

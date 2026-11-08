@@ -15,6 +15,7 @@ from epl9_tonal_drafts import definitions, READER_SHA, remap_curve
 from mn103_emit import assemble, encode
 from mn103_subset import parse_listing
 from epl9_placement import check_slot
+from epl9_native_recipe_inputs import NativeRecipeInputs, bind_midtone_bias
 
 MODULE_BASE = 0x68000000  # Synthetic, not an approved camera address.
 TEMPLATE = ROOT/'firmware_src/epl9_films.s.in'
@@ -28,22 +29,31 @@ def require(ok, message):
         raise ValueError(message)
 
 
-def build_module(image, base=MODULE_BASE, diagnostic_rgb=False):
+def build_module(image, base=MODULE_BASE, diagnostic_rgb=False, recipe_inputs=None):
     require(len(image) == 26214336 and sha(image) == MAIN_SHA, 'requires exact E-PL9 build 1101')
     require(type(base) is int and base % 4 == 0 and 0 <= base <= 0xffffffff-0x3c00,
             'module address is out of range or unaligned')
     placement=check_slot(image,base,0x3c00)
-    hsl_path, tone_path = ROOT/'recipes/epl9-film-drafts-v0.json', ROOT/'recipes/epl9-film-drafts-v2.json'
-    hsl = validate_recipes(json.loads(hsl_path.read_text()))
-    tone = definitions(json.loads(tone_path.read_text()))
+    require(recipe_inputs is None or type(recipe_inputs) is NativeRecipeInputs,
+            'requires pinned native recipe inputs')
+    require(not (recipe_inputs is not None and diagnostic_rgb), 'native inputs cannot use diagnostic RGB')
+    if recipe_inputs is None:
+        hsl_path, tone_path = ROOT/'recipes/epl9-film-drafts-v0.json', ROOT/'recipes/epl9-film-drafts-v2.json'
+        hsl = validate_recipes(json.loads(hsl_path.read_text()))
+        tone = definitions(json.loads(tone_path.read_text()))
+        input_definitions = {p.name:sha(p.read_bytes()) for p in (hsl_path,tone_path)}
+    else:
+        _, native_inputs = recipe_inputs.decoded()
+        hsl = tone = native_inputs['rows']
+        input_definitions = {'native_recipe_inputs': recipe_inputs.expected_sha256}
     require([r['watercolor_key'] for r in hsl] == [r['watercolor_key'] for r in tone], 'recipe order mismatch')
     constants = {name: base+at for name, at in OFFSETS.items()}
     constants.update(GOLD_KEY=0x01010078, PORTRA_KEY=0x01020078, COLOR_HEADER=0x000b0000)
     for prefix, row in zip(('GOLD','PORTRA'), tone):
         constants.update({prefix+'_CONTRAST': row['picture_mode_contrast'],
             prefix+'_HIGHLIGHTS': row['tone_level']['highlights'], prefix+'_SHADOWS': row['tone_level']['shadows']})
-        require(row['tone_level']['midtones'] == 1, 'assembly midtone bias requires review')
     source = Template(TEMPLATE.read_text(encoding='utf-8')).substitute({k: str(v) for k,v in constants.items()})
+    source = bind_midtone_bias(source, tone, 'd2', 'prepare_midtone_bias')
     code, symbols, rows = assemble(source, base)
     require(len(code) <= 0x1000, 'code overlaps first HSL table')
     data = bytearray(0x3c00)
@@ -72,12 +82,15 @@ def build_module(image, base=MODULE_BASE, diagnostic_rgb=False):
     return dict(data=bytes(data), source=source, symbols=symbols, constants=constants,
         code_bytes=len(code), rows=rows, patches=patches, base=base,
         diagnostic_rgb=diagnostic_rgb, recipes=tone,placement=placement,
-        definitions={p.name:sha(p.read_bytes()) for p in (hsl_path,tone_path)})
+        definitions=input_definitions,
+        recipe_binding=recipe_inputs.binding() if recipe_inputs is not None else None)
 
 
 def emit_files(module, out, reader=None):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),
             'output must be a new ignored local directory')
+    require(module.get('recipe_binding') is None or module.get('native_recipe_inputs_complete') is True,
+            'complete native recipe inputs require the late builder; refusing partial input emission')
     reader = reader or ROOT/'local/mn103-tooling/mn103-reader.exe'
     require(sha(reader.read_bytes()) == READER_SHA, 'requires inspected GNU reader')
     out.mkdir()
@@ -115,8 +128,10 @@ def emit_files(module, out, reader=None):
         owner_call_sites_bound=False, firmware_container_created=False, camera_accessed=False,
         owner_synchronization_and_buffer_lifetime_external=True,
         diagnostic_rgb=module['diagnostic_rgb'], native_wb_bias_implemented=False,
+        recipe_binding=module.get('recipe_binding'),
+        native_recipe_inputs_complete=module.get('native_recipe_inputs_complete', False),
         native_matrix_preserved=True, film_calibrated=False,
-        note='Experimental native glue using v2 HSL/tone direction. Stock RGB by default; no camera proof.')
+        note='Experimental native glue; historical drafts unless explicit native inputs are bound. No camera proof.')
     report.update(module.get('metadata',{}))
     (out/'manifest.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
     return code, report

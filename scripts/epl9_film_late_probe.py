@@ -20,6 +20,7 @@ from epl9_wb_extension import adjusted
 from epl9_wb_probe import boundaries as wb_boundaries, CoefficientReads
 from epl9_placement import module_regions, with_module_data
 from epl9_film_module import MODULE_BASE
+from epl9_native_recipe_inputs import NativeRecipeInputs
 
 AUX = 0x19000000
 NATIVE_OWNER = 0x1b000000
@@ -305,7 +306,8 @@ def route_cases(image,code,original_image,original_code,module):
     return results
 
 
-def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE):
+def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE,
+                  recipe_inputs=None):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
     image,code,_ = load_code(MAIN,reader)
@@ -314,7 +316,8 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
-    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document)
+    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,
+        color_document=color_document,wb_document=wb_document,recipe_inputs=recipe_inputs)
     generated,manifest = emit_files(module,out)
     modified = bytearray(image)
     if BASE<=base and base+len(module['data'])<=BASE+len(image):
@@ -341,11 +344,17 @@ def main():
     ap.add_argument('--color-controls',type=Path)
     ap.add_argument('--wb-controls',type=Path)
     ap.add_argument('--base',type=lambda v:int(v,0),default=MODULE_BASE)
+    ap.add_argument('--recipe-inputs',type=Path)
+    ap.add_argument('--recipe-inputs-sha256')
     args = ap.parse_args()
+    require(bool(args.recipe_inputs) == bool(args.recipe_inputs_sha256),
+            '--recipe-inputs and --recipe-inputs-sha256 must be supplied together')
+    recipe_inputs = NativeRecipeInputs(args.recipe_inputs.read_bytes(),args.recipe_inputs_sha256) if args.recipe_inputs else None
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
     color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
     wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
-    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document,color_document,wb_document,args.base)
+    image,modified,original_code,code,module,manifest = prepare_probe(args.out,args.diagnostic_rgb,document,color_document,
+        wb_document,args.base,recipe_inputs=recipe_inputs)
     crosscheck = original_key_crosscheck(image,original_code)
     frames = []
     for recipe in module['recipes']:
@@ -373,9 +382,13 @@ def main():
     require(MAIN.read_bytes()==image,'original main changed')
     sources = ('epl9_film_late_module.py','epl9_film_late_probe.py','epl9_film_module.py',
         'epl9_film_handoff.py','epl9_film_module_probe.py','epl9_job_probe.py','mn103_emit.py',
-        'mn103_subset.py','mn103_calls.py','mn103_models.py','epl9_color_extension.py','epl9_wb_extension.py','epl9_wb_probe.py','epl9_placement.py')
+        'mn103_subset.py','mn103_calls.py','mn103_models.py','epl9_color_extension.py','epl9_wb_extension.py',
+        'epl9_wb_probe.py','epl9_placement.py','epl9_native_recipe_inputs.py')
     report = dict(module=manifest,frame_cases=frames,route_cases=routes,flag_cases=flags,
         attached_object_original_key_crosscheck=crosscheck,
+        attached_object_crosscheck_definition='Historical v0 HSL/v2 tone owner-object control, not final v3 inputs',
+        attached_object_crosscheck_definition_sha256={name: sha((ROOT/'recipes'/name).read_bytes())
+            for name in ('epl9-film-drafts-v0.json','epl9-film-drafts-v2.json')},
         cache_sequence=cache,passthrough_cases=passthrough,native_owner_reference_case=refs,connected_jobs=connected,
         extended_color_boundary_cases=extended,
         early_gain_boundary_cases=wb_cases,

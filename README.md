@@ -22,7 +22,14 @@ The first implementation baseline is [Watercolor I → Kodak Gold 200-inspired a
 
 **On hold:** Log, 10-bit and HEVC research, by owner decision on 2026-11-04. No practical quality/dynamic-range gain or genuine ten-bit recording is established. Preserve the [findings and resumption limits](docs/log-ten-bit-handoff.md); do not automatically restart this direction. Other project goals remain separate.
 
-## Current evidence, 2026-11-07
+## Current evidence, 2026-11-08
+
+The [explicit native v3 input path](docs/epl9-native-v3-input-binding.md) now
+lets the late module consume complete hash-pinned native recipe data instead
+of silently inheriting v0 HSL/v2 tone. Its synthetic tests cover emitted
+tables and separate per-slot native midtone biases. The actual frozen v3
+files and exact package inputs remain unavailable here; this is source
+integration progress, not a completed camera-test package.
 
 **A native offline integration and partial native-menu icon integration now exist. The first camera-test package is being prepared; it is not yet a camera-tested or demonstrably safe release.** See [first-integration readiness](docs/first-integration-readiness.md) for what is done, active and still blocking a trial.
 
