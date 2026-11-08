@@ -7,6 +7,7 @@
 - [PEN-F Wi-Fi notes](https://github.com/fishcu/oly_fw_analysis/blob/main/docs/protocols/pen-f/WIFI.md)
 - [PEN-F USB update notes](https://github.com/fishcu/oly_fw_analysis/blob/main/docs/protocols/pen-f/USB_UPDATE.md)
 - [Caduceus for E-P7](https://github.com/cakelesscoder/caduceus-ep7)
+- [PEN-F and E-P7 lessons for the E-PL9 ART recipes](penf-ep7-art-comparison.md) — pinned source comparison, evidence levels and next steps; SD import remains research only.
 
 ## Camera and gyro formats
 
