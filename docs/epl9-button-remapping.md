@@ -67,7 +67,7 @@ For the last row, preserve the native ownership and cache contracts already docu
 
 ## Blockers and completion criteria
 
-The public checkout contains source and notes; `firmware/`, `local/` and upstream checkouts are ignored. The disconnected laptop holds the identified image, emulator installation and retained session evidence. They were not available here. This session also had no usable execution environment, so **no E133 input trace, new test run, script validation or patch verification was performed**.
+The public checkout contains source and notes; `firmware/`, `local/` and upstream checkouts are ignored. Earlier project reports locate the identified image, emulator installation and retained session evidence in local workspaces. Their current presence cannot be checked here: this session has no usable execution environment. **No E133 input trace, new test run, script validation or patch verification was performed.**
 
 Still missing:
 
@@ -77,3 +77,52 @@ Still missing:
 - Physical-button verification and candidate-specific installation/stock-return evidence.
 
 This research is complete as a source-backed handoff. The button feature is complete only when the above evidence exists and the separately authorized camera experiment confirms the intended behaviour. There is no E-PL9 Delete-remapping firmware ready to install in this branch.
+
+## Follow-up: published E133 address leads, 2026-11-08
+
+The owner clarified that this is a new button investigation and requested analysis of the firmware itself. The earlier manual review is only a baseline. **This follow-up did not obtain the firmware bytes or independently hash them.** It recovers concrete addresses from published, pinned cross-build analysis without claiming a byte-level E133 control-flow trace.
+
+### Image access was checked, not assumed
+
+- The current execution tool returns `No usable execution environment is available`. It cannot enumerate current directories or earlier workspaces. Consequently, a stock image may already exist there; this session cannot establish its presence or absence. The disconnected laptop must not be treated as the only possible location.
+- The public E-PL9 tree contains no firmware payload. The exact title searches available in Library returned the earlier research report and no stock-image metadata.
+- Upstream [BLOBS.sha256](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/BLOBS.sha256) independently pins the expected whole-container SHA above under `fw/old/OLY_E_133_1101_0000_0000.BIN`. This is an independent published hash pin, not a hash computed here.
+- Upstream [firmware inventory](https://github.com/fishcu/oly_fw_analysis/blob/9be1867ace6638d79e705048212dfddd3a1e794f/provenance/firmware-inventory.json) records the same 104552480-byte container and decoded-main hash, and supplies xdel archive URLs. The archive is indexed by search, but both its directory and direct BIN URL were inaccessible through the available browsing tool. No archive bytes were retrieved.
+- The [disassembly-window inventory](https://github.com/fishcu/oly_fw_analysis/blob/9be1867ace6638d79e705048212dfddd3a1e794f/provenance/disassembly-windows.json) was inspected: 2581 entries cover 23 distinct input-image hashes; none names the exact E133 decoded-main hash. It therefore does not supply an E133 Delete disassembly window to use here.
+- The pinned [stock provisioner](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/emu/host/firmware.mjs) can locate existing blocks, an explicit BIN, `OM_FW_DIR` or `OM_BIN`, and otherwise request stock from the vendor API. It verifies the whole-image pin before decoding. This route needs a working execution environment; it was not run. Obtaining and unpacking stock does not contact a camera.
+
+### Concrete cross-build findings
+
+[Machine-readable address leads](epl9-button-address-leads.json) retain **19 explicit E133 entries** from pinned [ports.mjs](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/emu/src/fw/ports.mjs). No address was filled by the map's unchanged-address fallback. Their roles come from the reference-model source in [play.mjs](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/emu/src/lab/play.mjs) and [menu.mjs](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/emu/src/lab/menu.mjs).
+
+| Address lead | E133 code in OM-Emu disassembly notation, or runtime table address | Runtime code address |
+| --- | --- | --- |
+| UI_IN task | `0x500f3a6a` | `0x604f3a8a` |
+| UI_IN post | `0x500f4b27` | `0x604f4b47` |
+| UI_IN forwarding function | `0x500f45fa` | `0x604f461a` |
+| UI_IN group descriptions | `0x6058584c` | table |
+| Raw code → EV translation | `0x60e3e654` | table |
+| Native assignable-button mapping entry | `0x50c4d628` | `0x6104d648` |
+| Key → button-setting lookup | `0x50c4c6a6` | `0x6104c6c6` |
+| Key → button-setting table | `0x6135d430` | table |
+| Button-setting getter | `0x50c5470e` | `0x6105472e` |
+| Function → action lookup | `0x50c4c73c` | `0x6104c75c` |
+| Function → action table | `0x6135d580` | table |
+| GUI send-event | `0x50d52e89` | `0x61152ea9` |
+| GUI dispatch | `0x50c7b4f5` | `0x6107b515` |
+| GUI event index → message map | `0x615493e0` | table |
+| GUI state-name table | `0x615ef200` | table |
+
+The code conversion is the upstream [hle.mjs](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/emu/src/lab/hle.mjs) rule: `runtime = disasm - 0x50000000 + 0x60400020`. Runtime table addresses must not receive this conversion. Every stored lead's calculated file offset lies within the expected 26214336-byte main payload. These arithmetic checks do not validate instructions, table rows or a patch site.
+
+The reference source explicitly describes an assignable-button chain through key-to-setting, getter and function-to-action lookup. Applying the published address map identifies where to examine that chain in E133. **The source map alone does not prove every E133 edge, the physical Fn identity, or that Delete takes this route.** Those claims require the original instructions and table records.
+
+### Delete and context: what is and is not established
+
+The named upstream Delete control uses raw code `0x0084`. Its historical reference-model analysis calls the press/release events `EV_PRESS_DEL_KEY` / `EV_RELEASE_DEL_KEY` and pairs them with GUI ON/LONG/OFF indices 39/40/41. The current player reads the selected model's input matrix and lets the camera application map keys itself; the older stand-in `S-KEYMAP` has been removed. Therefore neither the reference-model bit coordinates nor those GUI indices count as checked E133 mappings.
+
+The published [E133 model survey](https://github.com/flatpanda/om-emu/blob/147ca89c60b24774f3145c2813d79714e0f0b7b7/docs/model-survey.md) reports native playback at GUI `0x0608` and INFO at `0x060b`, with a native card filesystem in its test. The existing project runner uses native E133 shooting/menu states too. Thus distinct playback and shooting contexts are demonstrated by upstream/project execution, but the **Delete handlers within them remain unresolved**.
+
+The same published E133 facts locate the Rec View state word at runtime `0x623976bc`; upstream initializes it to standby 1 as an explicit emulator assumption. This word is an observation lead, not a sufficient physical-camera guard. A patch must distinguish idle still shooting from Rec View and busy capture rather than infer the context solely from the mode dial or one GUI state number.
+
+The current result narrows the pending byte-level work to these exact tables and functions. It does not establish that Delete is unused in all shooting-related states, identify an insertion point for a context hook, or preserve playback by construction. **No new button patch, script execution, disassembly or E133 key test is claimed.**
