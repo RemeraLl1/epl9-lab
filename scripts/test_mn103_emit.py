@@ -15,6 +15,9 @@ class EmitTests(unittest.TestCase):
             ('movhu',['(1832,a2)','d0'],'fa622807'),
             ('inc4',['a3'],'53'),
             ('add',['-88','sp'],'f8fea8'),
+            ('add',['-356','sp'],'fafe9cfe'),
+            ('add',['-2048','sp'],'fafe00f8'),
+            ('add',['2048','sp'],'fafe0008'),
             ('add',['64','a1'],'2140'),
             ('add',['d1','d1'],'e5'),
             ('add',['d0','d1'],'e1'),
@@ -41,7 +44,8 @@ class EmitTests(unittest.TestCase):
     def test_unsupported_forms_masks_and_widths_are_rejected(self):
         for op,args in [('mystery',[]),('ret',['[d0]','0']),('add',['128','d0']),
                         ('mov',['(256,sp)','d0']),('udfu01',['256','d0']),
-                        ('mov',['d0','d0']),('mov',['a1','a1']),('mov',['(a0)','(a1)'])]:
+                        ('mov',['d0','d0']),('mov',['a1','a1']),('mov',['(a0)','(a1)']),
+                        ('add',['32768','sp']),('add',['-32769','sp'])]:
             with self.assertRaises(ValueError):
                 encode(op,args,0x2000,{})
 

@@ -12,6 +12,7 @@
 
 - [Official E-PL9 manual](https://download.omsystem.com/pages/inst/epl9/manual_epl9_ENU.pdf)
 - [Gyroflow GCSV format](https://docs.gyroflow.xyz/app/technical-details/gcsv-format)
+- [ITU-T H.264 (08/2024), Annex A level limits](https://www.itu.int/rec/dologin_pub.asp?id=T-REC-H.264-202408-I%21%21PDF-E&lang=e&type=items)
 
 ## Diagnostic tools
 

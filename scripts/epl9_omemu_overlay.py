@@ -36,6 +36,9 @@ def overlay(stock,modified,spans,block):
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--out',type=Path,required=True)
+    ap.add_argument('--films-dir',type=Path,default=FILMS)
+    ap.add_argument('--candidate-main-sha256',
+        help='Required explicit pin when selecting a different audited film candidate')
     a=ap.parse_args();out=a.out.resolve()
     if out.exists() or not out.is_relative_to((ROOT/'local').resolve()):
         ap.error('new ignored local output directory required')
@@ -46,9 +49,22 @@ def main():
     if len(spans)!=10 or any(at+n>RESOURCE_PREFIX for at,n,_ in spans):
         raise ValueError('expected ten resources inside OM-Emu loaded prefix')
     icons=overlay(stock,modified,spans,'resource')
-    main=MAIN.read_bytes();candidate=(FILMS/'main-with-module-OFFLINE-ONLY.decoded.bin').read_bytes()
-    if sha(main)!=MAIN_SHA or sha(candidate)!=FILM_SHA:raise ValueError('wrong main input')
-    module=json.loads((FILMS/'manifest.json').read_text())
+    if a.films_dir.resolve()!=FILMS.resolve() and not a.candidate_main_sha256:
+        ap.error('a different film candidate requires its explicitly pinned main SHA-256')
+    main=MAIN.read_bytes();candidate=(a.films_dir/'main-with-module-OFFLINE-ONLY.decoded.bin').read_bytes()
+    expected=a.candidate_main_sha256 or FILM_SHA
+    if sha(main)!=MAIN_SHA or sha(candidate)!=expected:raise ValueError('wrong main input')
+    module=json.loads((a.films_dir/'manifest.json').read_text())
+    payload=(a.films_dir/'epl9-films-native.bin').read_bytes()
+    module_at=int(module['module_base'],16)-BASE
+    if (module['main_sha256']!=MAIN_SHA or len(payload)!=module['module_bytes'] or
+            sha(payload)!=module['module_sha256'] or candidate[module_at:module_at+len(payload)]!=payload):
+        raise ValueError('module manifest/binary/candidate disagree')
+    for patch in module['candidate_patches']:
+        at=int(patch['address'],16)-BASE
+        before,after=bytes.fromhex(patch['before']),bytes.fromhex(patch['after'])
+        if len(before)!=len(after) or main[at:at+len(before)]!=before or candidate[at:at+len(after)]!=after:
+            raise ValueError('hook bytes do not match the manifest')
     spans=[(int(module['module_base'],16)-BASE,module['module_bytes'],'film module')]
     spans += [(int(p['address'],16)-BASE,len(bytes.fromhex(p['before'])),'film hook '+p['address'])
               for p in module['candidate_patches']]

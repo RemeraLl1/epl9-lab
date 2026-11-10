@@ -6,7 +6,9 @@ import numpy as np
 from PIL import Image
 
 
-def compare(stock_dir, icons_dir, combined_dir):
+def compare(stock_dir, icons_dir, combined_dir, *, main_patch_count=6):
+    if main_patch_count not in (5, 6):
+        raise ValueError('expected the audited v3 five-span or diagnostic six-span main')
     dirs = [Path(p) for p in (stock_dir, icons_dir, combined_dir)]
     docs = [json.loads((p/'session.json').read_text()) for p in dirs]
     for doc in docs:
@@ -14,8 +16,8 @@ def compare(stock_dir, icons_dir, combined_dir):
             raise ValueError('not a completed E133 UI run')
         if len(doc['frames']) != 41 or any(f['unexpected_engine_errors'] for f in doc['frames']):
             raise ValueError('expected 41 frames without unexpected OSD engine errors')
-    if docs[0]['patch'] is not None or docs[1]['patch']['applied'] != 10 or docs[2]['patch']['applied'] != 16:
-        raise ValueError('expected stock, ten icons and combined sixteen patches')
+    if docs[0]['patch'] is not None or docs[1]['patch']['applied'] != 10 or docs[2]['patch']['applied'] != 10+main_patch_count:
+        raise ValueError('expected stock, ten icons and the explicitly selected combined patch count')
     if any(d['actions'] != docs[0]['actions'] for d in docs[1:]):
         raise ValueError('different input sequence')
     rows = []
@@ -52,7 +54,8 @@ def compare(stock_dir, icons_dir, combined_dir):
     if observed != expected:
         raise ValueError(f'incomplete or unexpected observed icon set: {observed}')
     hits = docs[2]['frames'][-1]['film_site_hits']
-    return dict(model='E133',frames_per_run=41,gui_states_equal=True,combined_matches_icons_pixels=True,
+    return dict(model='E133',frames_per_run=41,main_patch_count=main_patch_count,
+        gui_states_equal=True,combined_matches_icons_pixels=True,
         changes_confined_to_icon_regions=True,observed_resources=sorted(observed),
         changed_frames=sum(bool(r['changed_pixels']) for r in rows),rows=rows,
         combined_film_site_hits=hits,hardware_pixel_execution=False,
@@ -63,5 +66,6 @@ def compare(stock_dir, icons_dir, combined_dir):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('stock',type=Path); ap.add_argument('icons',type=Path); ap.add_argument('combined',type=Path)
+    ap.add_argument('--main-patch-count',type=int,choices=(5,6),default=6)
     a = ap.parse_args()
-    print(json.dumps(compare(a.stock,a.icons,a.combined),indent=2))
+    print(json.dumps(compare(a.stock,a.icons,a.combined,main_patch_count=a.main_patch_count),indent=2))

@@ -12,6 +12,10 @@ Tools and research notes for an Olympus PEN E-PL9 camera.
 
 These are research goals. A working E-PL9 firmware modification has not been produced by this project.
 
+The owner's clarified video target is [1920×1440 OpenGate at 60 fps](docs/epl9-opengate-video.md), paired with [gyro logging during recording](docs/epl9-gyro-logging.md). Exact-image analysis identifies 35 geometry records, a cross-component gyro-read protocol and candidate sample acquisition points. Full-field 60 fps readout, gyro clock synchronization and availability during movies remain unverified; the diagnostic CSV is not a production logger.
+
+The [timing and synchronization follow-up](docs/epl9-video-timing-sync.md) maps TG register writes and template producers, separate exposure/capture frame identities, a hardware TG IRQ marker and PTS-bearing supply descriptors. FULL mode uses a rate-ignoring fallback; physical exposure phase, the sequence-to-MOV join and full-field 4:3/60 remain unverified.
+
 The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
 
 [Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
@@ -56,3 +60,7 @@ The first camera session will record firmware versions, USB Storage/MTP descript
 See [research scope](docs/research-scope.md) and [sources](docs/sources.md).
 
 The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an exact shared COLOR table in the stock firmware. The [offline browser-client note](docs/offline-browser-client.md) separates cached interface behavior from camera transport requirements.
+
+## Cloud checkpoint
+
+See [cloud migration and source-only limitations](docs/cloud-migration-20261110.md). This checkpoint focuses on firmware research and recipe integration, without personal media.

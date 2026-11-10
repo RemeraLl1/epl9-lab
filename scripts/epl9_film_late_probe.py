@@ -12,7 +12,7 @@ from epl9_film_module_probe import call, flag_routes, USER_CONTROLS
 from epl9_workspace_bridge import ROOT, BASE, MAIN, sha
 from epl9_integrated_probe import native, full_route, WINDOWS, EXTRA_WINDOWS, SERVICE_WINDOWS
 from epl9_offline_prototype import JOB, REQUEST, CONTEXT, OUTPUT, OBJECT, SP, header
-from mn103_subset import Region, parse_listing
+from mn103_subset import Memory, Region, parse_listing
 from mn103_models import FillModel
 from epl9_job_probe import JOB_WINDOWS, experiment
 from epl9_color_extension import matrix_result
@@ -58,6 +58,11 @@ def run_color(image,code,module,request,obj,user,key,flags=0x10000002,state=None
     m = native(image,code,[Region(REQUEST,r,True),Region(CONTEXT,c,True),Region(OUTPUT,output,True),
         Region(AUX,cache,True),Region(OBJECT,obj),Region(USER_CONTROLS,controls),
         *module_regions(image,module)],{})
+    if module.get('metadata',{}).get('private_color_snapshot'):
+        # Explicitly provision enough synthetic stack for the opt-in snapshot.
+        # Existing baseline fixtures keep their historical bounds.
+        m.memory=Memory([Region(v.address-8192,bytearray(8192)+v.data,True,v.name)
+                         if v.name=='stack' else v for v in m.memory.regions])
     if user is not None:
         call(m,0x6074a061,0,16,dict(a0=USER_CONTROLS,a1=CONTEXT+64))
     before_c = bytes(c)
@@ -305,7 +310,7 @@ def route_cases(image,code,original_image,original_code,module):
     return results
 
 
-def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE):
+def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE,private_color=False):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
     image,code,_ = load_code(MAIN,reader)
@@ -314,7 +319,7 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
-    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document)
+    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document,private_color=private_color)
     generated,manifest = emit_files(module,out)
     modified = bytearray(image)
     if BASE<=base and base+len(module['data'])<=BASE+len(image):

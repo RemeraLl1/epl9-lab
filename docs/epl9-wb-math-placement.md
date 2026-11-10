@@ -148,6 +148,11 @@ the full callbacks have not been executed.
 
 ## Stack and synchronization: stronger evidence, remaining limits
 
+**Correction, November 7:** the historical prefix below omitted 60- and 28-byte
+intermediate frames. It is 480, not 392 bytes; the historical 2268-byte job
+would total 2748, not 2660. The current v3 job totals 2728. See the
+[native frame-fragment checks](epl9-v3-readback-sync-memory.md#stack-correction).
+
 The widened WB cases retain a measured peak of **2268 bytes** from the explicit
 job entry. Task descriptor 31 at table `60418cc4` declares entry `607ce1b5` and
 **14080 bytes** of stack. Its verified path to `607ce63f -> 6074e6eb` adds 16

@@ -1,0 +1,171 @@
+# Separate prototype: explicitly enlarge the HLS allocation, then initialize
+# its owned tail before the existing singleton store. No new BSS root.
+sd_ctor_hook:
+ call 0x60ae187f,[d2,d3,a2,a3],32
+ call sd_init_tail,[d2,d3,a2,a3],24
+ jmp 0x60ae1a8f
+
+sd_init_tail:
+ mov a0,a2
+ mov a0,a1
+ add 127,a1
+ add 53,a1
+ mov 27,d1
+ mov 0,d0
+tail_clear:
+ mov d0,(0,a1)
+ add 4,a1
+ add -1,d1
+ cmp 0,d1
+ bne tail_clear
+ mov a2,(200,a2)
+ mov 65538,d0
+ mov d0,(196,a2)
+ mov 288,d0
+ mov d0,(204,a2)
+ mov $FALLBACK0,d0
+ mov d0,(220,a2)
+ mov d0,(224,a2)
+ mov $PATH0,d0
+ mov d0,(232,a2)
+ mov $MODE,d0
+ mov d0,(236,a2)
+ mov $FALLBACK1,d0
+ mov d0,(252,a2)
+ mov d0,(256,a2)
+ mov $PATH1,d0
+ mov d0,(264,a2)
+ mov $MODE,d0
+ mov d0,(268,a2)
+ mov $MAGIC,d0
+ mov d0,(192,a2)
+ mov a2,a0
+ ret [d2,d3,a2,a3],24
+
+# A0=manager. Accept only the current singleton with the complete tail tag.
+sd_registry:
+ cmp 0,a0
+ beq registry_bad
+ mov 0x6239790c,a1
+ mov (0,a1),a1
+ cmp a0,a1
+ bne registry_bad
+ mov (192,a0),d0
+ cmp $MAGIC,d0
+ bne registry_bad
+ mov (196,a0),d0
+ cmp 65538,d0
+ bne registry_bad
+ mov (200,a0),a1
+ cmp a0,a1
+ bne registry_bad
+ mov (204,a0),d0
+ cmp 288,d0
+ bne registry_bad
+ add 127,a0
+ add 65,a0
+ ret [],4
+registry_bad:
+ mov 0,a0
+ ret [],4
+
+# Inline replay for the five-byte event-get CALL replacement.
+sd_event_hook:
+ call sd_state_event,[a2],8
+ jmp 0x60ae1c73
+
+sd_state_event:
+ call 0x60ae2073,[a2],8
+ add -32,sp
+ mov d0,(4,sp)
+ mov d1,(8,sp)
+ mov a0,(12,sp)
+ mov a1,(16,sp)
+ cmp 0,d0
+ bne state_event_resume
+ mov d3,a2
+ mov (0,a2),d0
+ cmp 0x02000100,d0
+ bne state_event_resume
+ mov a3,a0
+ call sd_registry,[],4
+ cmp 0,a0
+ beq state_event_resume
+ mov (16,a0),d0
+ cmp 0,d0
+ bne state_event_resume
+ mov 1,d0
+ mov d0,(16,a0)
+ mov a3,a0
+ add 127,a0
+ add 89,a0
+ mov a3,a1
+ mov (0,a2),d0
+ call sd_try,[d2,d3,a2,a3],64
+ mov a3,a0
+ add 127,a0
+ add 121,a0
+ mov a3,a1
+ mov d3,a2
+ mov (0,a2),d0
+ call sd_try,[d2,d3,a2,a3],64
+ mov 0,d0
+ mov d0,(208,a3)
+state_event_resume:
+ mov (4,sp),d0
+ mov (8,sp),d1
+ mov (12,sp),a0
+ mov (16,sp),a1
+ add 32,sp
+ ret [a2],8
+
+# D0 is logical test slot 1/2; A0 returns a stable recipe record.
+# No ART key or menu entry is allocated by these test aliases.
+sd_slot_get:
+ mov d0,d2
+ cmp 1,d2
+ beq slot_one
+ cmp 2,d2
+ beq slot_two
+ mov 0,a0
+ jmp slot_return
+slot_one:
+ mov $FALLBACK0,d3
+ jmp slot_lookup
+slot_two:
+ mov $FALLBACK1,d3
+slot_lookup:
+ mov 0x6239790c,a0
+ mov (0,a0),a0
+ call sd_registry,[],4
+ cmp 0,a0
+ beq slot_fallback
+ add 24,a0
+ cmp 2,d2
+ bne slot_read
+ add 32,a0
+slot_read:
+ mov (0,a0),d0
+ cmp 3,d0
+ bne slot_fallback
+ mov (4,a0),d0
+ mov (12,a0),d1
+ cmp d1,d0
+ bne slot_fallback
+ cmp 0x62267000,d0
+ bcs slot_fallback
+ cmp 0x6237f800,d0
+ bcc slot_fallback
+ mov d0,d1
+ and 3,d1
+ cmp 0,d1
+ bne slot_fallback
+ mov d0,a0
+ jmp slot_return
+slot_fallback:
+ mov d3,a0
+slot_return:
+ ret [d2,d3,a2,a3],24
+
+$LOADER
+$VALIDATOR

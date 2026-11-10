@@ -1,0 +1,133 @@
+# Standalone prototype only. A0=context, A1=HLS manager, D0=received event.
+# Caller enters with [d2,d3,a2,a3],64. No camera placement or hook is applied.
+# Context: state, selected record, embedded record, owned block, path, mode, error.
+sd_try:
+ mov a0,a2
+ mov a1,a3
+ cmp 0x02000100,d0
+ bne sd_return
+ mov (0,a2),d0
+ cmp 0,d0
+ bne sd_return
+ mov 0x8050,a0
+ mov (0,a0),d0
+ cmp 0,d0
+ bne sd_return
+ mov 0xa2aeaa3c,a0
+ mov (0,a0),d0
+ and 511,d0
+ cmp 511,d0
+ bne sd_return
+ mov sp,a0
+ add 8,a0
+ call 0x604117be,[a2],4
+ cmp 0,d0
+ bne sd_return
+ movhu (172,a3),d1
+ cmp 1,d1
+ blt sd_return
+ cmp 32767,d1
+ bgt sd_return
+ movhu (8,sp),d0
+ cmp d1,d0
+ bne sd_return
+ mov 0x6239914c,a0
+ mov (0,a0),d0
+ cmp 61440,d0
+ bne sd_return
+ mov 1,d0
+ mov d0,(0,a2)
+ mov 2048,d0
+ call 0x60402373,[],4
+ mov a0,a3
+ cmp 0,a3
+ beq sd_no_memory
+ mov a3,(12,a2)
+ mov (16,a2),a0
+ mov (20,a2),a1
+ call 0x609ce1c8,[],4
+ cmp 0,a0
+ beq sd_no_file
+ mov a0,d2
+ mov a3,a0
+ mov d2,a1
+ mov 1,d0
+ mov 661,d1
+ call 0x609ce357,[d2,d3,a2,a3],24
+ mov d0,(4,sp)
+ mov d2,a0
+ call 0x609ce1d1,[d2,a2,a3],16
+ cmp 0,d0
+ bne sd_close_unknown
+ mov (4,sp),d0
+ cmp 660,d0
+ bne sd_bad_length
+ mov a3,a0
+ call sd_validate,[d2,d3,a2,a3],24
+ cmp 0,d0
+ bne sd_bad_record
+ mov a3,(4,a2)
+ mov 3,d0
+ mov d0,(0,a2)
+ mov 0,d0
+ mov d0,(24,a2)
+ jmp sd_return
+sd_no_memory:
+ mov 1,d3
+ jmp sd_fallback
+sd_no_file:
+ mov 2,d3
+ jmp sd_free
+sd_bad_length:
+ mov 3,d3
+ jmp sd_free
+sd_bad_record:
+ mov 5,d3
+sd_free:
+ mov a3,a0
+ call 0x604023b2,[],4
+ mov 0,d0
+ mov d0,(12,a2)
+sd_fallback:
+ mov d3,(24,a2)
+ mov 2,d0
+ mov d0,(0,a2)
+ jmp sd_return
+sd_close_unknown:
+ mov 4,d0
+ mov d0,(24,a2)
+ mov d0,(0,a2)
+# The block remains owned; the descriptor was never published.
+sd_return:
+ mov (0,a2),d0
+ ret [d2,d3,a2,a3],64
+
+# Test-only adapter for the existing [a2],8 event-get call. The root word is
+# synthetic caller-owned storage, NOT an approved camera RAM address.
+sd_event_adapter:
+ call 0x60ae2073,[a2],8
+ add -32,sp
+ mov d0,(4,sp)
+ mov d1,(8,sp)
+ mov a0,(12,sp)
+ mov a1,(16,sp)
+ cmp 0,d0
+ bne sd_event_resume
+ mov 0x18004000,a0
+ mov (0,a0),a0
+ cmp 0,a0
+ beq sd_event_resume
+ mov a3,a1
+ mov d3,a2
+ mov (0,a2),d0
+ call sd_try,[d2,d3,a2,a3],64
+sd_event_resume:
+ mov (4,sp),d0
+ mov (8,sp),d1
+ mov (12,sp),a0
+ mov (16,sp),a1
+ add 32,sp
+ ret [a2],8
+
+# Independent native CRC/range checker, generated from the v0 field contract.
+$VALIDATOR

@@ -86,6 +86,11 @@ is therefore neither omitted nor replaced with a no-op.
 
 ### Connected integration and reentry limits
 
+**Stack correction, November 7:** the historical 2660-byte task-path total below
+omits two intermediate frames. The corrected total for its 2268-byte job is
+2748; the current v3 scoped total is 2728. See the
+[new fragment and concurrency checks](epl9-v3-readback-sync-memory.md).
+
 The connected test uses a host adapter at its existing owner boundary to bind
 event 2 to each selected stock handler and the declared context. This adapter
 is not emitted into firmware and does not establish the real creator-to-owner

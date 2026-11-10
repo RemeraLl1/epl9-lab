@@ -1,0 +1,53 @@
+# Opt-in: isolate the film's temporary COLOR identity/controls from its caller.
+# This does not make the stock executor or shared output/cache concurrently safe.
+# The native 40-byte caller frame is already present at the patched entry.
+film_private_entry:
+ mov (52,a0),d0
+ cmp $GOLD_KEY,d0
+ beq private_color_copy
+ cmp $PORTRA_KEY,d0
+ beq private_color_copy
+ mov (12,a0),a1
+ mov (2596,a1),d0
+ cmp $GOLD_RGB0,d0
+ beq private_color_copy
+ cmp $PORTRA_RGB0,d0
+ beq private_color_copy
+ jmp film_color_original
+
+private_color_copy:
+ add -2048,sp
+ mov a0,(4,sp)
+ mov sp,a1
+ add 16,a1
+ mov 32,d0
+private_context_words:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ bne private_context_words
+ mov (4,sp),a0
+ mov (4,a0),a0
+ mov sp,a1
+ add 127,a1
+ add 17,a1
+ mov 469,d0
+private_request_words:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ bne private_request_words
+ mov sp,a0
+ add 16,a0
+ mov sp,a1
+ add 127,a1
+ add 17,a1
+ mov a1,(4,a0)
+ call film_color_entry,[d2,d3,a2,a3],40
+private_color_return:
+ add 2048,sp
+ ret [d2,d3,a2,a3],40

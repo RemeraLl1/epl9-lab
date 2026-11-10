@@ -67,6 +67,8 @@ def encode(op, args, pc, symbols):
         if source is not None and target is not None:
             return bytes([0xe0+4*source+target])
         dest, address, value = reg(args[1],'d'), reg(args[1],'a'), number(args[0],symbols)
+        if args[1]=='sp' and not -128<=value<=127 and -32768<=value<=32767:
+            return b'\xfa\xfe'+struct.pack('<h',value)
         if not -128 <= value <= 127:
             raise ValueError('emitter supports only signed imm8 add')
         if args[1] == 'sp': return bytes([0xf8,0xfe,value & 255])

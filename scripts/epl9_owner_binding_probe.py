@@ -150,12 +150,20 @@ class BoundOwner:
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--out',type=Path,required=True)
-    ap.add_argument('--color-controls',type=Path,required=True)
+    ap.add_argument('--color-controls',type=Path)
+    ap.add_argument('--rgb-tables',type=Path,
+        help='Use the supplied recipe curves instead of diagnostic RGB markers')
+    ap.add_argument('--private-color',action='store_true',
+        help='Opt in to private stack copies of COLOR request/context')
     args=ap.parse_args()
-    color=json.loads(args.color_controls.read_text())
+    if args.color_controls is None and args.rgb_tables is None:
+        ap.error('provide diagnostic color controls or actual recipe RGB tables')
+    color=json.loads(args.color_controls.read_text()) if args.color_controls else None
+    rgb=json.loads(args.rgb_tables.read_text()) if args.rgb_tables else None
     wb=json.loads((ROOT/'recipes/epl9-native-wb-trial-v1.json').read_text())
     image,patched,_,code,module,manifest=prepare_probe(args.out,base=0x604a1300,
-        color_document=color,wb_document=wb,diagnostic_rgb=True)
+        color_document=color,wb_document=wb,rgb_document=rgb,diagnostic_rgb=rgb is None,
+        private_color=args.private_color)
     owner_code=load_owners(image,args.out)
     controls=control_cases(image,owner_code)
     producer_code={**owner_code,**load_factories(image,args.out)}

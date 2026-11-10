@@ -57,11 +57,14 @@ def task31(image):
     row=struct.unpack_from('<7I',image,0x60418cc4-BASE+31*28)
     if row[0]!=31 or row[3]!=0x607ce1b5 or row[5]!=14080:raise ValueError('task 31 descriptor changed')
     anchors={0x607ce1b5:'cff0',0x607ce1b7:'fafe9cfe',0x607ce31c:'cdd700b014',
+             0x607ce460:'cd010c303c',0x607cf0e0:'cdcef4b01c',
              0x607ce63f:'ddac00f8fff020'}
     for at,raw in anchors.items():
         if image[at-BASE:at-BASE+len(bytes.fromhex(raw))]!=bytes.fromhex(raw):raise ValueError('task stack anchor mismatch')
     return dict(task=31,entry=hex(row[3]),declared_stack=row[5],saved_register_bytes=16,local_bytes=356,
-                child_frame_bytes=20,executor_frame_already_in_measurement=True,
+                intermediate_call_frame_bytes=[20,60,28],prefix_before_executor_bytes=480,
+                executor_call_frame_bytes=32,executor_frame_already_in_measurement=True,
+                path='607ce31c -> 607ce460 -> 607cf0e0 -> 607ce63f; conditional branch',
                 task_runtime_and_interrupt_headroom_verified=False)
 
 
@@ -117,7 +120,7 @@ def main():
             rows.append(dict(key=hex(key),kind=hex(kind),stack=observer.result(),sequence=sequence,
                              restored=observer.restored,owner_matrix_matches_isp=True,hardware_started_after_restoration=True))
     task=task31(image)
-    task['scoped_configuration_stack_bound']=max(x['stack']['observed_stack_depth'] for x in rows)+392
+    task['scoped_configuration_stack_bound']=max(x['stack']['observed_stack_depth'] for x in rows)+task['prefix_before_executor_bytes']
     report=dict(main_sha256=sha(image),module=manifest,cases=rows,task31=task,owner_matrix_tails=owner_matrix_tails(image),
         owner_event2_inside_temporary_configuration=True,
         same_job_concurrent_entry_excluded=False,isp_irq_and_scheduling_verified=False,install_ready=False)

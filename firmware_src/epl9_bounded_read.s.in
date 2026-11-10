@@ -1,0 +1,203 @@
+# Offline prototype, no placement or hook. Caller owns context, DMA buffer,
+# stable mapping and exclusive controller access. +24 is a precondition token,
+# NOT an implemented lock. A0=context; CALL [d2,d3,a2,a3],64.
+# Context words: state,error,kind,page,buffer,capacity,exclusive,valid_bytes,
+# mapped_page,sample,completion,status,unused,saved_gate. States 0/1/2/3/4:
+# idle/inflight/data-valid/quarantined/failed-before-or-after-completion.
+read_page:
+ mov a0,a2
+ mov (0,a2),d0
+ cmp 0,d0
+ bne busy
+ mov 0,d0
+ mov d0,(28,a2)
+ mov d0,(4,a2)
+ mov (24,a2),d0
+ cmp 1,d0
+ bne bad_request
+ mov (20,a2),d0
+ cmp 2048,d0
+ bne bad_request
+ mov (16,a2),d0
+ cmp 0xa0000000,d0
+ bcs bad_request
+ cmp 0xaffff800,d0
+ bhi bad_request
+ and 15,d0
+ cmp 0,d0
+ bne bad_request
+ mov (12,a2),d0
+ cmp 12799,d0
+ bhi bad_request
+ mov (8,a2),d1
+ cmp 256,d1
+ beq main_page
+ cmp 257,d1
+ bne bad_request
+ mov 17344,d1
+ jmp join_page
+main_page:
+ mov 3520,d1
+join_page:
+ add d1,d0
+ call map_page,[d2,d3,a2,a3],32
+ cmp -1,d0
+ beq bad_map
+ mov d0,(32,a2)
+ mov 0x98d01104,a0
+ mov (0,a0),d0
+ cmp 0,d0
+ bne busy
+ mov 1,d0
+ mov d0,(0,a2)
+ mov 0x9880014c,a0
+ mov (0,a0),d0
+ mov d0,(52,a2)
+ or 0x02000000,d0
+ mov d0,(0,a0)
+ mov 0x98d011c0,a0
+ mov 1,d0
+ mov d0,(0,a0)
+ mov (32,a2),d0
+ mov 0x08000000,d1
+ add d1,d0
+ mov 0x98d01800,a0
+ mov d0,(0,a0)
+ mov 0x98d01804,a0
+ mov 0x01402001,d0
+ mov d0,(0,a0)
+ mov (16,a2),d0
+ and 0x7fffffff,d0
+ mov d0,(0,a0)
+ mov 0,d0
+ mov d0,(0,a0)
+ mov 0x98d01194,a0
+ mov (0,a0),d0
+ and 15,d0
+ mov d0,(36,a2)
+ mov 256,d2
+completion_poll:
+ mov 0x98d01104,a0
+ mov (0,a0),d0
+ mov d0,(40,a2)
+ and 0x9004,d0
+ cmp 0x9004,d0
+ beq completed
+ add -1,d2
+ cmp 0,d2
+ bne completion_poll
+ mov 5,d0
+ jmp quarantine
+completed:
+ mov (40,a2),d0
+ and 0xffff6ffb,d0
+ cmp 0,d0
+ bne extra_completion
+ mov 0x9004,d0
+ mov d0,(0,a0)
+ mov 0x98d011c0,a0
+ mov 0,d0
+ mov d0,(0,a0)
+ mov (52,a2),d0
+ mov 0x9880014c,a0
+ mov d0,(0,a0)
+ mov (36,a2),d0
+ cmp 13,d0
+ bhi maintenance_needed
+ mov 64,d2
+status_poll:
+ mov 10,d3
+status_delay:
+ add -1,d3
+ cmp 0,d3
+ bne status_delay
+ mov 0x98d01800,a0
+ mov 0x0c000000,d0
+ mov d0,(0,a0)
+ mov 0x98d01804,a1
+ mov 112,d0
+ mov d0,(0,a1)
+ mov 0x0c000002,d0
+ mov d0,(0,a0)
+ movbu (0,a1),d0
+ mov d0,(44,a2)
+ and 224,d0
+ cmp 0,d0
+ bne status_ready
+ add -1,d2
+ cmp 0,d2
+ bne status_poll
+ mov 7,d0
+ jmp quarantine
+status_ready:
+ mov (44,a2),d0
+ and 31,d0
+ cmp 0,d0
+ bne status_bad
+ mov 2048,d0
+ mov d0,(28,a2)
+ mov 2,d0
+ mov d0,(0,a2)
+ mov 0,d0
+ jmp done
+bad_request:
+ mov 1,d0
+ jmp fail
+bad_map:
+ mov 2,d0
+ jmp fail
+maintenance_needed:
+ mov 6,d0
+ jmp fail
+status_bad:
+ mov 8,d0
+ jmp fail
+extra_completion:
+ mov 9,d0
+quarantine:
+ mov 3,d1
+ mov d1,(0,a2)
+ mov d0,(4,a2)
+ jmp done
+fail:
+ mov 4,d1
+ mov d1,(0,a2)
+ mov d0,(4,a2)
+ jmp done
+busy:
+ mov 3,d0
+done:
+ ret [d2,d3,a2,a3],64
+
+# Same mapping relation as 604008a7, with explicit range and hop bounds.
+map_page:
+ mov d0,d3
+ and 63,d3
+ lsr 6,d0
+ mov d0,d2
+ mov 1024,a3
+map_loop:
+ cmp 1023,d2
+ bhi map_bad
+ mov d2,d0
+ asl 3,d0
+ mov 0xa03fdf80,d1
+ add d1,d0
+ mov d0,a0
+ mov (0,a0),d1
+ cmp 1023,d1
+ bhi map_bad
+ cmp d2,d1
+ beq map_found
+ mov d1,d2
+ add -1,a3
+ cmp 0,a3
+ bne map_loop
+map_bad:
+ mov -1,d0
+ ret [d2,d3,a2,a3],32
+map_found:
+ mov d2,d0
+ asl 6,d0
+ add d3,d0
+ ret [d2,d3,a2,a3],32

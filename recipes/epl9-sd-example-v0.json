@@ -1,0 +1,23 @@
+{
+  "schema": "epl9-sd-recipe-author-v0",
+  "recipe_id": 1001,
+  "name": "Custom 1",
+  "native_hsl": [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0]
+  ],
+  "contrast": 0,
+  "tone": {"highlights": 0, "midtones": 0, "shadows": 0},
+  "wb_q10": [1024, 1024],
+  "gamma_knots": [[0, 0], [4095, 4095]]
+}

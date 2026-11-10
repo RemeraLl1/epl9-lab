@@ -94,7 +94,7 @@ def definitions(document):
     return rows
 
 
-def wb_entries(layout):
+def wb_entries(layout, *, allow_distinct=False):
     entries = [layout.ip[tag] for tag in (0x100, 0x101)]
     for entry in entries:
         if (entry['type'], entry['count']) != (3, 4):
@@ -108,9 +108,10 @@ def wb_entries(layout):
     if a['offset'] < b['offset']+b['bytes'] and b['offset'] < a['offset']+a['bytes']:
         raise ValueError('WB entries alias one another')
     original = layout.integers(a)
-    if layout.integers(b) != original:
+    if not allow_distinct and layout.integers(b) != original:
         raise ValueError('this trial requires the measured equal captured/auto WB vectors')
-    scale_wb(original, 1000, 1000)
+    for entry in entries:
+        scale_wb(layout.integers(entry), 1000, 1000)
     return entries, original
 
 
@@ -135,11 +136,12 @@ def tone_entries(layout):
     return contrast, tone
 
 
-def prepare_tonal(source, image, key, hsl_document, tonal_document):
+def prepare_tonal(source, image, key, hsl_document, tonal_document, *, allow_distinct_wb=False):
     base_rows = validate_recipes(hsl_document)
     recipes = definitions(tonal_document)
     original_layout, base_cases = prepare(source, image, key, base_rows)
-    wb, original_wb = wb_entries(original_layout)
+    wb, original_wb = wb_entries(original_layout, allow_distinct=allow_distinct_wb)
+    original_vectors = [original_layout.integers(entry) for entry in wb]
     stock = list(struct.unpack_from('<256H', image, GAMMA_ROM-BASE))
     validate_curve(stock)
     base_by_name = {name: data for name, data, _ in base_cases}
@@ -160,9 +162,11 @@ def prepare_tonal(source, image, key, hsl_document, tonal_document):
         if decode_cmio(encoded, key) != expected_plain:
             raise ValueError('gamma replacement changed unrelated decoded T bytes')
         data[layout.t['offset']:layout.t['offset']+layout.t['bytes']] = encoded
-        updated_wb = scale_wb(original_wb, recipe['red_gain_permille'], recipe['blue_gain_permille'])
-        for entry in wb:
-            struct.pack_into('<2H', data, entry['offset'], *updated_wb[:2])
+        updated_vectors = [scale_wb(vector, recipe['red_gain_permille'], recipe['blue_gain_permille'])
+                           for vector in original_vectors]
+        updated_wb = updated_vectors[0]
+        for entry, vector in zip(wb, updated_vectors):
+            struct.pack_into('<2H', data, entry['offset'], *vector[:2])
         allowed = [(original_layout.p['offset']+at, 72) for _, _, at in SLOTS]
         allowed += [(original_layout.t['offset']+at, TABLE_BYTES+1) for at, _, _ in SLOTS]
         allowed += [(original_layout.t['offset']+GAMMA_T_OFFSET, 513)]
@@ -179,10 +183,12 @@ def prepare_tonal(source, image, key, hsl_document, tonal_document):
                                metadata_written=True, workspace_consumption_verified=False)
         verify_copy(source, data, allowed, original_layout.strips)
         result = Epl9Orf(bytes(data))
-        if any(result.integers(result.ip[tag]) != updated_wb for tag in (0x100, 0x101)):
+        if any(result.integers(result.ip[tag]) != vector
+               for tag, vector in zip((0x100, 0x101), updated_vectors)):
             raise ValueError('WB roundtrip failed')
         out.append((recipe, bytes(data), curve_bytes, dict(
             original_wb=list(original_wb), updated_wb=list(updated_wb),
+            original_auto_wb=list(original_vectors[1]), updated_auto_wb=list(updated_vectors[1]),
             curve_sha256=sha(curve_bytes), curve_min=curve[0], curve_max=curve[-1],
             curve_samples={str(i): curve[i] for i in (0, 1, 16, 32, 64, 128, 192, 254, 255)},
             changed_bytes=sum(a != b for a, b in zip(source, data)),

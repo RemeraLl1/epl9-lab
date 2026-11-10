@@ -13,6 +13,7 @@ from epl9_color_extension import controls, assembly, matrix_assembly, KEYS
 from epl9_wb_extension import controls as wb_controls, assembly as wb_assembly
 
 LATE_TEMPLATE = ROOT/'firmware_src/epl9_films_late.s.in'
+PRIVATE_TEMPLATE = ROOT/'firmware_src/epl9_films_private_color.s.in'
 
 
 def rgb_tables(document):
@@ -35,7 +36,7 @@ def rgb_tables(document):
     return result
 
 
-def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None):
+def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,private_color=False):
     require(not (diagnostic_rgb and rgb_document is not None),'choose provided RGB tables or diagnostic RGB, not both')
     provided = rgb_tables(rgb_document) if rgb_document is not None else None
     module = build_module(image,base,diagnostic_rgb)
@@ -48,6 +49,8 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
         source+='\n'+matrix_assembly(extended)
     wb=wb_controls(wb_document) if wb_document is not None else None
     if wb is not None: source+='\n'+wb_assembly(wb)
+    if private_color:
+        source+='\n'+Template(PRIVATE_TEMPLATE.read_text()).substitute({k:str(v) for k,v in constants.items()})
     code,symbols,rows = assemble(source,base)
     require(len(code) <= 0x1000,'late code overlaps HSL data')
     data = bytearray(module['data'])
@@ -67,7 +70,7 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
     hook_specs = [
         (0x60752202,'881cf9140c','jmp',['film_route_gate'],b''),
         (0x6079d7f4,'cd34fbf01cf8923d','call',['film_gamma_hook','[d2,d3,a2,a3]','28'],b'\xcb'),
-        (0x6079fb88,'f1d3f1ef53','jmp',['film_color_entry'],b''),
+        (0x6079fb88,'f1d3f1ef53','jmp',['film_private_entry' if private_color else 'film_color_entry'],b''),
     ]
     if wb is not None:
         hook_specs.append((0x6074f352,'0008257e0e','jmp',['film_wb_entry'],b''))
@@ -83,7 +86,9 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
         code_bytes=len(code),constants=constants,patches=patches,template=LATE_TEMPLATE,color_controls=extended,wb_controls=wb,
         metadata=dict(generation='late-v2',preserves_original_art_keys=True,
             existing_owner_object_unchanged=True,extra_owner_allocation=False,
-            legacy_commit_prepare_interfaces_used=False,extra_stack_bytes=88,
+            legacy_commit_prepare_interfaces_used=False,extra_stack_bytes=2176 if private_color else 88,
+            private_color_snapshot=private_color,
+            private_template_sha256=sha(PRIVATE_TEMPLATE.read_bytes()) if private_color else None,
             temporary_color_key=11,request_fields_restored_on_return=True,
             rgb_data_source='provided' if provided is not None else 'diagnostic' if diagnostic_rgb else 'stock',
             rgb_document_canonical_sha256=rgb_sha,native_curve_channel_order_verified=False,

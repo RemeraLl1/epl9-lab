@@ -57,6 +57,21 @@ class WhiteBalanceTests(unittest.TestCase):
         self.assertEqual([e['offset'] for e in entries], [1400, 1408])
         self.assertEqual(values, (496, 496, 256, 256))
 
+    def test_distinct_captured_auto_vectors_require_opt_in_and_stay_distinct(self):
+        data = wb_fixture()
+        struct.pack_into('<4H', data, 1400, 558, 444, 256, 256)
+        struct.pack_into('<4H', data, 1408, 508, 480, 256, 256)
+        layout = Epl9Orf(bytes(data))
+        with self.assertRaises(ValueError):
+            wb_entries(layout)
+        entries, captured = wb_entries(layout, allow_distinct=True)
+        self.assertEqual(captured, (558, 444, 256, 256))
+        scaled = [scale_wb(layout.integers(e), 1080, 880) for e in entries]
+        self.assertEqual(scaled, [(603, 391, 256, 256), (549, 422, 256, 256)])
+        struct.pack_into('<H', data, 1408, 0)
+        with self.assertRaises(ValueError):
+            wb_entries(Epl9Orf(bytes(data)), allow_distinct=True)
+
     def test_wb_alias_or_metadata_raw_overlap_is_rejected(self):
         for target in (1400, 2100, 200000):
             data = wb_fixture()

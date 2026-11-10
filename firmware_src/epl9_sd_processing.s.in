@@ -1,0 +1,474 @@
+# The old loader/state module is a separate immutable input at 0x69000000.
+# Native HLS task prepares both descriptors once, outside image configuration.
+sd_pipeline_event:
+ call $EVENT,[a2],8
+ add -32,sp
+ mov d0,(4,sp)
+ mov d1,(8,sp)
+ mov a0,(12,sp)
+ mov a1,(16,sp)
+ call sd_prepare_session,[d2,d3,a2,a3],24
+ mov (4,sp),d0
+ mov (8,sp),d1
+ mov (12,sp),a0
+ mov (16,sp),a1
+ add 32,sp
+ jmp 0x60ae1c73
+
+sd_prepare_session:
+ mov 0x6239790c,a0
+ mov (0,a0),a0
+ call $REGISTRY,[],4
+ cmp 0,a0
+ beq prepare_return
+ mov a0,a3
+ mov (16,a3),d0
+ cmp 0,d0
+ bne prepare_return
+ mov (20,a3),d0
+ cmp 0,d0
+ bne prepare_return
+ mov (24,a3),d0
+ cmp 2,d0
+ blt prepare_return
+ mov (56,a3),d0
+ cmp 2,d0
+ blt prepare_return
+ mov 1,d0
+ mov d0,(20,a3)
+ mov 8192,d0
+ call 0x60402373,[],4
+ cmp 0,a0
+ beq prepare_failed
+ mov a0,a2
+ mov 1,d0
+ call sd_materialize,[d2,d3,a2,a3],24
+ $SECOND_ARENA
+ mov 2,d0
+ call sd_materialize,[d2,d3,a2,a3],24
+ mov a2,(20,a3)
+ jmp prepare_return
+prepare_failed:
+ mov 0,d0
+ mov d0,(20,a3)
+prepare_return:
+ ret [d2,d3,a2,a3],24
+
+# A0=owned 4096-byte destination, D0=logical ID. No file I/O or allocation.
+sd_materialize:
+ mov a0,a3
+ mov d0,d2
+ call $GET,[d2,d3,a2,a3],24
+ mov a0,a2
+ mov a0,d0
+ mov d0,(12,a3)
+ mov d2,(8,a3)
+ mov 0,d0
+ mov d0,(0,a3)
+ mov 1,d0
+ mov d0,(4,a3)
+ mov 0x608ee360,a0
+ mov a3,a1
+ add 64,a1
+ mov a1,(16,a3)
+ mov 757,d0
+materialize_template:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ cmp 0,d0
+ bne materialize_template
+ mov a2,a0
+ $RECORD_PTR
+ mov a1,(20,a3)
+ mov 165,d0
+materialize_record:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ cmp 0,d0
+ bne materialize_record
+ mov (20,a3),a0
+ add 127,a0
+ add 21,a0
+ mov a0,(24,a3)
+ mov a2,a0
+ add 64,a0
+ mov a3,a1
+ add 76,a1
+ mov 12,d0
+materialize_hsl:
+ movhu (0,a0),d1
+ movhu d1,(0,a1)
+ movhu (2,a0),d1
+ movhu d1,(2,a1)
+ movhu (4,a0),d1
+ movhu d1,(4,a1)
+ add 6,a0
+ add 28,a1
+ add -1,d0
+ cmp 0,d0
+ bne materialize_hsl
+ mov $MAGIC,d0
+ mov d0,(0,a3)
+ mov a3,a0
+ ret [d2,d3,a2,a3],24
+
+# Default descriptors work before manager creation, SD readiness or allocation.
+sd_descriptor:
+ mov d0,d2
+ cmp 1,d2
+ beq descriptor_one
+ cmp 2,d2
+ beq descriptor_two
+ mov 0,a0
+ jmp descriptor_return
+descriptor_one:
+ mov $DEFAULT1,d3
+ jmp descriptor_lookup
+descriptor_two:
+ mov $DEFAULT2,d3
+descriptor_lookup:
+ mov 0x6239790c,a0
+ mov (0,a0),a0
+ call $REGISTRY,[],4
+ cmp 0,a0
+ beq descriptor_default
+ mov (20,a0),a0
+ cmp 0x61fb8540,a0
+ bcs descriptor_default
+ cmp 0x621b8541,a0
+ bcc descriptor_default
+ mov a0,a2
+ cmp 1,d2
+ beq descriptor_check
+ mov 4096,d0
+descriptor_offset:
+ add 127,a2
+ add -127,d0
+ cmp 127,d0
+ bgt descriptor_offset
+descriptor_remainder:
+ cmp 32,d0
+ bne descriptor_default
+ add 32,a2
+descriptor_check:
+ mov (0,a2),d0
+ cmp $MAGIC,d0
+ bne descriptor_default
+ mov (8,a2),d0
+ cmp d2,d0
+ bne descriptor_default
+ mov d2,d0
+ call $GET,[d2,d3,a2,a3],24
+ mov (12,a2),a1
+ cmp a0,a1
+ bne descriptor_default
+ mov a2,a0
+ jmp descriptor_return
+descriptor_default:
+ mov d3,a0
+descriptor_return:
+ ret [d2,d3,a2,a3],24
+
+# Only synthetic test identities get a shortened route; all other keys replay.
+sd_pipeline_route:
+ mov (4,sp),a0
+ mov (10384,a0),d1
+ cmp $KEY1,d1
+ beq pipeline_route_recipe
+ cmp $KEY2,d1
+ beq pipeline_route_recipe
+ mov d2,d0
+ exthu d0
+ udfu01 12,d0
+ jmp 0x60752207
+pipeline_route_recipe:
+ jmp 0x607523a5
+
+sd_stock_color:
+ mov a0,d3
+ mov d3,a3
+ inc4 a3
+ jmp 0x6079fb8d
+
+sd_pipeline_color:
+ add -32,sp
+ mov a0,(4,sp)
+ mov (52,a0),d0
+ cmp $KEY1,d0
+ beq pipeline_slot_one
+ cmp $KEY2,d0
+ beq pipeline_slot_two
+ jmp pipeline_exit_check
+pipeline_slot_one:
+ mov 1,d0
+ jmp pipeline_qualify
+pipeline_slot_two:
+ mov 2,d0
+pipeline_qualify:
+ call sd_descriptor,[d2,d3,a2,a3],24
+ mov a0,(8,sp)
+ mov (4,sp),a0
+ mov (4,a0),a1
+ mov (52,a0),d0
+ cmp $KEY1,d0
+ bne pipeline_header_two
+ mov (8,a1),d0
+ cmp $HEADER1,d0
+ bne pipeline_exit_check
+ jmp pipeline_format
+pipeline_header_two:
+ mov (8,a1),d0
+ cmp $HEADER2,d0
+ bne pipeline_exit_check
+pipeline_format:
+ movhu (14,a1),d0
+ cmp 512,d0
+ beq pipeline_secondary
+ cmp 256,d0
+ beq pipeline_secondary
+ cmp 64,d0
+ beq pipeline_secondary
+ cmp 4096,d0
+ beq pipeline_secondary
+ jmp pipeline_exit_check
+pipeline_secondary:
+ movhu (28,a1),d0
+ cmp 256,d0
+ beq pipeline_variant
+ cmp 512,d0
+ bne pipeline_exit_check
+pipeline_variant:
+ movbu (48,a1),d0
+ cmp 0,d0
+ bne pipeline_exit_check
+ movhu (1832,a1),d0
+ cmp 0,d0
+ bne pipeline_exit_check
+ mov 1,d0
+ mov d0,(20,sp)
+ jmp pipeline_copy
+
+# Known module/default and once-published arena pointers remain alive.
+pipeline_exit_check:
+ mov (4,sp),a0
+ mov (12,a0),a1
+ mov (2596,a1),d0
+ cmp $DEFAULT_GAMMA1,d0
+ beq pipeline_exit
+ cmp $DEFAULT_GAMMA2,d0
+ beq pipeline_exit
+ mov d0,(16,sp)
+ mov 1,d0
+ call sd_descriptor,[d2,d3,a2,a3],24
+ mov (24,a0),d1
+ mov (16,sp),d0
+ cmp d1,d0
+ beq pipeline_exit
+ mov 2,d0
+ call sd_descriptor,[d2,d3,a2,a3],24
+ mov (24,a0),d1
+ mov (16,sp),d0
+ cmp d1,d0
+ bne pipeline_stock
+pipeline_exit:
+ mov 0,d0
+ mov d0,(20,sp)
+pipeline_copy:
+ mov (4,sp),a3
+ mov (8,sp),a2
+ mov (20,sp),d3
+ add -2048,sp
+ mov a2,(4,sp)
+ mov d3,(8,sp)
+ mov a3,a0
+ mov sp,a1
+ add 16,a1
+ mov 32,d0
+pipeline_context:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ cmp 0,d0
+ bne pipeline_context
+ mov (4,a3),a0
+ mov sp,a1
+ add 127,a1
+ add 17,a1
+ mov 469,d0
+pipeline_request:
+ mov (a0),d1
+ mov d1,(a1)
+ inc4 a0
+ inc4 a1
+ add -1,d0
+ cmp 0,d0
+ bne pipeline_request
+ mov sp,a3
+ add 16,a3
+ mov sp,a2
+ add 127,a2
+ add 17,a2
+ mov a2,(4,a3)
+ mov (12,a3),d2
+ mov (60,a3),d0
+ or 268435458,d0
+ mov d0,(60,a3)
+ cmp 0,d3
+ beq pipeline_native
+ mov 11,d0
+ mov d0,(52,a3)
+ mov 720896,d0
+ mov d0,(8,a2)
+ mov (4,sp),a0
+ mov (20,a0),a0
+ movbu (1795,a2),d0
+ extb d0
+ movhu (136,a0),d1
+ exth d1
+ add d1,d0
+ cmp 2,d0
+ ble pipeline_contrast_hi
+ mov 2,d0
+pipeline_contrast_hi:
+ cmp -2,d0
+ bge pipeline_contrast_lo
+ mov -2,d0
+pipeline_contrast_lo:
+ movbu d0,(1795,a2)
+ $CONTROL_PTR
+ mov (1512,a2),a0
+ mov 5,d0
+ cmp 0,a0
+ beq pipeline_zero_controls
+pipeline_controls:
+ movhu (a0),d1
+ movhu d1,(a1)
+ add 2,a0
+ add 2,a1
+ add -1,d0
+ cmp 0,d0
+ bne pipeline_controls
+ jmp pipeline_merge
+pipeline_zero_controls:
+ mov 0,d1
+pipeline_zero_loop:
+ movhu d1,(a1)
+ add 2,a1
+ add -1,d0
+ cmp 0,d0
+ bne pipeline_zero_loop
+pipeline_merge:
+ $CONTROL_PTR
+ mov (4,sp),a0
+ mov (20,a0),a0
+ $TONE
+ mov a1,(1512,a2)
+ mov a1,a0
+ mov a3,a1
+ add 64,a1
+ call 0x6074a061,[],16
+pipeline_native:
+ mov a3,a0
+ call sd_stock_color,[d2,d3,a2,a3],40
+pipeline_after_native:
+ mov d0,(12,sp)
+ cmp 0,d3
+ beq pipeline_done
+pipeline_post_hsl:
+ mov (4,sp),a0
+ mov (16,a0),a0
+ movhu (3024,a0),d0
+ mov d2,a1
+ call 0x6079e50e,[d2,d3,a2,a3],80
+ mov 0,d0
+ mov d0,(1524,a2)
+ mov a3,a0
+ call 0x6079f309,[d2,d3,a2,a3],32
+ mov (4,sp),a0
+ mov (24,a0),a1
+ mov a1,d0
+ mov a1,d1
+ mov d2,a0
+ call 0x6079d7a0,[d2,a2],8
+pipeline_done:
+ mov (12,sp),d0
+ add 2048,sp
+ add 32,sp
+ ret [d2,d3,a2,a3],40
+pipeline_stock:
+ mov (4,sp),a0
+ add 32,sp
+ jmp sd_stock_color
+
+sd_pipeline_wb_hook:
+ add -8,sp
+ mov a0,(4,sp)
+ mov a2,a0
+ call sd_wb_request,[d2,d3,a2,a3],40
+ mov (4,sp),a0
+ add 8,sp
+ clr d0
+ clr d2
+ mov 3710,a1
+ jmp 0x6074f357
+
+sd_wb_request:
+ mov a0,a2
+ movhu (14,a2),d0
+ cmp 512,d0
+ beq wb_identity
+ cmp 256,d0
+ beq wb_identity
+ cmp 64,d0
+ beq wb_identity
+ cmp 4096,d0
+ bne wb_return
+wb_identity:
+ mov (8,a2),d0
+ cmp $HEADER1,d0
+ beq wb_one
+ cmp $HEADER2,d0
+ beq wb_two
+ jmp wb_return
+wb_one:
+ mov 1,d0
+ jmp wb_descriptor
+wb_two:
+ mov 2,d0
+wb_descriptor:
+ call sd_descriptor,[d2,d3,a2,a3],24
+ mov (20,a0),a3
+ mov 4,d0
+ mov a2,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 127,a1
+ add 44,a1
+wb_nonzero:
+ movhu (a1),d1
+ cmp 0,d1
+ beq wb_return
+ add 2,a1
+ add -1,d0
+ cmp 0,d0
+ bne wb_nonzero
+ $WB
+wb_return:
+ ret [d2,d3,a2,a3],40
