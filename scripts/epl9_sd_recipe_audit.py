@@ -1,4 +1,6 @@
 """Read-only E-PL9 SD recipe source audit; emits no patch or camera commands."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -9,7 +11,6 @@ import subprocess
 
 from epl9_workspace_bridge import ROOT, BASE, MAIN, MAIN_SHA
 from epl9_color_audit import STOCK_SHA
-from epl9_tonal_drafts import READER_SHA
 from epl9_osd_audit import load_decoder, verified_bytes, OSD_SHA
 from mn103_subset import parse_listing
 
@@ -80,8 +81,8 @@ def main():
     image = verified_bytes(MAIN, MAIN_SHA, 26214336)
     osd_path = MAIN.parent/'01_0101_421e0020.decoded.bin'
     osd_data = verified_bytes(osd_path, OSD_SHA, 26214336)
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    verified_bytes(reader, READER_SHA)
+    reader = default_reader()
+    verify_reader(reader)
     code, listings = {}, {}
     for name, (start, end) in WINDOWS.items():
         listing = ((args.listings/(name+'.tsv')).read_text(encoding='utf-8') if args.listings else
@@ -104,7 +105,7 @@ def main():
         inputs=[dict(name='stock package', bytes=len(stock), sha256=digest(stock)),
                 dict(name='decoded main', bytes=len(image), sha256=digest(image)),
                 dict(name='decoded OSD', bytes=len(osd_data), sha256=digest(osd_data))],
-        reader_sha256=READER_SHA, script_sha256=digest(Path(__file__).read_bytes()),
+        reader_sha256=verify_reader(reader), script_sha256=digest(Path(__file__).read_bytes()),
         checked_instruction_anchors=len(ANCHORS),
         listings={k:dict(start=hex(WINDOWS[k][0]), end=hex(WINDOWS[k][1]),
                          sha256=digest(v.encode())) for k,v in listings.items()},

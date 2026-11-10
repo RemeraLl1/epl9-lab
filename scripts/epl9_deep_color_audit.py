@@ -2,6 +2,8 @@
 
 Listings and synthetic execution are offline evidence, never a firmware patch.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -227,7 +229,7 @@ def exercise(image, code):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image', type=Path, default=ROOT / 'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin')
-    p.add_argument('--reader', type=Path, default=ROOT / 'local/mn103-tooling/mn103-reader.exe')
+    p.add_argument('--reader', type=Path, default=default_reader())
     p.add_argument('--out', type=Path, required=True)
     args = p.parse_args()
     checked_output(args.out)
@@ -235,6 +237,7 @@ def main():
     checked_image(data)
     listings, code = {}, {}
     for name, (start, stop) in WINDOWS.items():
+        verify_reader(args.reader)
         result = subprocess.run([str(args.reader.resolve()), str(args.image.resolve()),
                                  hex(BASE), hex(start-BASE), hex(stop-BASE)],
                                 check=True, text=True, capture_output=True)
@@ -253,7 +256,7 @@ def main():
                   stock_container_sha256=STOCK_SHA,
                   container_note='Identity carried from prior audit; decoded main is read here.',
                   input_bytes=len(data), input_sha256=MAIN_SHA,
-                  reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+                  reader_sha256=verify_reader(args.reader),
                   script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   dependencies={name: hashlib.sha256((ROOT/'scripts'/name).read_bytes()).hexdigest()
                                 for name in ('mn103_subset.py', 'mn103_calls.py', 'epl9_offline_prototype.py')},

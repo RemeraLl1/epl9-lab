@@ -4,6 +4,8 @@ Writes evidence only to a new directory under ignored local/. No camera access.
 The address mapping is the established main-component analysis mapping, not a
 claim about every component's runtime address. GNU listings need manual review.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -101,7 +103,7 @@ def offsets(data, needle):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     parser.add_argument('--no-disassembly', action='store_true')
     parser.add_argument('--arm-package-dir', type=Path,
                         help='optional isolated Capstone 5.0.6 directory; see Wi-Fi report')
@@ -149,6 +151,7 @@ def main():
     checked = {}
     if not args.no_disassembly:
         for name, (start, stop) in WINDOWS.items():
+            verify_reader(args.reader)
             listings[name] = subprocess.check_output(
                 [str(args.reader.resolve()), str((ROOT/'local/epl9-1101-analysis/decoded'/next(iter(COMPONENTS))).resolve()),
                  hex(BASE), hex(start-BASE), hex(stop-BASE)], text=True)
@@ -205,7 +208,7 @@ def main():
                                   capstone_version='5.0.6' if args.arm_package_dir else None),
                   range_header_literals={s: offsets(image, s.encode()) for s in
                                          ['Range:', 'Content-Range:', 'Accept-Ranges:', '206 Partial Content']},
-                  reader_sha256=sha(args.reader.read_bytes()) if listings else None,
+                  reader_sha256=verify_reader(args.reader) if listings else None,
                   script_sha256=sha(Path(__file__).read_bytes()), camera_accessed=False, firmware_modified=False)
     (out/'audit.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(dict(out=str(out), verified_components=len(inventory), strings=len(strings),

@@ -3,6 +3,8 @@
 Only RAM copies are overlaid. Kernel, pools, owner lookup and RPC completions
 are finite declared fixtures, not camera measurements.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 from collections import Counter
 import hashlib
@@ -16,7 +18,6 @@ from epl9_sd_loader import MODULE_BASE
 from epl9_sd_loader_probe import (LoaderFixture, RuntimeMemory, decode_module,
     authored_code, require, GUARD, PHYSICAL, SECTION_FLAGS, SD_STATUS, STACK, STOP)
 from epl9_sd_state_audit import PRIVATE
-from epl9_tonal_drafts import READER_SHA
 from epl9_wifi_prototype import Model, Evidence, NativeReader, span
 from mn103_calls import CallMachine
 from mn103_subset import Region, Fault, parse_listing
@@ -242,8 +243,8 @@ def main():
     for row in protected:require(hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()==row['sha256'],'protected input changed')
     defaults=[(ROOT/f'local/epl9-sd-slot-prototype-20261107-final/recipe-{i}-EXPERIMENTAL.RCP').read_bytes() for i in (1,2)]
     module=build(defaults);a.out.mkdir(parents=True)
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
-    require(hashlib.sha256(reader.read_bytes()).hexdigest()==READER_SHA,'wrong GNU reader')
+    reader=default_reader()
+    verify_reader(reader)
     executable=dict(module,data=module['data'][:module['code_bytes']])
     decode_module(executable,a.out,reader);module['code']=executable['code']
     (a.out/'state-module-SYNTHETIC-ONLY.bin').write_bytes(module['data'])
@@ -318,7 +319,7 @@ def main():
     report=dict(model='Olympus E-PL9 / IM008',displayed_version='1.1 (owner)',main_build=1101,
         main_bytes=len(image),main_sha256=MAIN_SHA,module_bytes=len(module['data']),code_bytes=module['code_bytes'],
         module_sha256=hashlib.sha256(module['data']).hexdigest(),module_base=hex(MODULE_BASE),synthetic_base=True,
-        reader_sha256=READER_SHA,instructions=len(module['code']),patches=patches,patches_applied_only_to_ram_copy=True,
+        reader_sha256=verify_reader(reader),instructions=len(module['code']),patches=patches,patches_applied_only_to_ram_copy=True,
         object_bytes=dict(stock=180,prototype=288),original_prefix_equal=True,root_published_after_tail_init=True,
         task_creation_preserves_tail=True,event_caller_outputs_equal=True,dead_return_word_excluded=True,
         cases=cases,reentrant_event_excluded=True,allocation_failure_fallback=True,

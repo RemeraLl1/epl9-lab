@@ -3,6 +3,8 @@
 Placement defaults to synthetic; one early-load candidate is opt-in. Owner allocation/call-site binding is an explicit
 remaining integration requirement. Default RGB contents stay stock.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
@@ -11,7 +13,7 @@ import subprocess
 from string import Template
 
 from epl9_workspace_bridge import ROOT, BASE, MAIN, MAIN_SHA, COLOR_ROM, sha, validate_recipes
-from epl9_tonal_drafts import definitions, READER_SHA, remap_curve
+from epl9_tonal_drafts import definitions, remap_curve
 from mn103_emit import assemble, encode
 from mn103_subset import parse_listing
 from epl9_placement import check_slot
@@ -78,8 +80,8 @@ def build_module(image, base=MODULE_BASE, diagnostic_rgb=False):
 def emit_files(module, out, reader=None):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),
             'output must be a new ignored local directory')
-    reader = reader or ROOT/'local/mn103-tooling/mn103-reader.exe'
-    require(sha(reader.read_bytes()) == READER_SHA, 'requires inspected GNU reader')
+    reader = reader or default_reader()
+    verify_reader(reader)
     out.mkdir()
     binary = out/'epl9-films-native.bin'
     binary.write_bytes(module['data'])
@@ -105,7 +107,7 @@ def emit_files(module, out, reader=None):
         require(len(args) == len(operands), 'GNU operand count mismatch')
     (out/'native-listing.tsv').write_text(listing,encoding='utf-8')
     report = dict(model='Olympus E-PL9', displayed_version='1.1 (owner report)', downloaded_build='1101',
-        main_bytes=26214336, main_sha256=MAIN_SHA, reader_sha256=READER_SHA,
+        main_bytes=26214336, main_sha256=MAIN_SHA, reader_sha256=verify_reader(reader),
         module_base=hex(module['base']), placement=module['placement'],
         module_bytes=len(module['data']), code_bytes=module['code_bytes'],
         module_sha256=sha(module['data']), source_sha256=sha(module['source'].encode()),

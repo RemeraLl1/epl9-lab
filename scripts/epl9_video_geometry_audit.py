@@ -3,6 +3,8 @@
 Executes only bounded, verified native fragments in host memory.
 Does not open the encoder, create a firmware patch or touch a camera.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -1504,7 +1506,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out',type=Path,required=True)
     parser.add_argument('--reader',type=Path,
-                        default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+                        default=default_reader())
     parser.add_argument('--listing-dir',type=Path,
                         help='Use saved NAME.tsv windows; still verify all input bytes and anchors')
     args = parser.parse_args()
@@ -1518,6 +1520,7 @@ def main():
         if args.listing_dir is not None:
             listing = (args.listing_dir/(name+'.tsv')).read_text(encoding='utf-8')
         else:
+            verify_reader(args.reader)
             listing = subprocess.check_output([str(args.reader.resolve()),str(path),
                                                hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         decoded.update(checked_listing(listing,data,start,stop))
@@ -1716,7 +1719,7 @@ def main():
         stock_bytes=len(stock),stock_sha256=STOCK_SHA,main_bytes=len(data),main_sha256=MAIN_SHA,
         analysis_base=hex(BASE),
         reader_sha256=None if args.listing_dir is not None else
-            hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+            verify_reader(args.reader),
         listing_source='predecoded, byte-checked windows' if args.listing_dir is not None else
             'native reader invoked',
         listing_sha256={name:hashlib.sha256(value.encode('utf-8')).hexdigest()

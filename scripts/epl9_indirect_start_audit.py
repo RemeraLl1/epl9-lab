@@ -3,13 +3,14 @@
 Explicit task IDs/current-task replies are fixtures, not physical OK selection.
 Kernel activation, allocation, transport and diagnostic boundaries are declared.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
 import struct
 
-from epl9_ok_entry_audit import (ROOT, BASE, MAIN_NAME, MAIN_SHA, STOCK_SHA,
-    READER_SHA, sha, u32, transfers, pointer_candidates, verified_input, local_output)
+from epl9_ok_entry_audit import ROOT, BASE, MAIN_NAME, MAIN_SHA, STOCK_SHA, sha, u32, transfers, pointer_candidates, verified_input, local_output
 from epl9_boot_recovery_audit import task_records
 from mn103_subset import Memory, Region, Fault, parse_listing
 from mn103_calls import CallMachine
@@ -38,9 +39,8 @@ PACKET, OBJECT, RESULT = 0x19000000, 0x19001000, 0x19002000
 def load_code(image, out):
     import subprocess
     from epl9_video_audit import checked_listing
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('unqualified reader')
+    reader = default_reader()
+    verify_reader(reader)
     code = {}
     for name, (lo, hi) in WINDOWS.items():
         s = subprocess.check_output([str(reader.resolve()),
@@ -253,7 +253,7 @@ def main():
     report=dict(model='Olympus PEN E-PL9',model_bytes='1330',
         displayed_version='1.1 (owner report)',downloaded_main_build='1101',
         stock_bytes=len(stock),stock_sha256=STOCK_SHA,main_bytes=len(image),main_sha256=MAIN_SHA,
-        reader_sha256=READER_SHA,source_sha256=sha(Path(__file__).read_bytes()),
+        reader_sha256=verify_reader(),source_sha256=sha(Path(__file__).read_bytes()),
         dependencies={n:sha((ROOT/'scripts'/n).read_bytes()) for n in (
             'mn103_subset.py','mn103_calls.py','epl9_ok_entry_audit.py','epl9_boot_recovery_audit.py',
             'epl9_video_audit.py','epl9_color_audit.py')},

@@ -4,6 +4,8 @@ Property values and buffers are explicit host inputs. Events 2, 13 and 21
 execute stock code with the context copied by the stock constructor. Resource
 events retain bounded host contracts; no camera/pixel claim.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 import struct
@@ -32,7 +34,8 @@ WINDOWS = {'primary_params':(0x607ce515,0x607ce5ae),
 def load_factories(image,out):
     code={}
     for name,(a,b) in WINDOWS.items():
-        listing=subprocess.check_output([str(ROOT/'local/mn103-tooling/mn103-reader.exe'),
+        verify_reader(default_reader())
+        listing=subprocess.check_output([str(default_reader()),
             str(MAIN),hex(BASE),hex(a-BASE),hex(b-BASE)],text=True)
         (out/(name+'.tsv')).write_text(listing)
         code.update(parse_listing(listing,image,BASE))

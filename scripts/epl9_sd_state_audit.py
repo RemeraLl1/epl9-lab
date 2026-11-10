@@ -1,4 +1,6 @@
 """Reproduce offline HLS singleton lifetime/allocation discovery, no writes."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -8,7 +10,6 @@ import subprocess
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE
 from epl9_sd_load_trigger_audit import PINNED, sha
 from epl9_color_audit import STOCK_SHA
-from epl9_tonal_drafts import READER_SHA
 from mn103_subset import parse_listing
 
 WINDOWS={
@@ -52,8 +53,8 @@ def main():
     image=MAIN.read_bytes();package=(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN').read_bytes()
     if (len(image),sha(image))!=(26214336,MAIN_SHA) or (len(package),sha(package))!=(104552480,STOCK_SHA):
         raise ValueError('wrong E-PL9 1101 input')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes())!=READER_SHA:raise ValueError('wrong GNU reader')
+    reader=default_reader()
+    verify_reader(reader)
     pinned={**PINNED,**PRIVATE};protected=[]
     paths=[*(ROOT/p for p in pinned),ROOT/'firmware_src/epl9_films_late.s.in',
            ROOT/'firmware_src/epl9_sd_loader.s.in',ROOT/'scripts/epl9_sd_loader.py',
@@ -77,7 +78,7 @@ def main():
     while at>=0:literals.append(hex(BASE+at));at=image.find(root,at+1)
     report=dict(model='Olympus E-PL9 / IM008',displayed_version='1.1 (owner)',build=1101,
         package_bytes=len(package),package_sha256=STOCK_SHA,main_bytes=len(image),main_sha256=MAIN_SHA,
-        reader_sha256=READER_SHA,windows=windows,raw_call_candidates=candidates,root_literal_occurrences=literals,
+        reader_sha256=verify_reader(reader),windows=windows,raw_call_candidates=candidates,root_literal_occurrences=literals,
         scan_limit='raw encoded candidates, not a complete indirect-reference or lifetime proof',
         original_object_bytes=180,proposed_object_bytes=288,ordinary_pool_id='0x10002',ordinary_pool_block_bytes=2048,
         protected_inputs=protected,camera_accessed=False,firmware_modified=False,

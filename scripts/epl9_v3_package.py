@@ -16,6 +16,7 @@ import sys
 from epl9_recovery_audit import inspect_package, decoded_payload, ORDER, WINDOWS, STATIC_WINDOWS
 from epl9_workspace_bridge import ROOT, BASE, MAIN_SHA, sha
 from epl9_color_audit import STOCK_SHA
+from epl9_source_identity import verified_source
 
 STOCK = ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN'
 INTEGRATION = ROOT/'local/epl9-v3-integration-20261107/manifest.json'
@@ -26,7 +27,10 @@ PRIVATE_CANDIDATE_HASHES = {**CANDIDATE_HASHES,
     0x100: '72cc1e48e6b42ab02b9911bdb841fe2c5b0cb34f2c08893f6b78be8a6871beee'}
 GENERATIONS = ('frozen-v3', 'private-color-v3')
 REFERENCE_COMMIT = '539fcf1fa9eda5fdef8ede4deeab94a4691d94c3'
+# Historical Windows checkout raw identity; keep for earlier evidence.
 REFERENCE_SOURCE_SHA = '2b72243f7af4735f5e341ce8f04ec4527dcf40ccfcf9ae3741efe7146657dce2'
+# LF bytes from tools/oly_container.py at REFERENCE_COMMIT.
+REFERENCE_SOURCE_LF_SHA = 'ab842e186049074848a24dda432e8a5b85d52390fd22af9d059bf630def9cb6b'
 KINDS = (0x100, 0x101)
 INVERT = bytes(x ^ 255 for x in range(256))
 
@@ -94,12 +98,15 @@ def independent_parser():
     repo = ROOT/'references/oly_fw_analysis'
     commit = subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip()
     path = repo/'tools/oly_container.py'
-    if commit != REFERENCE_COMMIT or sha(path.read_bytes()) != REFERENCE_SOURCE_SHA:
+    if commit != REFERENCE_COMMIT:
         raise ValueError('independent container implementation changed')
+    source, identity = verified_source(path, REFERENCE_SOURCE_LF_SHA, REFERENCE_SOURCE_SHA)
     spec = importlib.util.spec_from_file_location('epl9_pinned_container', path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
+    # Execute the verified snapshot, not a potentially stale cached .pyc.
+    exec(compile(source, str(path), 'exec'), module.__dict__)
+    module._source_identity = identity
     return module
 
 
@@ -213,7 +220,8 @@ def build(out, generation='frozen-v3'):
         preserved_updater_startup_ranges=protected_rows,
         excluded_stock_components=[r for r in stock_rows if int(r['kind'], 16) not in KINDS],
         independent_reference=dict(url='https://github.com/fishcu/oly_fw_analysis',
-            commit=REFERENCE_COMMIT, source_sha256=REFERENCE_SOURCE_SHA),
+            commit=REFERENCE_COMMIT, source_sha256=ref._source_identity['raw_sha256'],
+            **ref._source_identity),
         metadata_and_lengths_preserved=True, restore_exact_stock_component_bytes=True,
         selective_package=True, camera_accessed=False, media_written=False,
         physical_restore_verified=False, install_ready=False,

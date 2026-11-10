@@ -5,6 +5,8 @@ written only after verification, into a new ignored local/ directory.
 The CPU1-labelled component's analysis base is 0x40002800, not its container
 address 0x40002820. Static addresses do not establish execution on the body.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -138,7 +140,7 @@ def hash_target(image, base, table, slots, key):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--reader', type=Path, default=ROOT / 'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     args = parser.parse_args()
     out = local_output(args.out)
     verified_input(ROOT / 'firmware/OLY_E_133_1101_0000_0000.BIN', 104552480, STOCK_SHA)
@@ -180,6 +182,7 @@ def main():
             (aux_path,aux,AUX_BASE,AUX_WINDOWS,AUX_ANCHORS)]:
         decoded = {}
         for name,(start,stop) in windows.items():
+            verify_reader(args.reader)
             listing = subprocess.check_output([str(args.reader.resolve()),str(path.resolve()),
                                                hex(base),hex(start-base),hex(stop-base)],text=True)
             decoded.update(checked_listing(listing,data,start,stop,base=base))
@@ -192,7 +195,7 @@ def main():
                   internal_main_build='1101', stock_sha256=STOCK_SHA,
                   inputs=[dict(name=MAIN_NAME,bytes=len(image),sha256=MAIN_SHA,base=hex(BASE)),
                           dict(name=AUX_NAME,bytes=len(aux),sha256=AUX_SHA,base=hex(AUX_BASE))],
-                  reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+                  reader_sha256=verify_reader(args.reader),
                   geometry_table=hex(0x608bece4), geometry_records=records,
                   gyro_selectors=gyro, dispatches=dispatches, driver_operation35=driver,
                   checked_instruction_anchors=count, windows=len(listings),

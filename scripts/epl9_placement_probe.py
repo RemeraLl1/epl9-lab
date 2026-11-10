@@ -1,4 +1,6 @@
 """Verify the early loader request and local module-to-loaded-buffer identity."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse,json,struct,subprocess
 from pathlib import Path
 from epl9_workspace_bridge import ROOT,MAIN,MAIN_SHA,BASE,sha
@@ -28,7 +30,8 @@ def main():
         if len(before)!=len(after) or expected[at:at+len(before)]!=before:raise ValueError('candidate hook identity mismatch')
         expected[at:at+len(after)]=after
     if candidate!=expected:raise ValueError('candidate changed bytes beyond module and declared hooks')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader=default_reader()
+    verify_reader(reader)
     listing=subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(0x604001a4-BASE),hex(0x604001d0-BASE)],text=True)
     code=parse_listing(listing,image,BASE)
     m=Machine(code,Memory([Region(BASE,image),Region(0x6257d800,bytearray(4),True),

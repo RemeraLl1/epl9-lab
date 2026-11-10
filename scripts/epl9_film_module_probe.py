@@ -3,6 +3,8 @@
 Owner buffers/callers remain explicit fixtures. No host PC redirection or
 Python write installs a recipe in a running request. No hardware is modeled.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
@@ -220,13 +222,14 @@ def main():
     args = ap.parse_args()
     require(not args.out.exists() and args.out.resolve().is_relative_to((ROOT/'local').resolve()),
             'requires a new ignored local directory')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader = default_reader()
     image,original_code,_ = load_code(MAIN,reader)
     module = build_module(image,diagnostic_rgb=args.diagnostic_rgb)
     module_code,manifest = emit_files(module,args.out)
     code = dict(original_code)
     # Needed only for complete historical worklist comparisons.
     for start,stop in set([*WINDOWS.values(),*EXTRA_WINDOWS.values(),*SERVICE_WINDOWS.values()]):
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
@@ -236,6 +239,7 @@ def main():
         patched[p['address']-BASE:p['address']-BASE+len(raw)] = raw
         path = args.out/f'candidate-hook-{index}.bin'
         path.write_bytes(raw)
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader),str(path.resolve()),hex(p['address']),'0',hex(len(raw))],text=True)
         # Remove every displaced original instruction, then load actual patch bytes.
         for at in [at for at in code if p['address'] <= at < p['address']+len(raw)]:

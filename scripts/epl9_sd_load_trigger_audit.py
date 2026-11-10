@@ -1,4 +1,6 @@
 """Reproduce read-only SD-loader trigger discovery and freeze v3 hashes."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -7,7 +9,6 @@ import subprocess
 
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE
 from epl9_color_audit import STOCK_SHA
-from epl9_tonal_drafts import READER_SHA
 from mn103_subset import parse_listing
 
 WINDOWS={
@@ -46,8 +47,8 @@ def main():
     stock=(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN').read_bytes()
     if (len(image),sha(image))!=(26214336,MAIN_SHA) or (len(stock),sha(stock))!=(104552480,STOCK_SHA):
         raise ValueError('requires exact E-PL9 1101 inputs')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes())!=READER_SHA: raise ValueError('wrong GNU reader')
+    reader=default_reader()
+    verify_reader(reader)
     protected=[]
     paths=[*(ROOT/p for p in PINNED),ROOT/'firmware_src/epl9_films_late.s.in',
            *sorted((ROOT/'recipes').glob('epl9-film-drafts-*.json')),ROOT/'recipes/epl9-native-wb-trial-v1.json']
@@ -69,7 +70,7 @@ def main():
     (a.out/'protected-before.json').write_text(json.dumps(protected,indent=2)+'\n')
     report=dict(model='Olympus E-PL9',displayed_version='1.1 (owner report)',main_build=1101,
         stock_bytes=len(stock),stock_sha256=STOCK_SHA,main_bytes=len(image),main_sha256=MAIN_SHA,
-        reader_sha256=READER_SHA,windows=windows,protected_files=protected,
+        reader_sha256=verify_reader(reader),windows=windows,protected_files=protected,
         script_sha256=sha(Path(__file__).read_bytes()),
         camera_accessed=False,firmware_modified=False,static_analysis_only=True)
     (a.out/'discovery.json').write_text(json.dumps(report,indent=2)+'\n')

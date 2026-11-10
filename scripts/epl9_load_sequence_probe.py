@@ -3,6 +3,8 @@
 No NAND/DMA hardware is emulated. This tests the real alignment/chunk arithmetic
 and known startup destination intervals, not runtime memory ownership.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 import struct
@@ -11,7 +13,6 @@ from pathlib import Path
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE, sha
 from epl9_placement import CANDIDATE, MODULE_SIZE, EARLY_START, EARLY_END
 from epl9_deployment_probe import SECTIONS
-from epl9_tonal_drafts import READER_SHA
 from mn103_subset import Machine, Memory, Region, parse_listing, Fault
 from mn103_calls import CallMachine
 
@@ -135,9 +136,8 @@ def main():
         raise ValueError('candidate contains undeclared changes')
     args.out.mkdir()
     code = {}
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('pinned reader required')
+    reader = default_reader()
+    verify_reader(reader)
     for name,a,b in (('startup',0x60400020,0x60400280),('chunks',0x60401561,0x6040168b)):
         listing = subprocess.check_output([str(reader),
             str(MAIN),hex(BASE),hex(a-BASE),hex(b-BASE)],text=True)
@@ -145,7 +145,7 @@ def main():
         code.update(parse_listing(listing,image,BASE))
     report = dict(main_sha256=sha(image), candidate_sha256=sha(candidate), **audit(image,candidate,code))
     report['source_sha256'] = sha(Path(__file__).read_bytes())
-    report['reader_sha256'] = READER_SHA
+    report['reader_sha256'] = verify_reader(reader)
     report['section_evidence_source_sha256'] = sha((ROOT/'scripts/epl9_deployment_probe.py').read_bytes())
     (args.out/'load-sequence.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2))

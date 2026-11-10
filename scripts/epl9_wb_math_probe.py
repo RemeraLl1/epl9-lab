@@ -1,4 +1,6 @@
 """Run native math bodies with explicitly inferred, finite scalar-float leaves."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse,json,subprocess
 from decimal import Decimal,localcontext
 from fractions import Fraction
@@ -13,7 +15,8 @@ from mn103_calls import CallMachine
 
 
 def extend(image,code):
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader=default_reader()
+    verify_reader(reader)
     text=subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(0x604b83c1-BASE),hex(0x604b8900-BASE)],text=True)
     code.update(parse_listing(text,image,BASE))
 

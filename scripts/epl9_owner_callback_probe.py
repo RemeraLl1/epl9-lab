@@ -4,6 +4,8 @@ All owner/RTOS/registry state is declared synthetic data. No callback or logger
 is modeled as a successful return. Enabled output logging and invalid handles
 remain explicit stops. This is not a camera concurrency or pixel test.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 import struct
@@ -40,7 +42,8 @@ def load_owners(image, out):
         raise ValueError('exact E-PL9 1101 main required')
     code = {}
     for name, (start, end) in WINDOWS.items():
-        listing = subprocess.check_output([str(ROOT/'local/mn103-tooling/mn103-reader.exe'),
+        verify_reader(default_reader())
+        listing = subprocess.check_output([str(default_reader()),
             str(MAIN), hex(BASE), hex(start-BASE), hex(end-BASE)], text=True)
         (out/(name+'.tsv')).write_text(listing)
         code.update(parse_listing(listing, image, BASE))

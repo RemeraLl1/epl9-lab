@@ -4,6 +4,8 @@ These are CMIO transport experiments/drafts, not a TruePic emulator or calibrate
 Only measured native Natural table/parameter spans are replaced. No camera,
 installed application, embedded preview, or original source file is written.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -248,9 +250,8 @@ def native_recipe_configs(image_path, recipes):
     image = image_path.read_bytes()
     if len(image) != 26214336 or sha(image) != MAIN_SHA:
         raise ValueError('exact E-PL9 build 1101 required for native comparison')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != 'e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae':
-        raise ValueError('requires the inspected GNU reader')
+    reader = default_reader()
+    verify_reader(reader)
     listing = subprocess.check_output([str(reader), str(image_path.resolve()), hex(BASE),
         hex(0x6079e50e-BASE), hex(0x6079e6a0-BASE)], text=True)
     code = parse_listing(listing, image, BASE)

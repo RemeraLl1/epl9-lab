@@ -1,4 +1,6 @@
 """Trace matrix notification and request restoration before event 4/hardware start."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse,json,struct,subprocess
 from pathlib import Path
 from epl9_workspace_bridge import ROOT,BASE,MAIN,sha
@@ -75,7 +77,8 @@ def owner_matrix_tails(image):
     coeff=struct.pack('<9h',*values);rows=[]
     for start,end,slot,a2 in ((0x607d0acf,0x607d0b22,8,0x1d000000),
                                (0x609a83c5,0x609a841e,4,0x1c000000)):
-        listing=subprocess.check_output([str(ROOT/'local/mn103-tooling/mn103-reader.exe'),str(MAIN),
+        verify_reader(default_reader())
+        listing=subprocess.check_output([str(default_reader()),str(MAIN),
             hex(BASE),hex(start-BASE),hex(end-BASE)],text=True)
         code=parse_listing(listing,image,BASE)
         data=bytearray([0xa5])*4200;stack=bytearray(512);sp=0x1e000100

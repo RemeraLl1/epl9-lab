@@ -1,4 +1,6 @@
 """Execute native owner/notification contracts; no pixel or ISP completion model."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -77,8 +79,9 @@ class DiagnosticSink:
 def extend_code(image,code):
     code=dict(code)
     path=ROOT/'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin'
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader=default_reader()
     for start,end in WINDOWS.values():
+        verify_reader(reader)
         listing=subprocess.check_output([str(reader),str(path),hex(BASE),hex(start-BASE),hex(end-BASE)],text=True)
         decoded=parse_listing(listing,image,BASE)
         for at in code.keys() & decoded.keys():

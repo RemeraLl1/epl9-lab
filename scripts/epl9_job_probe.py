@@ -1,4 +1,6 @@
 """Connect native E-PL9 job construction and execution with explicit host inputs."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -489,9 +491,8 @@ def load():
     image = path.read_bytes()
     if len(image) != 26214336 or hashlib.sha256(image).hexdigest() != MAIN_SHA:
         raise ValueError('exact E-PL9 1.1 main required')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if hashlib.sha256(reader.read_bytes()).hexdigest() != 'e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae':
-        raise ValueError('reader identity mismatch')
+    reader = default_reader()
+    verify_reader(reader)
     code = {}
     for start,end in {**WINDOWS,**SERVICE_WINDOWS,**EXTRA_WINDOWS,**JOB_WINDOWS}.values():
         listing = subprocess.check_output([str(reader),str(path),hex(BASE),hex(start-BASE),hex(end-BASE)],text=True)
@@ -1003,7 +1004,7 @@ def main():
     report=dict(model='Olympus E-PL9',displayed_version='1.1 (owner report)',main_build='1101',
                 stock_bytes=104552480,stock_sha256=STOCK_SHA,main_bytes=len(image),main_sha256=MAIN_SHA,
                 stock_identity_from_prior_audit=True,analysis_base=hex(BASE),
-                reader_sha256='e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae',
+                reader_sha256=verify_reader(),
                 synthetic_inputs=True,camera_accessed=False,firmware_modified=False,
                 full_pixel_cycle_passed=False,cases=cases,connected_color_cases=connected,
                 owner_slot_cases=slot_cases,

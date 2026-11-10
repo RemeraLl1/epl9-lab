@@ -4,6 +4,8 @@ The selector intervention is host code at a declared native return boundary.
 RGB shapes and matrix sources are diagnostic, not calibrated film proposals.
 No firmware hook, hardware pixel engine or camera access is implemented here.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
@@ -12,7 +14,7 @@ import subprocess
 
 from epl9_workspace_bridge import (ROOT, BASE, MAIN, MAIN_SHA, COLOR_ROM,
                                    sha, validate_recipes)
-from epl9_tonal_drafts import definitions, remap_curve, validate_curve, READER_SHA
+from epl9_tonal_drafts import definitions, remap_curve, validate_curve
 from epl9_offline_prototype import (REQUEST, CONTEXT, OUTPUT, OBJECT, TABLE, SP,
                                     header, RECIPES)
 from epl9_integrated_probe import native, attempt, RETURN
@@ -48,7 +50,7 @@ def checked_output(path):
 def load_code(image_path, reader):
     image = image_path.read_bytes()
     require(len(image) == 26214336 and sha(image) == MAIN_SHA, 'requires exact E-PL9 main build 1101')
-    require(sha(reader.read_bytes()) == READER_SHA, 'requires inspected GNU reader')
+    verify_reader(reader)
     code, listings = {}, {}
     for start, stop in WINDOWS:
         listing = subprocess.check_output([str(reader.resolve()), str(image_path.resolve()),
@@ -333,7 +335,7 @@ def live_control_checks(image, code, bundles):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--image', type=Path, default=MAIN)
-    ap.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    ap.add_argument('--reader', type=Path, default=default_reader())
     ap.add_argument('--out', type=Path, required=True)
     args = ap.parse_args()
     checked_output(args.out)
@@ -355,7 +357,7 @@ def main():
     for bundle in bundles:
         (args.out/(bundle['name']+'-diagnostic-bundle.bin')).write_bytes(bundle['data'])
     report = dict(model='Olympus E-PL9', displayed_body='1.1 (owner report)', downloaded_build='1101',
-        main_bytes=len(image), main_sha256=MAIN_SHA, analysis_base=hex(BASE), reader_sha256=READER_SHA,
+        main_bytes=len(image), main_sha256=MAIN_SHA, analysis_base=hex(BASE), reader_sha256=verify_reader(args.reader),
         recipe_definition_hashes={p.name: sha(p.read_bytes()) for p in paths},
         script_sha256=sha(Path(__file__).read_bytes()),
         decoded_instructions=len(code),

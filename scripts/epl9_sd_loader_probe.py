@@ -3,6 +3,8 @@
 No patch, hook, camera write or installation container is emitted. The ordinary
 file-service RPC is modeled; optional stock wrappers/backend execute natively.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 from collections import Counter
 import hashlib
@@ -12,7 +14,6 @@ import struct
 import subprocess
 
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE
-from epl9_tonal_drafts import READER_SHA
 from epl9_sd_loader import build, MODULE_BASE
 from epl9_sd_recipes import Recipe, pack_recipe, unpack_recipe, FILE_BYTES
 from epl9_wifi_prototype import Model, Evidence, NativeReader, span
@@ -254,6 +255,7 @@ class LoaderFixture:
 def decode_module(module,out,reader):
     binary=out/'sd-loader-SYNTHETIC-ONLY.bin'
     binary.write_bytes(module['data'])
+    verify_reader(reader)
     listing=subprocess.check_output([str(reader),str(binary),hex(MODULE_BASE),'0',hex(len(module['data']))],text=True)
     code=parse_listing(listing,module['data'],MODULE_BASE)
     require(set(code)=={r[0] for r in module['rows']},'GNU instruction boundaries differ')
@@ -280,8 +282,8 @@ def main():
     a=ap.parse_args()
     require(not a.out.exists() and a.out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     image=MAIN.read_bytes();require(len(image)==26214336 and hashlib.sha256(image).hexdigest()==MAIN_SHA,'wrong stock main')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
-    require(hashlib.sha256(reader.read_bytes()).hexdigest()==READER_SHA,'wrong GNU reader')
+    reader=default_reader()
+    verify_reader(reader)
     before=json.loads((a.discovery/'protected-before.json').read_text())
     for row in before: require(hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()==row['sha256'],'protected input changed before run')
     a.out.mkdir(parents=True)
@@ -362,7 +364,7 @@ def main():
         adapter_cases.append(dict(name=name,stock=control,prototype=adapted,outputs_equal=True))
     for row in before: require(hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()==row['sha256'],'protected input changed')
     report=dict(model='Olympus E-PL9',displayed_version='1.1 (owner report)',main_build=1101,
-        main_bytes=len(image),main_sha256=MAIN_SHA,reader_sha256=READER_SHA,
+        main_bytes=len(image),main_sha256=MAIN_SHA,reader_sha256=verify_reader(reader),
         module=dict(bytes=len(module['data']),sha256=hashlib.sha256(module['data']).hexdigest(),
             base=hex(MODULE_BASE),instructions=len(module['code']),native_crc_and_range_validation=True),
         candidate_hook=dict(site='0x60ae1c6e',stock_bytes='cd05042008',continuation='0x60ae1c73',

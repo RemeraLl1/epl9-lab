@@ -3,6 +3,8 @@
 Executes bounded native fragments with explicit RAM fixtures and storage-read
 traps. No camera, media, update package or modified firmware is written.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -15,6 +17,7 @@ from epl9_video_audit import ROOT, BASE, MAIN_NAME, verified_input, checked_list
 from mn103_subset import Memory, Region, Machine, Fault, parse_listing
 from mn103_calls import CallMachine
 
+# Historical Windows identity, not the digest of a portable build.
 READER_SHA = 'e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae'
 WINDOWS = {
     'main_entry': (0x60400020, 0x604003cf),
@@ -64,8 +67,7 @@ def task_records(image):
 
 
 def load_code(image, reader, out):
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('unqualified disassembler')
+    verify_reader(reader)
     code = {}
     for name, (start, end) in WINDOWS.items():
         listing = subprocess.check_output([
@@ -215,14 +217,14 @@ def main():
     image = verified_input(ROOT/'local/epl9-1101-analysis/decoded'/MAIN_NAME, 26214336, MAIN_SHA)
     stock = verified_input(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN', 104552480, STOCK_SHA)
     out.mkdir()
-    code = load_code(image, ROOT/'local/mn103-tooling/mn103-reader.exe', out)
+    code = load_code(image, default_reader(), out)
     rows = section_cases(image, code)
     waits = wait_cases(image, code)
     contracts = static_contracts(image, code)
     report = dict(model='Olympus PEN E-PL9', model_bytes='1330',
                   displayed_version='1.1 (owner report)', main_build='1101 (download)',
                   stock_bytes=len(stock), stock_sha256=STOCK_SHA,
-                  main_bytes=len(image), main_sha256=MAIN_SHA, reader_sha256=READER_SHA,
+                  main_bytes=len(image), main_sha256=MAIN_SHA, reader_sha256=verify_reader(),
                   source_sha256=sha(Path(__file__).read_bytes()),
                   dependencies={n: sha((ROOT/'scripts'/n).read_bytes()) for n in (
                       'mn103_subset.py', 'mn103_calls.py', 'epl9_video_audit.py', 'epl9_color_audit.py')},

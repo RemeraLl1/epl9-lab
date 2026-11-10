@@ -49,9 +49,11 @@ historical and require deliberate adaptation for Linux operations.
 3. Restore the authorized private backup into ignored paths, preserving file
    identities. Do not publish the backup or its restored firmware.
 4. Restore independent upstream references at the recorded revisions below.
-5. Build the MN103 reader from source for the target operating system. Some
-   script defaults still name the Windows `.exe`; these need explicit
-   portability work, not an assumption that a Linux binary already exists.
+5. Build and validate the MN103 reader from pinned source for the target
+   operating system, following [MN103 tooling](mn103-tooling.md). The separate
+   [Linux portability follow-up](cloud-portability-20261110.md) provides
+   host-specific defaults and source/validation provenance; a Linux binary
+   must be built locally, not assumed present in the checkpoint.
 6. Run complete tests and the relevant native/offline probes after restoring
    inputs. A source checkout by itself omits required test fixtures.
 

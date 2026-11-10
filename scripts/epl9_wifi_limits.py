@@ -3,6 +3,8 @@
 No firmware patch is created. Synthetic instruction bytes are decoder fixtures,
 not an update input. Outputs must be new directories under ignored local/.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
@@ -151,7 +153,7 @@ ARM_CHECKS = {
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--out', type=Path, required=True)
-    p.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    p.add_argument('--reader', type=Path, default=default_reader())
     p.add_argument('--arm-package-dir', type=Path, default=ROOT/'local/wifi-python')
     args = p.parse_args()
     out = args.out.resolve()
@@ -176,6 +178,7 @@ def main():
         raise ValueError('wrong embedded ARM module')
     listings = {}
     for name, (start, stop) in MAIN_WINDOWS.items():
+        verify_reader(args.reader)
         listings['main_'+name] = subprocess.check_output(
             [str(args.reader.resolve()), str(image_path), hex(BASE), hex(start-BASE), hex(stop-BASE)], text=True)
     decoded = {}
@@ -233,6 +236,7 @@ def main():
                        for op in [0x2c, 0x2d, 0x2e])
     fixture_path = out/'synthetic-signed-immediates.dat'
     fixture_path.write_bytes(fixture)
+    verify_reader(args.reader)
     listings['synthetic_signed_immediates'] = subprocess.check_output(
         [str(args.reader.resolve()), str(fixture_path), '0x1000', '0', hex(len(fixture))], text=True)
     fixture_rows = [line.split('\t', 2) for line in listings['synthetic_signed_immediates'].splitlines()]
@@ -253,7 +257,7 @@ def main():
                   main_base=hex(BASE), arm_base=hex(ARM_BASE),
                   main_windows={k: [hex(a), hex(b)] for k, (a,b) in MAIN_WINDOWS.items()},
                   arm_windows={k: [hex(a), hex(b)] for k, (a,b) in ARM_WINDOWS.items()},
-                  script_sha256=sha(Path(__file__).read_bytes()), reader_sha256=sha(args.reader.read_bytes()),
+                  script_sha256=sha(Path(__file__).read_bytes()), reader_sha256=verify_reader(args.reader),
                   checked_mn103={hex(a): s for a, s in MN_CHECKS.items()},
                   checked_arm={hex(a): s for a, s in ARM_CHECKS.items()},
                   synthetic_instruction_cases=18,

@@ -3,6 +3,8 @@
 Disassembly observations are static, with a candidate RAM mapping. They do not
 establish on-camera reachability, live-view/capture coverage or safe patch sites.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -29,7 +31,7 @@ WINDOWS = {
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image', type=Path, default=ROOT / 'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin')
-    p.add_argument('--reader', type=Path, default=ROOT / 'local/mn103-tooling/mn103-reader.exe')
+    p.add_argument('--reader', type=Path, default=default_reader())
     p.add_argument('--out', type=Path, required=True)
     args = p.parse_args()
     if args.out.exists():
@@ -45,6 +47,7 @@ def main():
     listings = {}
     instructions = {}
     for name, (start, stop) in WINDOWS.items():
+        verify_reader(args.reader)
         result = subprocess.run([str(args.reader.resolve()), str(args.image.resolve()),
                                  hex(BASE), hex(start), hex(stop)],
                                 check=True, text=True, capture_output=True)
@@ -79,7 +82,7 @@ def main():
         'stock_container_bytes': 104552480, 'stock_container_sha256': STOCK_SHA,
         'input_bytes': len(data), 'input_sha256': MAIN_SHA,
         'container_note': 'Container identity carried from the initial audit; this probe reads the decoded main only.',
-        'reader_sha256': hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+        'reader_sha256': verify_reader(args.reader),
         'candidate_base': hex(BASE),
         'key_literal_offsets': {name: [hex(x) for x in occurrences(data, struct.pack('<I', key))]
                                 for name, key in KEYS.items()},

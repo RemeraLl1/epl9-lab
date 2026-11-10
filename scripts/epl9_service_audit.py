@@ -1,4 +1,6 @@
 """Audit ART service dependencies; bounded component execution, no camera access."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -105,7 +107,7 @@ def exercise(image, code):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', type=Path, default=ROOT/'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin')
-    parser.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     require(not args.out.exists() and args.out.resolve().is_relative_to((ROOT/'local').resolve()),
@@ -114,6 +116,7 @@ def main():
     require(len(image) == 26214336 and hashlib.sha256(image).hexdigest() == MAIN_SHA, 'wrong E-PL9 main')
     code, text, listings = {}, {}, {}
     for name, (start, stop) in WINDOWS.items():
+        verify_reader(args.reader)
         listing = subprocess.check_output([str(args.reader.resolve()), str(args.image.resolve()),
                     hex(BASE), hex(start-BASE), hex(stop-BASE)], text=True)
         code.update(parse_listing(listing, image, BASE))
@@ -134,7 +137,7 @@ def main():
                   stock_bytes=104552480, stock_sha256=STOCK_SHA,
                   stock_note='Identity from initial audit; only decoded main read here.',
                   main_bytes=len(image), main_sha256=MAIN_SHA, analysis_base=hex(BASE),
-                  reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+                  reader_sha256=verify_reader(args.reader),
                   script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   subset_sha256=hashlib.sha256((ROOT/'scripts/mn103_subset.py').read_bytes()).hexdigest(),
                   windows={n: [hex(a), hex(b)] for n, (a,b) in WINDOWS.items()},

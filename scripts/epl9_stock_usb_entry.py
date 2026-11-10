@@ -3,6 +3,8 @@
 Extracts pinned native windows and inventories dispatch/name tables. Camera
 admission, session gates and handlers must be treated as separate layers.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 import struct
@@ -10,7 +12,6 @@ import subprocess
 from pathlib import Path
 
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE, sha
-from epl9_recovery_audit import READER_SHA
 from mn103_subset import parse_listing
 
 WINDOWS = {
@@ -36,8 +37,9 @@ def run(out, reader):
     if out.exists() or not out.resolve().is_relative_to((ROOT/'local').resolve()):
         raise ValueError('new ignored output directory required')
     image = MAIN.read_bytes()
-    if sha(image) != MAIN_SHA or sha(reader.read_bytes()) != READER_SHA:
+    if sha(image) != MAIN_SHA:
         raise ValueError('input or native reader identity differs')
+    verify_reader(reader)
     word = lambda a: struct.unpack_from('<I', image, a-BASE)[0]
     def string(a):
         at = a-BASE
@@ -70,7 +72,7 @@ def run(out, reader):
                 for at in range(0x612776d0, 0x612777d0, 8) if word(at)]
     report = dict(model='E-PL9 / IM008 / 1330', body='1.1 (owner report)', build='1101',
                   main_bytes=len(image), main_sha256=sha(image),
-                  reader_bytes=reader.stat().st_size, reader_sha256=sha(reader.read_bytes()),
+                  reader_bytes=reader.stat().st_size, reader_sha256=verify_reader(reader),
                   operation_names=names, dispatch_hash=dispatch, pointer_references=pointers,
                   listings=listings, source_sha256=sha(Path(__file__).read_bytes()),
                   exploratory_xrefs_are_not_a_complete_call_graph=True, camera_accessed=False)
@@ -82,6 +84,6 @@ def run(out, reader):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--out', type=Path, required=True)
-    ap.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    ap.add_argument('--reader', type=Path, default=default_reader())
     args = ap.parse_args()
     run(args.out, args.reader)

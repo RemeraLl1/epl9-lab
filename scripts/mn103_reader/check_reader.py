@@ -3,10 +3,13 @@
 No camera access. The caller supplies GNU binutils sources and a local work dir.
 """
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
 import subprocess
+
+VECTOR_COUNT, VECTOR_BYTES = 1294, 5694
 
 
 def main():
@@ -15,6 +18,11 @@ def main():
     parser.add_argument('--vectors', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
+    manifest = json.loads((Path(__file__).with_name('upstream.json')).read_text(encoding='utf-8'))
+    vector_identity = next(row for row in manifest['files'] if row['path'] == 'gas/testsuite/gas/mn10300/am33-2.d')
+    vector_sha = hashlib.sha256(args.vectors.read_bytes()).hexdigest()
+    if vector_sha != vector_identity['sha256']:
+        raise ValueError('changed upstream vector identity')
     args.out.mkdir(parents=True, exist_ok=True)
     fixtures = []
     data = bytearray()
@@ -34,8 +42,8 @@ def main():
                           lambda m: '0x0*' + m[1], expected)
         fixtures.append((address, raw, expected))
         data.extend(raw)
-    if len(fixtures) < 1000:
-        raise ValueError(f'Too few parsed vectors: {len(fixtures)}')
+    if len(fixtures) != VECTOR_COUNT or len(data) != VECTOR_BYTES:
+        raise ValueError(f'Unexpected vector inventory: {len(fixtures)} instructions, {len(data)} bytes')
     image = args.out / 'am33-2-vectors.bin'
     image.write_bytes(data)
     reader = str(args.reader.resolve())
@@ -69,7 +77,7 @@ def main():
         if bad.returncode != 2:
             raise AssertionError(f'{label}: expected exit 2, got {bad.returncode}')
         rejected.append(label)
-    report = {'upstream_opcode_vectors_passed': len(fixtures), 'fixture_bytes': len(data),
+    report = {'upstream_opcode_vectors_passed': len(fixtures), 'fixture_bytes': len(data), 'vectors_sha256': vector_sha,
               'negative_cases_passed': rejected, 'camera_accessed': False,
               'scope': 'Decoder/host-adapter validation; not firmware reachability or patch validation.'}
     (args.out / 'validation.json').write_text(json.dumps(report, indent=2) + '\n')

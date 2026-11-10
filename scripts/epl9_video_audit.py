@@ -4,6 +4,8 @@ No camera interface, firmware mutation or patch generation. All derived bytes
 and listings stay in a new directory under ignored local/. Literal matches are
 leads, not semantic references. Reviewed instructions are static evidence only.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -132,7 +134,7 @@ def local_output(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--reader', type=Path, default=ROOT / 'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     args = parser.parse_args()
     out = local_output(args.out)
     stock = verified_input(ROOT / 'firmware/OLY_E_133_1101_0000_0000.BIN', 104552480, STOCK_SHA)
@@ -163,6 +165,7 @@ def main():
         raise ValueError('stabilizer operation-name association mismatch')
     listings, decoded = {}, {}
     for name, (start, stop) in WINDOWS.items():
+        verify_reader(args.reader)
         listing = subprocess.check_output([str(args.reader.resolve()), str(image_path.resolve()),
                                            hex(BASE), hex(start - BASE), hex(stop - BASE)], text=True)
         decoded.update(checked_listing(listing, data, start, stop))
@@ -173,7 +176,7 @@ def main():
     report = dict(
         model='Olympus PEN E-PL9', model_id='1330', displayed_version='1.1', internal_main_build='1101',
         stock_bytes=len(stock), stock_sha256=STOCK_SHA, decoded_main_bytes=len(data), decoded_main_sha256=MAIN_SHA,
-        analysis_base=hex(BASE), reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+        analysis_base=hex(BASE), reader_sha256=verify_reader(args.reader),
         target=dict(width=1920, height=1440, fps=60, pixel_aspect='1:1', full_sensor_field_required=True,
                     full_field_readout_verified=False, recording_verified=False),
         arithmetic_only=dict(output_pixels_per_second=1920*1440*60,

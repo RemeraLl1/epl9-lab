@@ -1,4 +1,6 @@
 """Execute the late film hooks with original ART keys and owner objects."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
@@ -312,10 +314,11 @@ def route_cases(image,code,original_image,original_code,module):
 
 def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE,private_color=False):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader = default_reader()
     image,code,_ = load_code(MAIN,reader)
     for start,stop in set([*WINDOWS.values(),*EXTRA_WINDOWS.values(),*SERVICE_WINDOWS.values(),
                           *JOB_WINDOWS.values(),*LATE_WINDOWS.values()]):
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
@@ -329,6 +332,7 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         modified[p['address']-BASE:p['address']-BASE+len(raw)] = raw
         path = out/f'candidate-hook-{index}.bin'
         path.write_bytes(raw)
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader),str(path.resolve()),hex(p['address']),'0',hex(len(raw))],text=True)
         for at in [at for at in code if p['address']<=at<p['address']+len(raw)]: del code[at]
         code.update(parse_listing(listing,raw,p['address']))

@@ -2,6 +2,8 @@
 
 Hardware processing stops at its real unmapped peripheral boundary.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -18,7 +20,6 @@ from epl9_sd_loader_probe import require, GUARD, STOP, STACK
 from epl9_sd_processing import build, overlay, descriptor, TEST_KEYS, RECORD, GAMMA, STRIDE, BASE_ADDRESS
 from epl9_sd_recipes import unpack_recipe, pack_recipe
 from epl9_wifi_prototype import Evidence, span
-from epl9_tonal_drafts import READER_SHA
 from epl9_film_handoff import WINDOWS as FILM_WINDOWS, base_request
 from epl9_film_late_probe import LATE_WINDOWS, owner_object
 from epl9_integrated_probe import WINDOWS, EXTRA_WINDOWS, SERVICE_WINDOWS
@@ -38,6 +39,7 @@ REQ,CTX,OUT,CACHE,OWNER,USER=(0x18000000,0x18001000,0x18002000,0x18004000,0x1800
 def decode(module,out,reader):
     out.mkdir();raw=module['data'][:module['code_bytes']]
     path=out/'code.bin';path.write_bytes(raw)
+    verify_reader(reader)
     listing=subprocess.check_output([str(reader),str(path),hex(module['base']),'0',hex(len(raw))],text=True)
     code=parse_listing(listing,raw,module['base'])
     require(set(code)=={r[0] for r in module['rows']},'GNU instruction boundaries differ')
@@ -213,8 +215,8 @@ def main():
                 'preceding state generation differs')
         protected.append(dict(path=name,sha256=hashlib.sha256((ROOT/name).read_bytes()).hexdigest()))
     for row in protected:require(hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()==row['sha256'],'protected source changed')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
-    require(hashlib.sha256(reader.read_bytes()).hexdigest()==READER_SHA,'wrong GNU reader')
+    reader=default_reader()
+    verify_reader(reader)
     defaults=[(ROOT/f'local/epl9-sd-slot-prototype-20261107-final/recipe-{i}-EXPERIMENTAL.RCP').read_bytes() for i in (1,2)]
     state=build_state(defaults)
     require(hashlib.sha256(state['data']).hexdigest()==previous['module_sha256'],'preceding state module differs')
@@ -302,7 +304,7 @@ def main():
             (Path(__file__),ROOT/'scripts/epl9_sd_processing.py',ROOT/'firmware_src/epl9_sd_processing.s.in',
              ROOT/'scripts/test_epl9_sd_processing.py')},
         read_backend_listing_hashes=evidence.hashes,state_module_sha256=previous['module_sha256'],
-        reader_sha256=READER_SHA,protected_inputs_unchanged=True,
+        reader_sha256=verify_reader(reader),protected_inputs_unchanged=True,
         source_listing_hashes=hashes,protected_inputs=protected,camera_accessed=False,firmware_package_created=False,
         boundaries=['finite pool backing, RTOS/owner/file-service/SD fixtures','native ISP configuration, no hardware pixels'])
     for row in protected:require(hashlib.sha256((ROOT/row['path']).read_bytes()).hexdigest()==row['sha256'],'protected input changed')

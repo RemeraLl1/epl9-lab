@@ -2,13 +2,14 @@
 
 No camera, NAND write, encoded package or hardware lifetime claim.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 import struct
 import subprocess
 from pathlib import Path
 from epl9_workspace_bridge import ROOT, MAIN, MAIN_SHA, BASE, sha
-from epl9_tonal_drafts import READER_SHA
 from epl9_sd_placement import build, SPANS, STATE_BASE, CONSUMER_BASE, V3_SPAN
 from epl9_sd_state import build as synthetic_state, ROOT_ADDRESS
 from epl9_sd_processing import build as synthetic_consumer, RECORD
@@ -178,7 +179,7 @@ def main():
         require(sha((ROOT/name).read_bytes())==value,'prior consumer source changed')
         protected.append(dict(path=name,sha256=value))
     for row in protected:require(sha((ROOT/row['path']).read_bytes())==row['sha256'],'protected input changed')
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe';require(sha(reader.read_bytes())==READER_SHA,'wrong reader')
+    reader=default_reader();verify_reader(reader)
     defaults=[(ROOT/f'local/epl9-sd-slot-prototype-20261107-final/recipe-{i}-EXPERIMENTAL.RCP').read_bytes() for i in (1,2)]
     state,consumer,candidate,reference,patches=build(image,defaults)
     a.out.mkdir();decode(state,a.out/'state',reader);decode(consumer,a.out/'consumer',reader)
@@ -232,7 +233,7 @@ def main():
     for row in protected:require(sha((ROOT/row['path']).read_bytes())==row['sha256'],'protected input changed during run')
     (a.out/'main-SD-PLACED-OFFLINE-ONLY.decoded.bin').write_bytes(candidate)
     report=dict(model='Olympus E-PL9 / IM008 / 1330',displayed_version='1.1 (owner)',main_build=1101,
-        main_bytes=len(image),main_sha256=MAIN_SHA,candidate_sha256=sha(candidate),reader_sha256=READER_SHA,
+        main_bytes=len(image),main_sha256=MAIN_SHA,candidate_sha256=sha(candidate),reader_sha256=verify_reader(reader),
         modules=[dict(base=hex(m['base']),end=hex(m['base']+len(m['data'])),bytes=len(m['data']),code_bytes=m['code_bytes'],sha256=sha(m['data'])) for m in (state,consumer)],
         patches=patches,load=load,omitted_chunk_rejected=True,pools=pools,session_cases=cases,
         lifetime_negative_controls=negative,absolute_fc_reference_candidates=refs,computed_writers_excluded=False,

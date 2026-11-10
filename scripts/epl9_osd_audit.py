@@ -7,11 +7,16 @@ import json
 from pathlib import Path
 import struct
 
+from epl9_source_identity import verified_source
+
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 0x60400020
 MAIN_SHA = '8e39c335d54fd8ddea189db82fe708159f43f9995bba42c2cd47dd22b8814267'
 OSD_SHA = 'ee9a9c3ad1974dd212483ca7d012e51ae23083ce0119589a3b42996aa13ccf1e'
+# Historical Windows checkout raw identity; keep for earlier evidence.
 DECODER_SHA = '16e310d988012e56091ce883ab6ab95d5f1eaf3abb00a0aac733a54edb99a9b8'
+# LF bytes from tools/osd_extract.py at DECODER_COMMIT.
+DECODER_LF_SHA = 'c7fe693c1322553758a7f312c8e31009b9f45016702f83c24eaec6cbd2910396'
 DECODER_COMMIT = '7d42c1f258737b7196c6b17cec5d643b5080ece6'
 ASSETS = [688, 689, 1024, 4387, 4388, 4420, 4421, 4458, 4459, 4556, 4557, 4573]
 # Deliberately selected matched label lists, not every occurrence of value 19.
@@ -34,10 +39,12 @@ def verified_bytes(path, expected, size=None):
 
 def load_decoder(path=None):
     path = path or ROOT / 'references/caduceus-ep7/tools/osd_extract.py'
-    verified_bytes(path, DECODER_SHA)
+    source, identity = verified_source(path, DECODER_LF_SHA, DECODER_SHA)
     spec = importlib.util.spec_from_file_location('pinned_external_osd', path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # Execute the verified snapshot, not a potentially stale cached .pyc.
+    exec(compile(source, str(path), 'exec'), module.__dict__)
+    module._source_identity = identity
     # Reuse format parsing, NOT other-model offsets or compatibility claims.
     # Hash checks stay enabled and now require the identified E-PL9 components.
     module.COMPONENT_ADDR = 0x421e0020
@@ -125,7 +132,9 @@ def main():
         'osd': {'bytes': 26214336, 'sha256': OSD_SHA, 'component_header_version': '0x0100',
                 'container_payload_address': '0x421e0020'},
         'decoder': {'upstream': 'https://github.com/cakelesscoder/caduceus-ep7',
-                    'commit': DECODER_COMMIT, 'file': 'tools/osd_extract.py', 'sha256': DECODER_SHA},
+                    'commit': DECODER_COMMIT, 'file': 'tools/osd_extract.py',
+                    'sha256': decoder._source_identity['raw_sha256'],
+                    **decoder._source_identity},
         'adapter_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'resources': osd.resources, 'bank0_base': hex(osd.base0), 'bank69_base': hex(osd.base69),
         'bitmap_count': osd.bitmap_count, 'kinds': counts, 'rle_modes': dict(modes),

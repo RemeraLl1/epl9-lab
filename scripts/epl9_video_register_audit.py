@@ -3,6 +3,8 @@
 Reads exact local firmware only. Does not run camera code, emulate sensor
 timing, patch an image, or assert that an exposure callback is an IRQ.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -1081,7 +1083,7 @@ def mux_nominal_video_timing(rate):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     args = parser.parse_args()
     out = local_output(args.out)
     verified_input(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN',104552480,STOCK_SHA)
@@ -1202,6 +1204,7 @@ def main():
                 f'clock getter entry {index} changed')
     listings, decoded = {}, {}
     for name,(start,stop) in WINDOWS.items():
+        verify_reader(args.reader)
         listing = subprocess.check_output([str(args.reader.resolve()),str(path.resolve()),
                                            hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         decoded.update(checked_listing(listing,data,start,stop))
@@ -1213,7 +1216,7 @@ def main():
         model='Olympus PEN E-PL9',model_id='1330',displayed_version='1.1',internal_main_build='1101',
         stock=dict(bytes=104552480,sha256=STOCK_SHA),
         main=dict(name=MAIN_NAME,bytes=len(data),sha256=MAIN_SHA,base=hex(BASE)),
-        reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+        reader_sha256=verify_reader(args.reader),
         tg=dict(stage_command=7,apply_command=9,writer_pairs=[[hex(x) for x in p] for p in pairs],
                 vd_period_register='0x9b00008c',hd_period_register='0x9b000094',
                 getter_mask='0x7fff',clock_hz_verified=False,count_encoding_verified=False,

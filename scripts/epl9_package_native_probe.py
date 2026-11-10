@@ -5,14 +5,14 @@ runs natively. Small cases compare the entire register/flag/RAM state against
 unaccelerated execution. No unconditional validation-success model is used.
 The flash entry is a RAM-only trap; no device or storage API is invoked.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import json
 from pathlib import Path
 import struct
 
-from epl9_recovery_audit import (ROOT, BASE, BUFFER, STACK, SP, RESULT, RETURN,
-    Boundary, fixture, load_code, inspect_package, decoded_payload, sha, MAIN_NAME, MAIN_SHA,
-    ORDER, READER_SHA)
+from epl9_recovery_audit import ROOT, BASE, BUFFER, STACK, SP, RESULT, RETURN, Boundary, fixture, load_code, inspect_package, decoded_payload, sha, MAIN_NAME, MAIN_SHA, ORDER
 from epl9_v3_package import sum32, INVERT, generation_inputs, component
 from mn103_subset import Region, Memory, Fault
 from mn103_calls import CallMachine
@@ -177,7 +177,7 @@ def run(out, packages):
         raise ValueError('wrong stock main')
     package_manifest = json.loads((packages/'manifest.json').read_text())
     out.mkdir()
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader = default_reader()
     code = load_code(image, out, reader)
     checks = crosscheck_loops(image, code)
     (out/'loop-crosschecks.json').write_text(json.dumps(checks, indent=2)+'\n', encoding='utf-8')
@@ -255,7 +255,7 @@ def run(out, packages):
     report = dict(schema='epl9-full-size-native-package-probe-v1', generation=generation,
         candidate_main_from_exact_package=True, candidate_main_sha256=sha(candidate_main),
         package_manifest_sha256=sha((packages/'manifest.json').read_bytes()),
-        source_sha256=sha(Path(__file__).read_bytes()), reader_sha256=READER_SHA,
+        source_sha256=sha(Path(__file__).read_bytes()), reader_sha256=verify_reader(reader),
         loop_windows={hex(a):dict(end=hex(b),name=n,sha256=sha(image[a-BASE:b-BASE])) for a,(b,n) in LOOPS.items()},
         native_loop_crosschecks=checks, cases=results,
         scope='Native outer validator/selection control flow; three crosschecked bulk loops; writes trapped',

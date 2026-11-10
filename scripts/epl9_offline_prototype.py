@@ -1,4 +1,6 @@
 """Execute bounded decoded E-PL9 sections with synthetic state; never patch files."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -246,9 +248,10 @@ def main():
     image = image_path.read_bytes()
     if len(image) != 26214336 or hashlib.sha256(image).hexdigest() != MAIN_SHA:
         p.error('exact E-PL9 1.1/build 1101 main required')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader = default_reader()
     code = {}
     for start, stop in WINDOWS.values():
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader), str(image_path), hex(BASE),
                                            hex(start-BASE), hex(stop-BASE)], text=True)
         code.update(parse_listing(listing, image, BASE))
@@ -265,7 +268,7 @@ def main():
     result['provenance'] = {'model': 'E-PL9', 'displayed_version': '1.1', 'main_build': '1101',
         'stock_bytes': 104552480, 'stock_sha256': STOCK_SHA,
         'main_bytes': len(image), 'main_sha256': MAIN_SHA, 'base': hex(BASE),
-        'reader_sha256': hashlib.sha256(reader.read_bytes()).hexdigest(),
+        'reader_sha256': verify_reader(reader),
         'fixture_sha256': hashlib.sha256(fixture_path.read_bytes()).hexdigest(),
         'source_sha256': {name: hashlib.sha256((ROOT/'scripts'/name).read_bytes()).hexdigest()
                           for name in ('mn103_subset.py', 'epl9_offline_prototype.py')},

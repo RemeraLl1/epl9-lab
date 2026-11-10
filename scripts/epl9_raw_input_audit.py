@@ -1,4 +1,6 @@
 """Map a real ORF mosaic into native configuration; no TruePic pixel model."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -44,7 +46,8 @@ def format_evidence(image,code):
 def upload_evidence(image,code,words):
     """Native register transfer only; no pixel execution or ready response."""
     path=ROOT/'local/epl9-1101-analysis/decoded/00_0100_406e0020.decoded.bin'
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader=default_reader()
+    verify_reader(reader)
     listing=subprocess.check_output([str(reader),str(path),hex(BASE),
         hex(0x60740cad-BASE),hex(0x60740cc0-BASE)],text=True)
     code=dict(code);code.update(parse_listing(listing,image,BASE))

@@ -3,6 +3,8 @@
 Checks static instructions and data only. No camera interface, firmware patches,
 or invented hardware clock rates. Outputs are restricted to a new local/ path.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -99,7 +101,7 @@ AUX_ANCHORS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--reader', type=Path, default=ROOT/'local/mn103-tooling/mn103-reader.exe')
+    parser.add_argument('--reader', type=Path, default=default_reader())
     args = parser.parse_args()
     out = local_output(args.out)
     verified_input(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN',104552480,STOCK_SHA)
@@ -133,6 +135,7 @@ def main():
         (aux_path,aux,AUX_BASE,AUX_WINDOWS,AUX_ANCHORS)]:
         decoded={}
         for name,(start,stop) in windows.items():
+            verify_reader(args.reader)
             listing=subprocess.check_output([str(args.reader.resolve()),str(path.resolve()),
                                              hex(base),hex(start-base),hex(stop-base)],text=True)
             decoded.update(checked_listing(listing,image,start,stop,base=base))
@@ -145,7 +148,7 @@ def main():
                 internal_main_build='1101',stock_bytes=104552480,stock_sha256=STOCK_SHA,
                 inputs=[dict(name=MAIN_NAME,bytes=len(data),sha256=MAIN_SHA,base=hex(BASE)),
                         dict(name=AUX_NAME,bytes=len(aux),sha256=AUX_SHA,base=hex(AUX_BASE))],
-                reader_sha256=hashlib.sha256(args.reader.read_bytes()).hexdigest(),
+                reader_sha256=verify_reader(args.reader),
                 main_counter=dict(register='0x9890014c',subtract_from='0x3fffffff',
                                   absolute_tick_rate_verified=False),
                 component_counters=dict(timer0=list(timer0),timer2=list(timer2),

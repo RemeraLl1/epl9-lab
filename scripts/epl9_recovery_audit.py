@@ -3,6 +3,8 @@
 Native validation uses small RAM-only fixtures and explicit diagnostic/backend
 boundaries. No installable update, stock-restore BIN or patched firmware is saved.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -15,6 +17,7 @@ from epl9_video_audit import ROOT, BASE, MAIN_NAME, verified_input, checked_list
 from mn103_subset import Memory, Region, Fault, parse_listing
 from mn103_calls import CallMachine
 
+# Historical Windows identity, not the digest of a portable build.
 READER_SHA='e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae'
 WINDOWS={
     'shared_updater':(0x6100440a,0x610051ab),
@@ -128,8 +131,7 @@ class Boundary:
 
 
 def load_code(image,out,reader):
-    if sha(reader.read_bytes())!=READER_SHA:
-        raise ValueError('unqualified reader')
+    verify_reader(reader)
     code={};listings={}
     for name,(start,end) in (WINDOWS|STATIC_WINDOWS).items():
         listing=subprocess.check_output([str(reader.resolve()),str((ROOT/'local/epl9-1101-analysis/decoded'/MAIN_NAME).resolve()),
@@ -299,7 +301,7 @@ def main():
     out=local_output(args.out)
     image=verified_input(ROOT/'local/epl9-1101-analysis/decoded'/MAIN_NAME,26214336,MAIN_SHA)
     stock=verified_input(ROOT/'firmware/OLY_E_133_1101_0000_0000.BIN',104552480,STOCK_SHA)
-    reader=ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader=default_reader()
     out.mkdir()
     code=load_code(image,out,reader)
     rows=run_cases(image,code)
@@ -308,7 +310,7 @@ def main():
     static=static_contracts(image,code,out)
     report=dict(model='Olympus E-PL9',displayed_version='1.1 (owner report)',main_build='1101',
         stock_bytes=len(stock),stock_sha256=STOCK_SHA,main_bytes=len(image),main_sha256=MAIN_SHA,
-        source_sha256=sha(Path(__file__).read_bytes()),reader_sha256=READER_SHA,
+        source_sha256=sha(Path(__file__).read_bytes()),reader_sha256=verify_reader(reader),
         stock_components=components,
         backend_status_cases=backend,static_contracts=static,
         dependencies={name:sha((ROOT/'scripts'/name).read_bytes()) for name in (

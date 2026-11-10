@@ -4,6 +4,8 @@ The v2 default uses existing contrast/HSM and WB metadata in copies. The v1
 CMIO gamma experiment is retained for reproduction of a negative pixel control.
 Neither is a camera patch or an independent ISP implementation.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import io
 import json
@@ -18,6 +20,7 @@ from epl9_workspace_bridge import (ROOT, BASE, MAIN, MAIN_SHA, LAUREL, SLOTS,
 GAMMA_ROM, GAMMA_T_OFFSET = 0x608c37e4, 0xbe6
 DEFAULT_RECIPES = ROOT/'recipes/epl9-film-drafts-v2.json'
 BASE_RECIPES = ROOT/'recipes/epl9-film-drafts-v0.json'
+# Historical Windows identity, not the digest of a portable build.
 READER_SHA = 'e1c9bcb2b2467a44b8f6e2b6910c9868eff6ce571c36d5b9ad41d1d8693a76ae'
 
 
@@ -227,9 +230,8 @@ def native_gamma_checks(image_path, cases):
     image = image_path.read_bytes()
     if sha(image) != MAIN_SHA:
         raise ValueError('requires the exact E-PL9 main')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('unqualified reader')
+    reader = default_reader()
+    verify_reader(reader)
     code = {}
     for start, stop in ((0x6079d26c, 0x6079d7da), (0x607a3c9e, 0x607a3df6)):
         listing = subprocess.check_output([str(reader), str(image_path.resolve()), hex(BASE),
@@ -284,9 +286,8 @@ def native_tone_checks(image_path, cases, processing_key=2):
     image = image_path.read_bytes()
     if sha(image) != MAIN_SHA:
         raise ValueError('requires exact E-PL9 main')
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('unqualified reader')
+    reader = default_reader()
+    verify_reader(reader)
     code = {}
     for start, stop in ((0x6079ed15, 0x6079f3d2), (0x60749cbd, 0x6074a5b2), (0x607a3c9e, 0x607a3df6)):
         listing = subprocess.check_output([str(reader), str(image_path.resolve()), hex(BASE),

@@ -1,4 +1,6 @@
 """Run native call chains with synthetic state; report unmodeled boundaries."""
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -163,8 +165,9 @@ def main():
     if args.out.exists() or not args.out.resolve().is_relative_to((ROOT/'local').resolve()):
         p.error('output must be a new ignored local directory')
     code = {}
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
+    reader = default_reader()
     for start, end in {**WINDOWS, **SERVICE_WINDOWS, **EXTRA_WINDOWS}.values():
+        verify_reader(reader)
         listing = subprocess.check_output([str(reader), str(path), hex(BASE),
                     hex(start-BASE), hex(end-BASE)], text=True)
         decoded = parse_listing(listing, image, BASE)
@@ -177,7 +180,7 @@ def main():
         assert op+'\t'+','.join(operands) == expected
     report = dict(provenance=dict(model='E-PL9', displayed_version='1.1', main_build='1101',
         stock_bytes=104552480, stock_sha256=STOCK_SHA, main_bytes=len(image), main_sha256=MAIN_SHA,
-        base=hex(BASE), reader_sha256=hashlib.sha256(reader.read_bytes()).hexdigest(),
+        base=hex(BASE), reader_sha256=verify_reader(reader),
         source_sha256={name: hashlib.sha256((ROOT/'scripts'/name).read_bytes()).hexdigest()
           for name in ('mn103_subset.py', 'mn103_calls.py', 'mn103_models.py',
                        'epl9_integrated_probe.py', 'epl9_offline_prototype.py')}),

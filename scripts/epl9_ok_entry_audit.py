@@ -3,6 +3,8 @@
 This does not emulate physical reset or invent an OK-to-SD selector. Native
 fragments use declared RAM/register fixtures; task activation is trapped.
 """
+
+from mn103_tooling import default_reader, verify_reader
 import argparse
 import hashlib
 import json
@@ -13,7 +15,7 @@ import subprocess
 
 from epl9_color_audit import MAIN_SHA, STOCK_SHA
 from epl9_video_audit import ROOT, BASE, MAIN_NAME, verified_input, checked_listing, local_output
-from epl9_boot_recovery_audit import READER_SHA, task_records
+from epl9_boot_recovery_audit import task_records
 from mn103_subset import Memory, Region, Machine, Fault, parse_listing
 from mn103_calls import CallMachine
 
@@ -82,9 +84,8 @@ def pointer_candidates(image, target):
 
 
 def load_code(image, out):
-    reader = ROOT/'local/mn103-tooling/mn103-reader.exe'
-    if sha(reader.read_bytes()) != READER_SHA:
-        raise ValueError('unqualified reader')
+    reader = default_reader()
+    verify_reader(reader)
     code = {}
     for name, (start, end) in WINDOWS.items():
         listing = subprocess.check_output([
@@ -296,7 +297,7 @@ def main():
     report = dict(model='Olympus PEN E-PL9', model_bytes='1330',
                   displayed_version='1.1 (owner report)', downloaded_main_build='1101',
                   stock_bytes=len(stock), stock_sha256=STOCK_SHA,
-                  main_bytes=len(image), main_sha256=MAIN_SHA, reader_sha256=READER_SHA,
+                  main_bytes=len(image), main_sha256=MAIN_SHA, reader_sha256=verify_reader(),
                   source_sha256=sha(Path(__file__).read_bytes()),
                   dependencies={n:sha((ROOT/'scripts'/n).read_bytes()) for n in (
                       'mn103_subset.py','mn103_calls.py','epl9_color_audit.py',
