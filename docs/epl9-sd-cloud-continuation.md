@@ -12,6 +12,11 @@ no confirmed native camera menu entries. Configuration comparisons are not
 image output; the documented connected jobs stop at unmapped TruePic
 `9880014c`. Physical SD, camera execution and installation remain unverified.
 
+The later [HLS stop/user inventory follow-up](epl9-hls-stop-cloud-boundary.md)
+preserves the clarified Windows handoff and provides a stock-main-only audit
+tool. The actual shutdown sources and native evidence remain unavailable;
+that follow-up does not recreate their implementation.
+
 ## Available and missing material
 
 The cloud source tree includes:
