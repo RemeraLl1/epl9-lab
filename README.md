@@ -27,6 +27,8 @@ The [classified ART continuation](docs/epl9-classified-art-branch.md) adds coher
 
 [ISEQ producer and job lifetime](docs/epl9-iseq-job-lifetime.md) distinguishes an empty transaction-result connector from the separate active controller job lifecycle. Duplicate token registration is not worker execution or a measured camera race.
 
+[Native-source-v1 offline package](docs/epl9-native-source-v1-package.md) keeps the corrected generation separate, with source/container checks, native load/updater qualification and fresh UI comparison. Private files remain local; this is not installation readiness.
+
 [Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
 
 The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.
