@@ -35,6 +35,18 @@ def integers(values, bounds):
                                              for v,(lo,hi) in zip(values,bounds))
 
 
+def validate_controls(recipe_id, name, hsl, contrast, tone, wb_q10):
+    require(type(recipe_id) is int and 0 < recipe_id <= 0xffffffff, 'invalid recipe ID')
+    require(type(name) is str and 1 <= len(name) <= 31 and
+            all(32 <= ord(c) <= 126 and c != '@' for c in name), 'name must be 1..31 plain ASCII bytes')
+    require(type(hsl) is tuple and len(hsl) == 12 and
+            all(type(row) is tuple and integers(row, ((-1000,1000),(-240,240),(-100,100)))
+                for row in hsl), 'unqualified native HSL records')
+    require(type(contrast) is int and -2 <= contrast <= 2, 'invalid contrast')
+    require(type(tone) is tuple and integers(tone, ((-7,7),)*3), 'invalid tone biases')
+    require(type(wb_q10) is tuple and integers(wb_q10, ((512,2048),)*2), 'invalid native-order WB')
+
+
 @dataclass(frozen=True)
 class Recipe:
     recipe_id: int
@@ -46,15 +58,7 @@ class Recipe:
     gamma: tuple  # one shared native variant-zero gamma
 
     def __post_init__(self):
-        require(type(self.recipe_id) is int and 0 < self.recipe_id <= 0xffffffff, 'invalid recipe ID')
-        require(type(self.name) is str and 1 <= len(self.name) <= 31 and
-                all(32 <= ord(c) <= 126 and c != '@' for c in self.name), 'name must be 1..31 plain ASCII bytes')
-        require(type(self.hsl) is tuple and len(self.hsl) == 12 and
-                all(type(row) is tuple and integers(row, ((-1000,1000),(-240,240),(-100,100)))
-                    for row in self.hsl), 'unqualified native HSL records')
-        require(type(self.contrast) is int and -2 <= self.contrast <= 2, 'invalid contrast')
-        require(type(self.tone) is tuple and integers(self.tone, ((-7,7),)*3), 'invalid tone biases')
-        require(type(self.wb_q10) is tuple and integers(self.wb_q10, ((512,2048),)*2), 'invalid native-order WB')
+        validate_controls(self.recipe_id, self.name, self.hsl, self.contrast, self.tone, self.wb_q10)
         require(type(self.gamma) is tuple and integers(self.gamma, ((0,4095),)*256) and
                 all(a <= b for a,b in zip(self.gamma,self.gamma[1:])), 'invalid shared gamma')
 
@@ -89,22 +93,47 @@ def unpack_recipe(data):
                   values[36], tuple(values[37:40]), tuple(values[40:42]), tuple(values[42:]))
 
 
-def compile_author(document, image):
+def validate_author(document):
+    """Validate editable controls without inventing or compiling a gamma curve."""
     fields = {'schema','recipe_id','name','native_hsl','contrast','tone','wb_q10','gamma_knots'}
     require(type(document) is dict and set(document) == fields and document['schema'] == AUTHOR_SCHEMA,
             'unsupported author schema/fields')
-    require(len(image) == 26214336 and hashlib.sha256(image).hexdigest() == MAIN_SHA,
-            'requires exact E-PL9 build 1101 main for native gamma compilation')
     tone = document['tone']
     require(type(tone) is dict and set(tone) == {'highlights','midtones','shadows'}, 'explicit H/M/S required')
     require(type(document['native_hsl']) is list and all(type(r) is list for r in document['native_hsl']),
             'HSL must be a list of rows')
     require(type(document['wb_q10']) is list, 'WB must be a list')
     validate_knots(document['gamma_knots'])
+    controls = dict(recipe_id=document['recipe_id'], name=document['name'],
+        hsl=tuple(tuple(r) for r in document['native_hsl']), contrast=document['contrast'],
+        tone=tuple(tone[k] for k in ('highlights','midtones','shadows')),
+        wb_q10=tuple(document['wb_q10']))
+    validate_controls(**controls)
+    return controls
+
+
+def compile_author(document, image):
+    controls = validate_author(document)
+    require(len(image) == 26214336 and hashlib.sha256(image).hexdigest() == MAIN_SHA,
+            'requires exact E-PL9 build 1101 main for native gamma compilation')
     base = struct.unpack_from('<256H', image, 0x608c37e4-BASE)
-    return Recipe(document['recipe_id'],document['name'],tuple(tuple(r) for r in document['native_hsl']),
-                  document['contrast'],tuple(tone[k] for k in ('highlights','midtones','shadows')),
-                  tuple(document['wb_q10']),tuple(remap_curve(base,document['gamma_knots'])))
+    return Recipe(**controls, gamma=tuple(remap_curve(base,document['gamma_knots'])))
+
+
+def read_json(path, limit=65536):
+    """Bound author/manifest reads and reject ambiguous duplicate JSON fields."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            require(key not in result, 'duplicate JSON field: '+key)
+            result[key] = value
+        return result
+    def constant(value):
+        raise ValueError('nonfinite JSON number: '+value)
+    with Path(path).open('rb') as handle:
+        raw = handle.read(limit+1)
+    require(len(raw) <= limit, 'JSON input exceeds size limit')
+    return json.loads(raw.decode('utf-8-sig'), object_pairs_hook=unique, parse_constant=constant)
 
 
 def materialize(recipe, color_template):
@@ -181,15 +210,28 @@ def main():
     export.add_argument('--out',type=Path,required=True)
     inspect = sub.add_parser('inspect',help='validate and summarize one experimental recipe file')
     inspect.add_argument('recipe',type=Path)
+    author = sub.add_parser('validate-author',help='check editable JSON without compiling a gamma or record')
+    author.add_argument('author',type=Path)
     args = ap.parse_args()
-    if args.command == 'export':
-        recipe = compile_author(json.loads(args.author.read_text(encoding='utf-8')),MAIN.read_bytes())
-        path = new_local_output(args.out)
-        with path.open('xb') as handle:
-            handle.write(pack_recipe(recipe))
-    else:
-        with args.recipe.open('rb') as handle:
-            recipe = unpack_recipe(handle.read(FILE_BYTES+1))
+    try:
+        if args.command == 'validate-author':
+            controls = validate_author(read_json(args.author))
+            print(json.dumps(dict(recipe_id=controls['recipe_id'],name=controls['name'],
+                author_controls_valid=True,gamma_compiled=False,record_exported=False,
+                exact_stock_main_required_for_export=True,camera_loader_implemented=False)))
+            return
+        if args.command == 'export':
+            document = read_json(args.author)
+            validate_author(document)
+            recipe = compile_author(document,MAIN.read_bytes())
+            path = new_local_output(args.out)
+            with path.open('xb') as handle:
+                handle.write(pack_recipe(recipe))
+        else:
+            with args.recipe.open('rb') as handle:
+                recipe = unpack_recipe(handle.read(FILE_BYTES+1))
+    except (OSError,ValueError) as error:
+        ap.error(str(error))
     print(json.dumps(dict(recipe_id=recipe.recipe_id,name=recipe.name,bytes=FILE_BYTES,
                          schema='experimental host v0',camera_loader_implemented=False)))
 

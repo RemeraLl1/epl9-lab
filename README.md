@@ -64,3 +64,9 @@ The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an ex
 ## Cloud checkpoint
 
 See [cloud migration and source-only limitations](docs/cloud-migration-20261110.md). This checkpoint focuses on firmware research and recipe integration, without personal media.
+
+The [computer-side SD recipe route](docs/epl9-sd-file-workflow.md) provides
+author validation, checked local file pairs and an immutable fallback
+rehearsal, with a firmware-free native-loader demonstration. Actual author
+export still needs the exact private main; native menu assignment, session
+shutdown and physical SD/camera qualification remain open.

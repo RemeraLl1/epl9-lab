@@ -1,5 +1,11 @@
 # SD recipe cloud continuation, 2026-11-10
 
+The [2026-11-11 file-workflow follow-up](epl9-sd-file-workflow.md) adds author
+preflight, local record staging/verification and immutable host rehearsal.
+Its 60 SD tests and 34 standalone native-loader invocations do not supply the
+missing main or shutdown implementation; the earlier counts below remain
+historical results of their stated revisions.
+
 The published checkpoint `cloud-sync/2026-11-10` at
 `3c42b01444bf933056917768de32a2bbf9e892f0` contains the two-slot SD loader,
 manager-tail state, processing consumer and in-image placement study. This
