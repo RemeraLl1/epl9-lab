@@ -4,6 +4,7 @@ import unittest
 
 from epl9_job_probe import (FixtureOwner, FixturePool, FixturePoolFree, FixtureEventBits, FixtureConsumerSlot, FixtureLock, FixtureSignal, FixtureCompletion,
                             JOB, CACHE, SOURCE, OUTPUT, STACK, SP, SCRATCH, OWNER_CALLBACK, OWNER_CONTEXT, experiment)
+from epl9_job_probe import OWNER_BUFFER_ARENAS
 from epl9_offline_prototype import check_packing
 from mn103_calls import CallMachine
 from mn103_subset import Memory, Region, Fault
@@ -31,6 +32,54 @@ def callback(m,event,arg):
 
 
 class JobContractTests(unittest.TestCase):
+    def test_invalid_size_is_not_mislabeled_as_capacity_exhaustion(self):
+        for size in (0,32*1024*1024+1):
+            owner=FixtureOwner(buffer_capacity=7);m=fixture(owner);record=JOB+5668
+            m.memory.write(record+72,size,4)
+            before=[bytes(r.data) for r in m.memory.regions]
+            with self.assertRaisesRegex(Fault,'size exceeds declared fixture bound'):
+                callback(m,19,record)
+            self.assertEqual(owner.buffers,[])
+            self.assertEqual(before,[bytes(r.data) for r in m.memory.regions])
+
+    def test_explicit_third_owner_arena_preserves_default_capacity_and_guards(self):
+        for capacity in (2,3,7):
+            owner=FixtureOwner(buffer_capacity=capacity);m=fixture(owner)
+            for index in range(capacity):
+                record=JOB+5668+88*index
+                m.memory.write(record+72,64,4)
+                m.memory.write(record+76,0x1000+index,4)
+                callback(m,19,record)
+                pointer=m.memory.read(record+64,4)
+                self.assertEqual(pointer,OWNER_BUFFER_ARENAS[index])
+                region,offset=m.memory.region(pointer,4)
+                self.assertEqual(region.data[offset:offset+64],b'\xcd'*64)
+                self.assertEqual(region.data[offset+64:],b'\xa5'*16)
+            record=JOB+5668+88*capacity
+            m.memory.write(record+72,64,4)
+            m.memory.write(record+76,0x1100,4)
+            before=[bytes(r.data) for r in m.memory.regions]
+            with self.assertRaisesRegex(Fault,'fixture capacity'):
+                callback(m,19,record)
+            self.assertEqual(before,[bytes(r.data) for r in m.memory.regions])
+            self.assertEqual(len(owner.buffers),capacity)
+
+    def test_owner_arena_configuration_and_overlap_remain_fail_closed(self):
+        for capacity in (0,-1,8,True,2.0,None):
+            with self.assertRaises(ValueError):FixtureOwner(buffer_capacity=capacity)
+        owner=FixtureOwner(buffer_capacity=3);m=fixture(owner)
+        # Model two already declared allocations, then make the third arena
+        # overlap an existing readable region. Rejection must not publish it.
+        owner.buffers=[dict(address=0x20000000,size=64,id=1),dict(address=0x23000000,size=64,id=2)]
+        m.memory=Memory([*m.memory.regions,Region(OWNER_BUFFER_ARENAS[2]+32,bytes(64))])
+        record=JOB+5668
+        m.memory.write(record+72,64,4)
+        before=[bytes(r.data) for r in m.memory.regions]
+        with self.assertRaisesRegex(Fault,'overlaps'):
+            callback(m,19,record)
+        self.assertEqual(before,[bytes(r.data) for r in m.memory.regions])
+        self.assertEqual(len(owner.buffers),2)
+
     def test_native_late_module_rejects_host_recipe_attachment_before_execution(self):
         with self.assertRaisesRegex(ValueError,'must not be mixed'):
             experiment(b'',{},0x01010078,0x200,0,native_module={},attach_table=True)

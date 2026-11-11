@@ -5,6 +5,7 @@ consumers normalize slots 0/1 by min(2,3), or pack [0,2,3,1]. This is evidence
 for a WB gain record, not proof of a physical R/B order or photographic match.
 """
 from epl9_color_extension import KEYS
+from epl9_native_source_gate import assembly as source_gate
 
 
 def controls(document):
@@ -30,14 +31,17 @@ def adjusted(values,gains):
     return tuple(min(65535,(v*g+512)//1024) for v,g in zip(values[:2],gains))+tuple(values[2:])
 
 
-def assembly(rows):
+def assembly(rows, *, native_source_gate=False):
+    if native_source_gate:
+        return finalized_assembly(rows)
     # Only D0/D1/D2/A1 are clobbered. Original continuation overwrites all
     # four before reading them. No stack, multiply, divide, MDR/MDRQ or LB
     # operations; the next native setlb establishes the next loop cache.
     lines=['film_wb_entry:',' movhu (14,a2),d0']
     for value in (0x200,0x100,0x40,0x1000):
         lines += [f' cmp {value},d0',' beq wb_key_check']
-    lines += [' jmp wb_resume','wb_key_check:',' mov (8,a2),d0',
+    lines += [' jmp wb_resume']
+    lines += ['wb_key_check:',' mov (8,a2),d0',
               ' cmp 7864577,d0',' beq wb_gold_gate',
               ' cmp 7864833,d0',' beq wb_portra_gate',' jmp wb_resume',
               'wb_gold_gate:',' jmp wb_gold','wb_portra_gate:',' jmp wb_portra']
@@ -59,3 +63,30 @@ def assembly(rows):
     # Replay clr D0, clr D2, mov 3710,A1 (same values/flags as native).
     lines += ['wb_resume:',' clr d0',' clr d2',' mov 3710,a1',' jmp 0x6074f357']
     return '\n'.join(lines)+'\n'
+
+
+def finalized_assembly(rows):
+    """Bias each freshly built request after optional source/selector mutation.
+
+    At stock 60761c9e, builder SP+52 retains R, after its source copy and
+    optional selector callback. The original copy loop leaves D1=0. A1 is
+    overwritten on both following branches before native use. A0 and every
+    callee-saved register are retained.
+    The old 6074f352 hook is NOT installed in this opt-in variant.
+    No stack, mutable global, multiply, divide or MDR/MDRQ operation is added.
+    """
+    source = assembly(rows).replace(',a2)', ',a1)')
+    source = source.replace('film_wb_entry:\n', 'film_wb_entry:\n mov (52,sp),a1\n')
+    source = source.replace(' beq wb_key_check\n', ' beq wb_source_check\n')
+    source = source.replace('wb_key_check:\n',
+        'wb_source_check:\n' + source_gate('wb_source', 'a1', 28, 48,
+            'wb_selector_check', 'wb_resume') +
+        'wb_selector_check:\n movhu (1832,a1),d1\n cmp 0,d1\n'
+        ' beq wb_key_check\n jmp wb_resume\nwb_key_check:\n')
+    before = 'wb_resume:\n clr d0\n clr d2\n mov 3710,a1\n jmp 0x6074f357\n'
+    after = ('wb_resume:\n mov sp,a1\n' + ' add 127,a1\n'*5 +
+             ' add 117,a1\n mov (a1),d0\n clr d1\n'
+             ' cmp 0,d0\n jmp 0x60761ca4\n')
+    if source.count(before) != 1:
+        raise ValueError('finalized gain hook requires the reviewed WB body')
+    return source.replace(before, after)

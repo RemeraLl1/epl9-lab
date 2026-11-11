@@ -312,7 +312,7 @@ def route_cases(image,code,original_image,original_code,module):
     return results
 
 
-def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE,private_color=False):
+def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,base=MODULE_BASE,private_color=False,native_source_gate=False):
     require(not out.exists() and out.resolve().is_relative_to((ROOT/'local').resolve()),'new ignored output required')
     reader = default_reader()
     image,code,_ = load_code(MAIN,reader)
@@ -322,7 +322,7 @@ def prepare_probe(out,diagnostic_rgb=False,rgb_document=None,color_document=None
         listing = subprocess.check_output([str(reader),str(MAIN),hex(BASE),hex(start-BASE),hex(stop-BASE)],text=True)
         code.update(parse_listing(listing,image,BASE))
     original_code = dict(code)
-    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document,private_color=private_color)
+    module = build_late_module(image,base=base,diagnostic_rgb=diagnostic_rgb,rgb_document=rgb_document,color_document=color_document,wb_document=wb_document,private_color=private_color,native_source_gate=native_source_gate)
     generated,manifest = emit_files(module,out)
     modified = bytearray(image)
     if BASE<=base and base+len(module['data'])<=BASE+len(image):

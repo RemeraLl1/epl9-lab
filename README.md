@@ -18,6 +18,15 @@ The [timing and synchronization follow-up](docs/epl9-video-timing-sync.md) maps 
 
 The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
 
+The [native source-field follow-up](docs/epl9-native-source-gates.md) finds and corrects a scoped WB/COLOR qualification mismatch in a separate opt-in offline variant. Both recipes reach their native configuration on source `0107`/flags `03`; frozen defaults and recipe tables remain unchanged. This is not camera rendering or an installation release.
+
+The [classified ART continuation](docs/epl9-classified-art-branch.md) adds coherent native-produced Sv inputs and a finite seven-arena host fixture, preserving the two-arena default. Both recipes reach the first TruePic boundary on that additional path; no successful hardware completion or installation is claimed.
+
+[Cloned executor-reentry controls](docs/epl9-native-source-reentry.md) find no repeated WB multiplication, but show that overlap at gain return disrupts the unfinished prefix under finite host resources. Exclusion of simultaneous access to the same job remains required.
+[Native job ownership and exclusion](docs/epl9-native-job-exclusion.md): sequential primary/wrapper task ownership, other executor/message routes, and why no speculative firmware lock was added.
+
+[ISEQ producer and job lifetime](docs/epl9-iseq-job-lifetime.md) distinguishes an empty transaction-result connector from the separate active controller job lifecycle. Duplicate token registration is not worker execution or a measured camera race.
+
 [Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
 
 The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.

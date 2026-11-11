@@ -21,6 +21,11 @@ PARAMS, ERROR, STACK, SP = 0x10020000, 0x10030000, 0x10010000, 0x10013c00
 OWNER_CALLBACK, OWNER_CONTEXT, SOURCE, OUTPUT = 0x0f000000, 0x10040000, 0x12000000, 0x16000000
 SCRATCH = 0x18000000
 PARAMETER_OBJECT, RECIPE_TABLE = 0x19000000, 0x19010000
+# Explicit non-overlapping 32 MiB host arenas with room for allocation guards.
+# The first two preserve all historical fixture addresses. Extra arenas avoid
+# native-owner fixture state around 0x2c000000; they are not camera RAM claims.
+OWNER_BUFFER_ARENAS=(0x20000000,0x23000000,0x30000000,0x33000000,
+                     0x36000000,0x39000000,0x3c000000)
 JOB_WINDOWS = {
     'wide_arithmetic_helpers': (0x604bbecc, 0x604bc028),
     'job_destructor': (0x6074e2fd, 0x6074e33b),
@@ -129,7 +134,13 @@ class FixtureOwner:
     name = 'synthetic-frame-owner'
 
     def __init__(self, continue_processing=True, accept_request=True, provide_slot=False,
-                 source_bounds=(4608,3456)):
+                 source_bounds=(4608,3456), buffer_capacity=2):
+        # Explicit finite host arenas, not the camera's physical allocator.
+        # The opt-in classified prefix needs one output and six scratch
+        # allocations. Each request still checks size, overlap and table ABI.
+        if type(buffer_capacity) is not int or not 1<=buffer_capacity<=len(OWNER_BUFFER_ARENAS):
+            raise ValueError('owner fixture requires one to seven bounded buffer slots')
+        self.buffer_capacity=buffer_capacity
         self.buffers = []
         self.released_buffers = set()
         self.provide_slot = provide_slot
@@ -178,10 +189,12 @@ class FixtureOwner:
             if not JOB+5668 <= arg < JOB+9892 or (arg-JOB-5668)%88:
                 raise Fault('owner allocation outside native buffer table')
             size = m.memory.read(arg+72,4)
-            if not 0 < size <= 32*1024*1024 or len(self.buffers) >= 2:
+            if not 0 < size <= 32*1024*1024:
+                raise Fault('owner buffer request size exceeds declared fixture bound')
+            if len(self.buffers) >= self.buffer_capacity:
                 raise Fault('owner buffer request exceeds declared fixture capacity')
             m.memory.region(arg+64,4,True)
-            address = 0x20000000+len(self.buffers)*0x03000000
+            address = OWNER_BUFFER_ARENAS[len(self.buffers)]
             if any(address < r.address+len(r.data) and r.address < address+size+16 for r in m.memory.regions):
                 raise Fault('fixture buffer address overlaps existing memory')
         elif event == 20:
@@ -250,7 +263,7 @@ class FixtureOwner:
             detail['coefficients_preserved'] = [m.memory.read(arg+i*2,2) for i in range(9)]
         elif event == 19:
             size = m.memory.read(arg+72,4)
-            address = 0x20000000+len(self.buffers)*0x03000000
+            address = OWNER_BUFFER_ARENAS[len(self.buffers)]
             region = Region(address,bytearray([0xcd])*size+bytearray([0xa5])*16,True,'fixture output buffer')
             m.memory = Memory([*m.memory.regions,region])
             m.memory.write(arg+64,address,4)
@@ -585,7 +598,7 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
                attach_table=False, provide_reference_dimensions=True, provide_slot=False,
                input_format=None, input_stride=None, destroy_job=False,
                legacy_output_offsets=False, source_fixture=None, native_module=None, machine_observer=None,
-               gain_fixture=None, parameter_fixture=None):
+               gain_fixture=None, parameter_fixture=None, owner_buffer_capacity=2):
     kinds=(0x200,0x100,0x40,0x1000) if parameter_fixture is not None else (0x200,0x100,0x40)
     if key not in RECIPES or kind not in kinds or selector not in (0,2):
         raise ValueError('only the declared target/key/type/selector grid is supported')
@@ -606,7 +619,8 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             raise ValueError('native parameter fixture identity/size mismatch')
         params[:]=parameter_fixture
     source_bounds=(source_fixture['stride'],source_fixture['height']) if source_fixture else (4608,3456)
-    owner = FixtureOwner(continue_processing,accept_request,provide_slot,source_bounds)
+    owner = FixtureOwner(continue_processing,accept_request,provide_slot,source_bounds,
+                         buffer_capacity=owner_buffer_capacity)
     pool = FixturePool()
     consumer_id = FixtureConsumerSlot('id')
     workspace = FixtureConsumerSlot('workspace',consumer_id)
@@ -818,7 +832,10 @@ def experiment(image, code, key, kind, selector, *, start_frame=True,
             job_header_unchanged=job[12:16] == header(key),
             cached_key_unchanged=memory.read(JOB+10384,4) == key,
             request_header=job[10448:10452].hex(),
-            early_gain_hook=native_module['symbols'].get('film_wb_entry') in m.trace,
+            early_gain_hook=(native_module['symbols'].get('film_wb_entry') in m.trace and
+                native_module.get('metadata',{}).get('native_source_gate_policy','legacy')=='legacy'),
+            finalized_gain_hook=(native_module['symbols'].get('film_wb_entry') in m.trace and
+                native_module.get('metadata',{}).get('native_source_gate_policy','legacy')!='legacy'),
             source_gain_record=list(struct.unpack_from('<4H',job,10406)),
             request_gain_record=list(struct.unpack_from('<4H',job,10440+1568)),
             matrix_words=list(struct.unpack_from('<9H',cache,80)),

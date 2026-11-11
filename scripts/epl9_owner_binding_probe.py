@@ -42,7 +42,7 @@ def load_factories(image,out):
     return code
 
 
-def create_parameters(image,code,name,variant,*,cancelled=0):
+def create_parameters(image,code,name,variant,*,cancelled=0,sv_fixture=None):
     state=fixture(cancelled=cancelled)
     obj=state['object'];obj.extend(bytes([0xa5])*(0x7000-len(obj)))
     for region in state['regions']:
@@ -51,6 +51,10 @@ def create_parameters(image,code,name,variant,*,cancelled=0):
     struct.pack_into('<H',state['context'],72,0x1003)
     state['context'][164]=1
     struct.pack_into('<H',state['context'],272,0)
+    if sv_fixture is not None:
+        if type(sv_fixture) is not int or not 0<=sv_fixture<=65535:
+            raise ValueError('native owner Sv fixture must be an unsigned halfword')
+        struct.pack_into('<H',state['context'],280,sv_fixture)
     obj[22955]=120
     struct.pack_into('<H',obj,22926,0)
     for offset,value in ((23680,0),(23688,variant),(23689,0),(22956,0),(22957,0),(23703,0)):
@@ -70,7 +74,8 @@ def create_parameters(image,code,name,variant,*,cancelled=0):
     if obj!=before:raise ValueError('parameter producer changed owner property storage')
     return bytes(params),state,dict(producer=hex(target),callback=hex(CALLBACKS[name]),
         context=hex(CONTEXT),parameters=params.hex(),instructions=len(m.trace),modeled_calls=0,
-        declared_fields={'operation':0x1003,'art':120,'art_variant':variant,'dimension_selector':1})
+        declared_fields=dict(operation=0x1003,art=120,art_variant=variant,dimension_selector=1,
+            **({'shSv':sv_fixture} if sv_fixture is not None else {})))
 
 
 def control_cases(image,code):

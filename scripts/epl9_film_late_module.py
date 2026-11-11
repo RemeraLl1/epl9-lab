@@ -11,6 +11,7 @@ from epl9_tonal_drafts import validate_curve
 from mn103_emit import assemble, encode
 from epl9_color_extension import controls, assembly, matrix_assembly, KEYS
 from epl9_wb_extension import controls as wb_controls, assembly as wb_assembly
+from epl9_native_source_gate import extend_late_source
 
 LATE_TEMPLATE = ROOT/'firmware_src/epl9_films_late.s.in'
 PRIVATE_TEMPLATE = ROOT/'firmware_src/epl9_films_private_color.s.in'
@@ -36,19 +37,22 @@ def rgb_tables(document):
     return result
 
 
-def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,private_color=False):
+def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=None,color_document=None,wb_document=None,private_color=False,native_source_gate=False):
+    require(type(native_source_gate) is bool,'native_source_gate must be explicit boolean')
     require(not (diagnostic_rgb and rgb_document is not None),'choose provided RGB tables or diagnostic RGB, not both')
     provided = rgb_tables(rgb_document) if rgb_document is not None else None
     module = build_module(image,base,diagnostic_rgb)
     constants = dict(module['constants'],GOLD_HEADER=0x00780101,PORTRA_HEADER=0x00780201,
                      CONTROL_MAGIC=0x46504c45)
     source = Template(LATE_TEMPLATE.read_text()).substitute({k:str(v) for k,v in constants.items()})
+    if native_source_gate:
+        source=extend_late_source(source)
     extended=controls(color_document) if color_document is not None else None
     if extended is not None:
         source=source.replace('color_restore:\n',assembly(extended,base)+'color_restore:\n')
         source+='\n'+matrix_assembly(extended)
     wb=wb_controls(wb_document) if wb_document is not None else None
-    if wb is not None: source+='\n'+wb_assembly(wb)
+    if wb is not None: source+='\n'+wb_assembly(wb,native_source_gate=native_source_gate)
     if private_color:
         source+='\n'+Template(PRIVATE_TEMPLATE.read_text()).substitute({k:str(v) for k,v in constants.items()})
     code,symbols,rows = assemble(source,base)
@@ -73,7 +77,8 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
         (0x6079fb88,'f1d3f1ef53','jmp',['film_private_entry' if private_color else 'film_color_entry'],b''),
     ]
     if wb is not None:
-        hook_specs.append((0x6074f352,'0008257e0e','jmp',['film_wb_entry'],b''))
+        hook_specs.append((0x60761c9e,'fab4f002a000','jmp',['film_wb_entry'],b'\xcb') if native_source_gate else
+                          (0x6074f352,'0008257e0e','jmp',['film_wb_entry'],b''))
     if extended is not None:
         hook_specs.append((0x6079c017,'cdc4feb00c','jmp',['film_matrix_hook'],b''))
     for at,before,op,args,suffix in hook_specs:
@@ -94,8 +99,13 @@ def build_late_module(image,base=MODULE_BASE,diagnostic_rgb=False,rgb_document=N
             rgb_document_canonical_sha256=rgb_sha,native_curve_channel_order_verified=False,
             color_controls_sha256=sha(json.dumps(color_document,sort_keys=True).encode()) if extended else None,
             wb_controls_sha256=sha(json.dumps(wb_document,sort_keys=True).encode()) if wb else None,
-            early_gain_bias_enabled=wb is not None,physical_wb_channel_order_verified=False,
+            early_gain_bias_enabled=wb is not None and not native_source_gate,physical_wb_channel_order_verified=False,
             native_wb_bias_implemented=wb is not None,install_ready=False,
+            native_source_gate_policy='primary-art-base-variant-v1' if native_source_gate else 'legacy',
+            gain_bias_stage='fresh request after source copy and optional selector callback' if native_source_gate and wb else 'early request constructor',
+            gain_bias_hook_address='0x60761c9e' if native_source_gate and wb else '0x6074f352' if wb else None,
+            finalized_request_stability_required=native_source_gate,
+            arbitrary_mutator_callbacks_qualified=False,
             native_matrix_preserved=not extended or all(v['matrix_delta'] is None for v in extended.values()),
             calibration_matrix_replaced=False,six_axis_override_enabled=bool(extended and any(v['six_axis'] is not None for v in extended.values())),
             matrix_adjustment_before_owner_callback=extended is not None,
@@ -113,11 +123,13 @@ def main():
     ap.add_argument('--rgb-tables',type=Path,help='Two recipes, three 256-entry native-order curves each')
     ap.add_argument('--color-controls',type=Path)
     ap.add_argument('--wb-controls',type=Path)
+    ap.add_argument('--native-source-gate',action='store_true',
+        help='Opt in to source 0x0107/flags 3 and finalized-request gain placement; requires the qualified owner path')
     args = ap.parse_args()
     document = json.loads(args.rgb_tables.read_text(encoding='utf-8')) if args.rgb_tables else None
     color_document=json.loads(args.color_controls.read_text(encoding='utf-8')) if args.color_controls else None
     wb_document=json.loads(args.wb_controls.read_text(encoding='utf-8')) if args.wb_controls else None
-    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document,color_document,wb_document)
+    module = build_late_module(MAIN.read_bytes(),args.base,args.diagnostic_rgb,document,color_document,wb_document,native_source_gate=args.native_source_gate)
     _,report = emit_files(module,args.out)
     print(json.dumps({k:report[k] for k in ('code_bytes','module_sha256','preserves_original_art_keys','extra_owner_allocation')},indent=2))
 
