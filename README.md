@@ -37,6 +37,34 @@ The follow-up adds explicit bounded memory models and deeper native request prep
 
 The [connected-job probe](docs/epl9-integrated-prototype.md#connected-constructor-frame-start-and-consumer-2026-11-02) now completes native construction/frame start and reaches request-consumer configuration with explicit host resource models. It identifies cache invalidation fields needed for future film-table switching and rejects misleading no-op success. Full pixel processing remains incomplete.
 
+## Offline emulator and virtual updater
+
+The [native updater and persistent logical flash](docs/epl9-virtual-installation.md)
+connect real E-PL9 update/selector/readback instructions to a file-backed logical
+storage model. The [persisted-write UI bridge](docs/epl9-virtual-flash-ui.md)
+loads those written payloads into separate fresh OM-Emu UI sessions. Neither
+stage performs a camera installation or starts at the physical reset vector.
+
+- [Reproduce E-PL9 and port the approach to another model](docs/emulator-porting-guide.md).
+  Other models require their own verified firmware/build adapter; this is not a
+  universal firmware image or a guarantee for every camera.
+- [Public evidence summary and validation boundaries](docs/evidence/virtual-emulator-20261112.json).
+- [Publication check and missing private prerequisites](docs/emulator-publication-validation.md).
+
+Source-only emulator checks require Python 3.12+ and the Python image dependencies:
+
+```sh
+python -m pip install -r requirements-emulator.txt
+python -B -m unittest discover -s scripts -p 'test_epl9_virtual*.py' -v
+python -B -m unittest discover -s scripts -p 'test_epl9_native_source_ui_qualification.py' -v
+```
+
+Firmware, decoded components, private recipe inputs, flash snapshots, overlays,
+PNGs and third-party checkouts are not bundled. Full exact-image replay needs
+those separately obtained, hash-pinned inputs. The current ART-only candidate
+remains frozen; later recipe-bank/SD/Delete work belongs to separate generations.
+`install_ready` remains false.
+
 ## Local workspace
 
 The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:

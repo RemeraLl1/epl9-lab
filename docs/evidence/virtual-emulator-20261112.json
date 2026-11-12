@@ -1,0 +1,153 @@
+{
+  "schema": "epl9-public-emulation-evidence-summary-v1",
+  "date": "2026-11-12",
+  "model": "Olympus PEN E-PL9",
+  "model_bytes": "1330",
+  "generation": "native-source-v1",
+  "summary_kind": "Authored public summary of recorded private runs; no firmware, raw traces or media included",
+  "recorded_evidence": {
+    "native_suite_report_sha256": "157d1e4a9e21f00da0908c499c6389a28428a5d4de2c8b97839029f2a7fef5c9",
+    "native_suite_scenarios": 13,
+    "lower_checksum_full_state_crosschecks": 10,
+    "ui_qualification_manifest_sha256": "c5ab7fc1d4e8da446d2861edb3ad8ce2f36cf465507ce3a9e4a87c5f70460ddd",
+    "ui_frame_bindings_sha256": "59f6412f85a550f5a8699cc3be73f38f63d12f7ea3fd1bdbadda90d8b3f84553",
+    "fresh_ui_sessions": 4,
+    "frames_per_session": 41,
+    "bound_png_native_rgb_pairs": 164,
+    "restored_stock_frames_matching_baseline": 41,
+    "candidate_vs_stock_changed_frames": 10,
+    "changes_confined_to_accepted_icons": true,
+    "post_bringup_processing_site_hits": 0,
+    "upstream_om_emu_commit": "147ca89c60b24774f3145c2813d79714e0f0b7b7"
+  },
+  "source_sha256": {
+    "epl9_virtual_flash.py": "575e236a8dfdce13345118c3e5b32577fddc50f23d089d091168ca3d5fdce85b",
+    "epl9_virtual_install.py": "ee071b44645bdc73e2dd2b27eb3f80e2177bcec7ff2feb385cce48514d0b181f",
+    "epl9_virtual_flash_ui.py": "93513d2617d32d81b332e0642dc8ef09864b9a4b98ceef7a8d7d18118b6107ab"
+  },
+  "cases": [
+    {
+      "scenario": "install-candidate",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": true
+    },
+    {
+      "scenario": "restore-stock",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": true
+    },
+    {
+      "scenario": "erase-error-osd",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": false,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "program-error-osd",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": false,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "program-error-main",
+      "native_return": "0x0",
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "readback-mismatch-main",
+      "native_return": "0x0",
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "readback-error-main",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "power-loss-osd",
+      "native_return": null,
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": false,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "power-loss-main",
+      "native_return": null,
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "restore-after-modeled-interruption",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": true
+    },
+    {
+      "scenario": "corrupt-main-input",
+      "native_return": "0x3211",
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": false,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "corrupt-osd-input",
+      "native_return": "0x3211",
+      "main_matches_scenario_target": false,
+      "osd_matches_scenario_target": false,
+      "virtual_install_verified": false
+    },
+    {
+      "scenario": "check-only-no-write",
+      "native_return": "0x0",
+      "main_matches_scenario_target": true,
+      "osd_matches_scenario_target": true,
+      "virtual_install_verified": false
+    }
+  ],
+  "publication_validation": {
+    "new_emulator_tests_passed": 51,
+    "unchanged_native_ui_qualifier_tests_passed": 28,
+    "full_discovery": {
+      "run": 473,
+      "errors": 2,
+      "skipped": 15,
+      "complete_pass": false,
+      "unavailable_prerequisites": [
+        "ignored independent osd_extract.py reference",
+        "historical private-color candidate/stock package fixtures"
+      ]
+    },
+    "full_size_native_and_ui_replayed_in_publication_checkout": false
+  },
+  "boundaries": {
+    "camera_accessed": false,
+    "physical_flash_programmed": false,
+    "reset_to_updater_proven": false,
+    "full_nand_or_ecc_model": false,
+    "sensor_or_truepic_rendering_proven": false,
+    "universal_model_compatibility": false,
+    "install_ready": false
+  },
+  "notes": [
+    "The store is decoded logical main/OSD envelopes, not an acquired full physical NAND image.",
+    "Native final zero may hide lower program/readback errors; verification also requires actual persisted bytes and successful operations.",
+    "Restore after interruption supplies an intact executing updater in model RAM, so it is not reset/recovery evidence.",
+    "A fresh OM-Emu UI harness launch is not a physical reboot.",
+    "The check-only target is the unchanged stock state, not an installed candidate.",
+    "Current frozen ART recipe/package bytes were not changed by publication."
+  ]
+}
