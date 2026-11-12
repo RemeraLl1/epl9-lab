@@ -1,58 +1,49 @@
 # E-PL9 Lab
 
-Tools and research notes for an Olympus PEN E-PL9 camera.
+**Film looks and firmware research for the Olympus PEN E-PL9.**
 
-## Research goals
+## Start here
 
-1. Investigate applying named film recipes, then replacing ART presets with in-camera film looks.
-2. Document the camera's Wi-Fi API and USB interfaces.
-3. Build an offline-capable browser interface for browsing and downloading original files, and measure transfer performance.
-4. Investigate gyro logging for Gyroflow and full-field 4:3 video at reduced resolution.
-5. Determine hardware and firmware limits before making claims about additional video modes, including 4K60.
+- **[Build the experimental Gold/Portra files →](docs/START-HERE.md)** — download the correct source branch, check your original firmware, and build locally. No GitHub experience required.
+- **[Current progress and next steps →](docs/PROJECT-STATUS.md)** — what works in software, what remains untested, and where each workstream lives.
+- **[Help develop or test →](CONTRIBUTING.md)** — choose a task and report reproducible results.
+- **[Updates →](CHANGELOG.md)** · **[Credits and upstream projects →](docs/CREDITS.md)**
 
-These are research goals. A working E-PL9 firmware modification has not been produced by this project.
+> **Research build, not a camera-tested release.** We can reproduce the experimental update file and run parts of the updater and menu in emulation. This does not establish safe installation, real image processing, or recovery on a physical E-PL9. There is no qualified E-PL9 flashing guide or public ready-to-install release yet. Do not use E-P7/PEN-F firmware or assume their instructions apply unchanged.
 
-The selected targets are [Watercolor I → Kodak Gold 200 and Watercolor II → Kodak Portra 400](docs/watercolor-gold200.md). Replace both slots' processing while retaining other modes. [E-PL9 routing findings](docs/epl9-art-routing.md) identify their shared worklist and candidate native color paths; no installable patch or calibrated recipe exists yet.
+## Where this project comes from
 
-[Service dependencies](docs/epl9-service-dependencies.md) specify completion, callbacks, buffer handling and reference counts to preserve. The [icon-resource audit](docs/epl9-watercolor-icons.md) locates separate I/II badges and their UI-label associations in the exact E-PL9 image.
+This is an E-PL9 adaptation effort in the same Olympus firmware-modding community as **[Caduceus for E-P7](https://github.com/cakelesscoder/caduceus-ep7)** by **[cakelesscoder](https://github.com/cakelesscoder)** and contributors. Caduceus provides important ideas, tools and research references for bringing film looks to these cameras. We credit that foundation explicitly; we are not claiming to have invented the whole approach.
 
-The [revised offline prototype](docs/epl9-integrated-prototype.md) preserves tested short/early schedules and executes native COLOR selection/build/return chains for both slots. Full pixel processing remains unverified, with explicit software boundaries recorded. The [ART example-picture audit](docs/epl9-art-example-pictures.md) separately inventories 220 JPEGs and one ICO and retains the owner's requirement to replace large menu examples.
+E-PL9 uses a different integration route: our first target replaces **Watercolor I/II in ART**, rather than assuming the E-P7's Colour Profile system exists here. Not every E-PL9 patch is a direct port, and Caduceus's camera-tested features are not evidence that our changes work. We also build on research from **[fishcu/oly_fw_analysis](https://github.com/fishcu/oly_fw_analysis)** and UI emulation from **[flatpanda/om-emu](https://github.com/flatpanda/om-emu)**. See [credits, licence boundaries and reuse rules](docs/CREDITS.md).
 
-The follow-up adds explicit bounded memory models and deeper native request preparation, with allocation failure checked. [G200/P400 icon candidates](docs/epl9-watercolor-icons.md#standalone-replacement-artwork-2026-11-02) round-trip in all 10 target allocations. [Digital-recipe photo references](docs/epl9-art-example-pictures.md#digital-recipe-photo-shortlist-2026-11-02) are linked with provenance; third-party photos are not bundled.
+## What is available now?
 
-The [connected-job probe](docs/epl9-integrated-prototype.md#connected-constructor-frame-start-and-consumer-2026-11-02) now completes native construction/frame start and reaches request-consumer configuration with explicit host resource models. It identifies cache invalidation fields needed for future film-table switching and rejects misleading no-op success. Full pixel processing remains incomplete.
-
-## Local workspace
-
-The initial Windows checkout is `D:\EPL9Lab`. Public source and documentation are separated from ignored local data:
-
-| Folder | Contents | Published |
+| Work | Current result | Not established |
 | --- | --- | --- |
-| `scripts/` | Diagnostics and offline inspection tools | Yes |
-| `docs/` | Scope, sources and verified findings | Yes |
-| `tools/`, `downloads/` | Installed tools and their installers | No |
-| `references/` | Independent upstream Git checkouts | No |
-| `local/` | Machine configuration, installation records and private reports | No |
-| `firmware/`, `captures/`, `samples/` | Firmware files, packet captures and camera media | No |
+| Gold 200 / Portra 400-inspired ART looks | Frozen experimental candidate; reproducible local builder; G200/P400 menu badges in emulation | Physical installation, calibrated camera JPEGs, video support |
+| Local builder | Public source + exact original E-PL9 BIN recreate the same candidate and stock-return files | An automatic stock downloader or verified Windows run |
+| Updater + UI emulator | Real instruction subsets → persistent logical flash → reread components → separate OM-Emu UI launch | Hardware reset, real NAND/controller behaviour, sensor/ISP/codec |
+| Recovery | Software tests of stock main/OSD return after explicit entry into updater | Independent rescue if early main cannot start |
+| 31 recipes, SD banks, Delete switch | Separate host-side reference model and recipe catalogue work | 31 working native ART recipes or on-camera SD/Delete integration |
+| OpenGate | Parameter/buffer experiments on native code fragments | A recorded 4:3 movie, real frame rate, or hardware feasibility |
+| Gyro / Wi-Fi / other functions | Research in progress | A usable time-synchronised gyro logger or universal camera control |
 
-## Start
+The first candidate remains frozen while awaiting hardware evaluation. Future recipes, SD switching, Delete-button changes, OpenGate and gyro work stay separate. The current menu text still says Watercolor I/II; badges alone do not prove image processing.
 
-Run the workstation check from PowerShell:
+## Download the right code
 
-```powershell
-.\scripts\doctor.ps1
-```
+The latest builder is currently in **[the volunteer-builder branch](https://github.com/RemeraLl1/epl9-lab/tree/develop/volunteer-builder-20261112)**, reviewed through [draft PR #8](https://github.com/RemeraLl1/epl9-lab/pull/8).
 
-For an offline file identity report, use Python 3.12 or newer:
+**The ordinary `Code → Download ZIP` on this main page does not include that builder yet.** Follow [Start here](docs/START-HERE.md), which takes you to the right branch. A draft PR is proposed work, not an installed feature or a released firmware image.
 
-```powershell
-.\.venv\Scripts\python.exe .\scripts\firmware_info.py .\firmware\camera-update.BIN --output .\local\firmware-info.json
-```
+Olympus firmware, private camera media and credentials are not distributed here. You supply the exact original firmware locally. A successful build never installs anything on your camera.
 
-The inspector reads a local file and reports its size, SHA-256 and initial bytes. It does not decode, modify or flash firmware.
+## Find your area
 
-The first camera session will record firmware versions, USB Storage/MTP descriptors, official-client recognition, Wi-Fi capabilities and transfer measurements. USB connection alone does not establish full firmware-dump access.
+- **First-time builders:** [Start here](docs/START-HERE.md).
+- **Firmware and emulator developers:** [status and branch map](docs/PROJECT-STATUS.md), [contribution guide](CONTRIBUTING.md), then the workstream's own instructions.
+- **Interested camera owners:** [how to volunteer](CONTRIBUTING.md#camera-owners), without treating this as a flashing invitation.
+- **Historical research:** [scope](docs/research-scope.md), [initial firmware findings](docs/epl9-1.1-initial-findings.md), [sources](docs/sources.md). These dated notes are preserved as history; the status page explains later progress.
 
-See [research scope](docs/research-scope.md) and [sources](docs/sources.md).
-
-The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an exact shared COLOR table in the stock firmware. The [offline browser-client note](docs/offline-browser-client.md) separates cached interface behavior from camera transport requirements.
+Not affiliated with or endorsed by OM Digital Solutions, Olympus, Kodak, Fujifilm, or the upstream authors. Film names describe inspired looks, not official film emulations. Project-wide reuse licensing still needs an explicit maintainer decision; upstream licences remain applicable to their own material.
