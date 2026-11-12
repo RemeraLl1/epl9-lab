@@ -75,3 +75,10 @@ The [first E-PL9 1.1 findings](docs/epl9-1.1-initial-findings.md) identify an ex
 ## Cloud checkpoint
 
 See [cloud migration and source-only limitations](docs/cloud-migration-20261110.md). This checkpoint focuses on firmware research and recipe integration, without personal media.
+
+## Reproduce the frozen E-PL9 research files
+
+See [the local volunteer builder](docs/epl9-volunteer-builder.md): one original
+E-PL9 build 1101 file plus public sources produces the exact native-source-v1
+candidate and stock-return pair. No private intermediates or external toolchain
+are needed. This is **not** a qualified physical installation release.
