@@ -1,0 +1,277 @@
+{
+  "schema": "epl9-gyro-deferred-epoch-probe-v1",
+  "component_sha256": "1c942d2fb6b8830f0195a0be7464880838ddf08c5f038bad626aed8e72789678",
+  "reader_sha256": "013c0af69148cc34b74e2a8a46c4efba808c7575a19cd1c08b4f2ab3867712d5",
+  "source_sha256": "692c0e0b7e420fc9d663b825b78d9586bf4fa5c17d1da8cfd29e3e8c5cb6650d",
+  "native_windows": 7,
+  "native_anchors": 13,
+  "tick_counter_rows": [
+    {
+      "before": 0,
+      "after": 1,
+      "trace": [
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b"
+      ]
+    },
+    {
+      "before": 17179869182,
+      "after": 17179869183,
+      "trace": [
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b"
+      ]
+    },
+    {
+      "before": 17179869183,
+      "after": 17179869184,
+      "trace": [
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "before": 281474976710655,
+      "after": 0,
+      "trace": [
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    }
+  ],
+  "enqueue_gates": [
+    {
+      "flags_6209_6208": [
+        0,
+        0
+      ],
+      "admitted": false,
+      "return_value": 4294967271,
+      "trace": [
+        "0x4001cef8",
+        "0x4001cefb",
+        "0x4001cefd",
+        "0x4001ceff",
+        "0x4001cf02",
+        "0x4001cf04",
+        "0x4001cf06",
+        "0x4001cf08"
+      ]
+    },
+    {
+      "flags_6209_6208": [
+        0,
+        1
+      ],
+      "admitted": true,
+      "return_value": null,
+      "trace": [
+        "0x4001cef8",
+        "0x4001cefb",
+        "0x4001cefd",
+        "0x4001ceff",
+        "0x4001cf02",
+        "0x4001cf04"
+      ]
+    },
+    {
+      "flags_6209_6208": [
+        1,
+        0
+      ],
+      "admitted": false,
+      "return_value": 4294967271,
+      "trace": [
+        "0x4001cef8",
+        "0x4001cefb",
+        "0x4001cefd",
+        "0x4001cf06",
+        "0x4001cf08"
+      ]
+    },
+    {
+      "flags_6209_6208": [
+        1,
+        1
+      ],
+      "admitted": false,
+      "return_value": 4294967271,
+      "trace": [
+        "0x4001cef8",
+        "0x4001cefb",
+        "0x4001cefd",
+        "0x4001cf06",
+        "0x4001cf08"
+      ]
+    }
+  ],
+  "pending_increment_rows": [
+    {
+      "before": 0,
+      "after": 1,
+      "overflow_loses_pending_count": false,
+      "trace": [
+        "0x4001cf0f",
+        "0x4001cf12",
+        "0x4001cf13"
+      ]
+    },
+    {
+      "before": 1,
+      "after": 2,
+      "overflow_loses_pending_count": false,
+      "trace": [
+        "0x4001cf0f",
+        "0x4001cf12",
+        "0x4001cf13"
+      ]
+    },
+    {
+      "before": 254,
+      "after": 255,
+      "overflow_loses_pending_count": false,
+      "trace": [
+        "0x4001cf0f",
+        "0x4001cf12",
+        "0x4001cf13"
+      ]
+    },
+    {
+      "before": 255,
+      "after": 0,
+      "overflow_loses_pending_count": true,
+      "trace": [
+        "0x4001cf0f",
+        "0x4001cf12",
+        "0x4001cf13"
+      ]
+    }
+  ],
+  "pending_drain_rows": [
+    {
+      "before": 0,
+      "after": 0,
+      "will_call_tick_counter": false,
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a"
+      ]
+    },
+    {
+      "before": 1,
+      "after": 0,
+      "will_call_tick_counter": true,
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c"
+      ]
+    },
+    {
+      "before": 255,
+      "after": 254,
+      "will_call_tick_counter": true,
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c"
+      ]
+    }
+  ],
+  "phase_difference_rows": [
+    {
+      "old": 100,
+      "new": 120,
+      "native_delta": 20,
+      "trace": [
+        "0x4000b7f5",
+        "0x4000b7f6",
+        "0x4000b7f7",
+        "0x4000b7f9",
+        "0x4000b7fa"
+      ]
+    },
+    {
+      "old": 49990,
+      "new": 10,
+      "native_delta": 20,
+      "trace": [
+        "0x4000b7f5",
+        "0x4000b7f6",
+        "0x4000b7f7",
+        "0x4000b7f9",
+        "0x4000b7fa",
+        "0x4000b7fc",
+        "0x4000b802",
+        "0x4000b804"
+      ]
+    },
+    {
+      "old": 100,
+      "new": 100,
+      "native_delta": 0,
+      "trace": [
+        "0x4000b7f5",
+        "0x4000b7f6",
+        "0x4000b7f7",
+        "0x4000b7f9",
+        "0x4000b7fa"
+      ]
+    }
+  ],
+  "host_algebraic_snapshot_examples": [
+    {
+      "label": "no wrap",
+      "epoch": 10,
+      "pending": 0,
+      "phase": 49999,
+      "naive_epoch_times_50000_plus_phase": 549999
+    },
+    {
+      "label": "wrap before deferred drain",
+      "epoch": 10,
+      "pending": 1,
+      "phase": 0,
+      "naive_epoch_times_50000_plus_phase": 500000
+    },
+    {
+      "label": "after deferred drain",
+      "epoch": 11,
+      "pending": 0,
+      "phase": 0,
+      "naive_epoch_times_50000_plus_phase": 550000
+    }
+  ],
+  "limitations": [
+    "native fragments independently entered on synthetic RAM",
+    "critical sections and IRQ execution not modeled",
+    "counter units and hardware clock parent unverified",
+    "pending overflow case is synthetic, not measured camera loss",
+    "no gyro sample, exposure or cross-clock join",
+    "phase/comparator inclusive endpoint remains unqualified"
+  ],
+  "camera_accessed": false,
+  "firmware_changed": false,
+  "gyro_log_generated": false
+}
