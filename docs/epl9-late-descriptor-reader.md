@@ -120,3 +120,32 @@ python scripts/epl9_descriptor_hsl_reader_probe.py \
 
 This source-only extension does not change the frozen candidate or introduce
 SD/Delete hooks. It reads the private stock input and distributes no OEM bytes.
+
+### Constructor identity and cache lifetime, further bounded evidence
+
+The extended probe now executes the constructor's alias fragments. Initially
+context+12/16/20 reference workspace+1692/5372/6080. But when request+1484 is
+non-null, `6073f0e8..6073f107` replaces these with external-cache+0/3680/4388
+and stores that cache at context+56. The fragment stops before the comparator
+call. **Consumer workspace destruction therefore does not, by itself, prove
+that the configuration holding recipe pointers is dead.**
+
+The existing native cache comparator/update experiment is now also reproduced
+by this probe. Its cold result is `ffffffbe`, warm result `80800000`. Changing
+only the table pointer leaves `80800000`; changing the table token yields
+`90800000`. This is a measured comparator contract, not permission to reuse or
+repurpose the token without the real owner's agreement. The existing job
+fixture identifies cache at job+12316, but that alone is not a global ownership
+or alias proof.
+
+The next integration requirements are now separate and explicit:
+
+1. Hold descriptors across the lifetime of every configuration/cache that can
+   retain their pointers, not just a single upload or consumer workspace.
+2. Prove native cache invalidation for changed recipe content. A new host
+   generation or a changed native pointer does not automatically invalidate it.
+3. Connect successful drain, cancellation, diagnostic repeated execution and
+   final job/cache destruction, before allowing slot reuse.
+
+No native hook is enabled by these tests. All static/direct-call scans remain
+incomplete for computed dispatch and all runtime aliases.

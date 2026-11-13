@@ -12,12 +12,15 @@ from epl9_sd_recipes import pack_recipe
 from mn103_subset import Region, Memory, Machine, parse_listing
 from mn103_calls import CallMachine
 from mn103_tooling import verify_reader
+from epl9_job_probe import cache_experiment
 
 ARENA,CONFIG,STACK,OWNER,DEST=0x18000000,0x20000000,0x20002000,0x20003000,0x20004000
 START,STOP=0x6074151f,0x6074178d
 POINTERS=(2596,2600,2604,3124,3128,3132,3136,3140,3144,3148,3152,3156,3160)
 WINDOWS=((0x6079e50e,0x6079e6a0),(0x6079d7a0,0x6079d7da),(START,STOP),
-         (0x607405f3,0x60740634))
+         (0x607405f3,0x60740634),(0x6073f07b,0x6073f09d),
+         (0x6073f0e8,0x6073f10d),(0x6073e588,0x6073eab3),
+         (0x60749fa5,0x6074a061),(0x607a3bed,0x607a3df6))
 
 class ObservedMemory(Memory):
     def __init__(self,regions):
@@ -72,6 +75,29 @@ def experiment(image,code,*,overwrite=False):
         'output_sha256':sha256(dest).hexdigest(),'hsl_output_sha256':sha256(dest[5120:10240]).hexdigest()}
 
 
+def configuration_alias(code):
+    # Exact constructor fragments, excluding allocation and later calls.
+    c,w,r,k,sp=0x21000000,0x21001000,0x21004000,0x21005000,0x21007000
+    context,workspace,request,stack=bytearray(256),bytearray(10000),bytearray(1876),bytearray(256)
+    struct.pack_into('<I',context,8,w)
+    mem=Memory([Region(c,context,True),Region(w,workspace,True),Region(r,request,True),Region(sp,stack,True)])
+    m=Machine(code,mem,dict(sp=sp,d3=c,a3=c+8))
+    result=m.run(0x6073f07b,[0x6073f09d]);assert result['status']=='stop',result
+    original=tuple(mem.read(c+o,4) for o in (12,16,20))
+    assert original==(w+1692,w+5372,w+6080)
+    struct.pack_into('<I',request,1484,k)
+    m.r['a2']=r
+    result=m.run(0x6073f0e8,[0x6073f107]);assert result['status']=='stop',result
+    external=tuple(mem.read(c+o,4) for o in (12,16,20,56))
+    assert external==(k,k+3680,k+4388,k)
+    assert m.r['a0']==k and m.r['a1']==r
+    return {'workspace_default_offsets':[1692,5372,6080],
+            'external_cache_source':'request+1484',
+            'context_external_offsets':{'12':0,'16':3680,'20':4388,'56':0},
+            'stopped_before_cache_comparator':hex(0x6073f107),
+            'scope':'Two exact constructor alias fragments, not allocation/ownership/completion proof.'}
+
+
 def run(image,code):
     # Assert actual decoded native call operands and destination immediates.
     sites=[]
@@ -83,7 +109,8 @@ def run(image,code):
     assert good['output_sha256']!=bad['output_sha256']
     assert good['hsl_output_sha256']!=bad['hsl_output_sha256']
     return {'main_sha256':sha256(image).hexdigest(),'baseline':good,'premature_hsl_overwrite':bad,
-            'static_call_sites':sites,'scope':'Native setters and bounded copy fragment with synthetic stack, owner and output. Optional config3164 skipped. No task completion, ISP, physical allocation, SD/Delete or safe release-hook proof.'}
+            'static_call_sites':sites,'configuration_alias':configuration_alias(code),
+            'cache_invalidation':{k:v for k,v in cache_experiment(image,code).items() if k!='events'},'scope':'Native setters and bounded copy fragment with synthetic stack, owner and output. Optional config3164 skipped. No task completion, ISP, physical allocation, SD/Delete or safe release-hook proof.'}
 
 
 def main():
