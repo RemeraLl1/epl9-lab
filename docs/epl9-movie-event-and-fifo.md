@@ -51,3 +51,16 @@ The exact outer order in `0x60720c86` is:
 Consequently a newly initialized mode3 is not the same cycle's already-enqueued config. A subsequent outer iteration could promote it, but guards and intervening helpers have not been executed continuously, so this remains an explicit temporal gap. The previous paragraph's structural queue bridge is now located, not a continuous movie-start proof.
 
 Reproduce queue test with the same PYTHONPATH and `--main/--reader/--out`, substituting `scripts/epl9_movie_config_fifo_probe.py` and `queue-result.json`.
+
+## Follow-up: priority guard, promotion and invocation gates
+
+Expanded pending-event probe: **126 cases**, old mode0/1/2/3/4/9 × seven events × three auxiliary values. The earlier 21-case result used old mode9 only. This exposes an important priority rule: auxiliary event1 with old mode1/2/3/4 **consumes both pending events but bypasses the 0x16 initializer**, preserves old mode and sets submode7. Thus 0x16 does not unconditionally mean mode3. Nonmatching auxiliary/old-mode combinations retain the earlier tested selection behavior. Repeated traces are deduplicated by trace_id.
+
+New `scripts/epl9_movie_promotion_guard_probe.py` / `docs/evidence/movie-promotion-guards-20261113.json`: **1 native 108-byte promotion copy +16 invocation-gate cases pass**. At `0x60720c86`, next pair+108 becomes current pair+0. Separately, `0x60720d37` selects the event dispatcher only when:
+
+- state+640 is zero; or
+- state+640 is nonzero, state+16 includes 0x4000, and either next submode is7 or latch `0x62419de4` is zero.
+
+If state+640 is zero or eligible next submode is7, the tested gate resets that latch. The positive stop is before actual dispatcher call at `0x60720d74`; negative stops are `0x60720d7b`/`0x60720d99`. Promotion and guard fragments execute separately; helper calls between them are still not executed. No complete next-cycle movie path is claimed.
+
+Total current focused coverage: **126 event +8 FIFO +2 FIFO boundary +1 promotion +16 gate =153 cases**. No full test suite, hardware, encoder or RTOS completion qualification. Event-table semantics still require independent tracing; naming mode3 'movie' remains unjustified.
