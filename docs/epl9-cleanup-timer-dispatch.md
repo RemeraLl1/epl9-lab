@@ -31,7 +31,7 @@ Consequently a snapshot cannot simply test the hardware status and pending softw
 
 The startup copy at400100d6 copies536 bytes from ROM4001ed28 to RAM0ac4. The ROM pair at4001eed8 is{0x6001,40009db7}; it therefore lands at0c74/0c78, IRQ table index34 relative to0b64. This identifies the default timer0 binding. Later registration APIs may replace it; no full startup/live table is measured.
 
-Sixteen additional native controls connected generic IRQ dispatch to this timer0 handler and timer callback. Synthetic selected slot34 at8a00, synthetic16-bit controller register8988, copied handler pointer0c78, callback pointer0828. Each control stopped before the unsupported PSW instruction4000a938 and explicitly resumed4000a93c. Original instructions cleared `status_low_nibble <<4` from the controller register before reaching the timer callback. No PSW semantics, hardware register semantics or physical event evolution is modeled. The primary callback occurs exactly when status bit4 is set. All 80 controls are included in scripts/epl9_cleanup_timer_probe.py and docs/evidence/cleanup-timer-dispatch-20261113.json.
+Sixteen additional native controls connected generic IRQ dispatch to this timer0 handler and timer callback. Synthetic selected slot34 at8a00, synthetic16-bit controller register8988, copied handler pointer0c78, callback pointer0828. Each control stopped before the unsupported PSW instruction4000a938 and explicitly resumed4000a93c. Original instructions cleared `status_low_nibble <<4` from the controller register before reaching the timer callback. No PSW semantics, hardware register semantics or physical event evolution is modeled. The primary callback occurs exactly when status bit4 is set. All 90 controls are included in scripts/epl9_cleanup_timer_probe.py and docs/evidence/cleanup-timer-dispatch-20261113.json.
 
 This closes the default ROM-to-RAM timer0 binding, but not actual gyro acquisition interrupt priority or whether the ACK-before-enqueue window is preemptible. Keep the latter unresolved rather than claiming a production race.
 
@@ -44,3 +44,11 @@ python scripts/epl9_cleanup_timer_probe.py --repo . --main /private/main.bin --a
 ```
 
 `--repo` locates scripts and its qualified local MN103 reader. All peripheral state is synthetic. PSW bridging and all modeled services are explicit. This report does not claim whole-program concurrency safety or physical throughput.
+
+## Movie command20 binding
+
+Static trace:607072df installs callback606fbc6c and contexta2af1e1c into parameters passed through6071c506 /6074eac5. Constructor6074ec4f copies this pair into object+4/+8. Callback event20 selects ROM table row608b4854, branch606fbcfa, then606fbf10. The latter uses descriptor+68 as a1-based class selector, passes descriptor+64 as the release address, and calls6071949e. That helper enters synchronization via6071784e and leaves via60717864; actual release continues into607c601c for class34/flag0 or607c67d6 otherwise. These interiors and full callback-to-restart ownership remain unresolved.
+
+Ten new native release-body controls use selectors0..9. Selectors1..7 produce release classes3/12/10/34/5/25/26. Invalid0/9 log and return0 without release. Selector8 passes the local range check, but its12-byte metadata overlaps the next jump table at608b4838: class48761, flag111. This is a synthetic out-of-contract possibility, NOT evidence that a real producer emits8 or that camera release is broken. Do not describe all eight as valid resource types merely because the local check accepts them. Follow actual producer writes to descriptor+68 before changing this range.
+
+The90 total controls preserve explicit external service models. A zero return and dispatch to allocator routines are not proof of outstanding-frame drain.

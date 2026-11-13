@@ -1,4 +1,4 @@
-"""64 bounded native cleanup/timer-dispatch controls; no camera or firmware writes."""
+"""90 bounded native cleanup/timer-dispatch controls; no camera or firmware writes."""
 import argparse,sys,json,subprocess,hashlib
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument('--repo',type=Path,required=True);p.add_argument('--main',type=Path,required=True);p.add_argument('--aux',type=Path,required=True);p.add_argument('--out',type=Path,required=True);args=p.parse_args()
@@ -66,6 +66,19 @@ for status in range(16):
  b=m.run(0x4000a93c,stops=[END],limit=100);assert b['status']=='stop',b
  want=initial&~(status<<4);assert mem.read(0x8988,2)==want;assert seen==([want] if status&4 else [])
  irq.append(dict(status=status,register_after=want,at_callback=seen,skipped_psw='0x4000a938',trace=[hex(x) for x in m.trace]))
-result=dict(main_sha256=MAIN_SHA,aux_sha256=AUX_SHA,reader_sha256=reader_sha,source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),cleanup=rows,timer_dispatch=timers,irq_timer_link=irq,camera_accessed=False,firmware_modified=False,limitations=['synthetic RAM states','cleanup lock and dispatcher explicitly modeled','timer callbacks modeled','no IRQ scheduling or hardware clock','no drain or atomic timestamp qualification'])
+code=decode(args.main,image,BASE,[(0x606fbf10,0x606fbfab)])
+movie=[]
+for kind in range(10):
+ mem=Memory([Region(BASE,image,False,'OEM'),Region(SP-4096,bytearray(8192),True,'stack'),Region(OBJ,bytearray(128),True,'descriptor')]);mem.write(OBJ+68,kind,4);mem.write(OBJ+64,0x12345678,4);seen=[]
+ def release(m):
+  q=m.r['a0'];seen.append(dict(address=mem.read(q+12,4),kind=mem.read(q+24,2),flag=mem.read(q+36,1)));return {}
+ m=CallMachine(code,mem,dict(sp=SP,a0=OBJ,a1=0x2b000000),models={0x6071949e:Model('movie release boundary; not native drain',release),0x60440132:Model('diagnostic log',lambda m:{})})
+ out=m.run(m.enter(0x606fbf10,END,0,60),stops=[END],limit=200);assert out['status']=='stop',out
+ assert len(seen)==(1 if 1<=kind<=8 else 0);assert m.r['d0']==0
+ if seen:
+  expected=[(3,0),(12,0),(10,0),(34,0),(5,3),(25,3),(26,3),(48761,111)][kind-1]
+  assert (seen[0]['kind'],seen[0]['flag'])==expected
+ movie.append(dict(kind=kind,release=seen,trace=[hex(x) for x in m.trace]))
+result=dict(main_sha256=MAIN_SHA,aux_sha256=AUX_SHA,reader_sha256=reader_sha,source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),cleanup=rows,timer_dispatch=timers,irq_timer_link=irq,movie_release=movie,camera_accessed=False,firmware_modified=False,limitations=['synthetic RAM states','cleanup lock and dispatcher explicitly modeled','timer callbacks modeled','no IRQ scheduling or hardware clock','no drain or atomic timestamp qualification'])
 if args.out.exists():raise ValueError('use fresh output')
-args.out.write_text(json.dumps(result,indent=2)+'\n');print('Passed 32 cleanup + 32 timer dispatch + 16 IRQ linkage controls')
+args.out.write_text(json.dumps(result,indent=2)+'\n');print('Passed 32 cleanup + 32 timer dispatch + 16 IRQ linkage + 10 movie release controls')
