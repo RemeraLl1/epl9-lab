@@ -1,0 +1,233 @@
+{
+  "format": "epl9-button-address-leads/1",
+  "date": "2026-11-08",
+  "status": "published_cross_build_leads_only",
+  "source": {
+    "repository": "https://github.com/flatpanda/om-emu",
+    "commit": "147ca89c60b24774f3145c2813d79714e0f0b7b7",
+    "paths": [
+      "emu/src/fw/ports.mjs",
+      "emu/src/lab/play.mjs",
+      "emu/src/lab/menu.mjs",
+      "emu/src/lab/hle.mjs",
+      "emu/src/fw/model.mjs"
+    ]
+  },
+  "expected_input": {
+    "filename": "OLY_E_133_1101_0000_0000.BIN",
+    "bytes": 104552480,
+    "sha256": "aefab05396c43ecba0551b94a5d31f7e52350c18d6f4bf1d02d75761108e6028",
+    "hash_verified_here": false,
+    "main_bytes": 26214336,
+    "main_sha256": "8e39c335d54fd8ddea189db82fe708159f43f9995bba42c2cd47dd22b8814267",
+    "main_image_base": "0x60400020"
+  },
+  "scope": {
+    "firmware_bytes_available": false,
+    "e133_control_flow_edges_verified": false,
+    "delete_context_handlers_located": false,
+    "physical_fn_key_identity_resolved": false,
+    "patch_created": false,
+    "camera_accessed": false
+  },
+  "records": [
+    {
+      "role": "ui_in_task",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5014b736",
+      "e133_disasm_or_runtime": "0x500f3a6a",
+      "e133_runtime": "0x604f3a8a",
+      "e133_main_file_offset": "0xf3a6a",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "ui_in_post",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5014c956",
+      "e133_disasm_or_runtime": "0x500f4b27",
+      "e133_runtime": "0x604f4b47",
+      "e133_main_file_offset": "0xf4b27",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "ui_in_forward",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5014c3eb",
+      "e133_disasm_or_runtime": "0x500f45fa",
+      "e133_runtime": "0x604f461a",
+      "e133_main_file_offset": "0xf45fa",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "ui_in_group_table",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x60224774",
+      "e133_disasm_or_runtime": "0x6058584c",
+      "e133_runtime": "0x6058584c",
+      "e133_main_file_offset": "0x18582c",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "raw_code_to_ev_table",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x60e48e60",
+      "e133_disasm_or_runtime": "0x60e3e654",
+      "e133_runtime": "0x60e3e654",
+      "e133_main_file_offset": "0xa3e634",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "ev_name_table",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x60dd3150",
+      "e133_disasm_or_runtime": "0x60dda014",
+      "e133_runtime": "0x60dda014",
+      "e133_main_file_offset": "0x9d9ff4",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "native_button_mapping_entry",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5104d084",
+      "e133_disasm_or_runtime": "0x50c4d628",
+      "e133_runtime": "0x6104d648",
+      "e133_main_file_offset": "0xc4d628",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "key_to_setting_lookup",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5104bd2b",
+      "e133_disasm_or_runtime": "0x50c4c6a6",
+      "e133_runtime": "0x6104c6c6",
+      "e133_main_file_offset": "0xc4c6a6",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "key_to_setting_table",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x612c36bc",
+      "e133_disasm_or_runtime": "0x6135d430",
+      "e133_runtime": "0x6135d430",
+      "e133_main_file_offset": "0xf5d410",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "button_setting_getter",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5104e12d",
+      "e133_disasm_or_runtime": "0x50c5470e",
+      "e133_runtime": "0x6105472e",
+      "e133_main_file_offset": "0xc5470e",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "function_to_action_lookup",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5104be42",
+      "e133_disasm_or_runtime": "0x50c4c73c",
+      "e133_runtime": "0x6104c75c",
+      "e133_main_file_offset": "0xc4c73c",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "function_to_action_table",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x612c388c",
+      "e133_disasm_or_runtime": "0x6135d580",
+      "e133_runtime": "0x6135d580",
+      "e133_main_file_offset": "0xf5d560",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "native_action_lookup",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5104bc84",
+      "e133_disasm_or_runtime": "0x50c4c63d",
+      "e133_runtime": "0x6104c65d",
+      "e133_main_file_offset": "0xc4c63d",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_send_event",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x5115b286",
+      "e133_disasm_or_runtime": "0x50d52e89",
+      "e133_runtime": "0x61152ea9",
+      "e133_main_file_offset": "0xd52e89",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_set_event",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x510ba2c2",
+      "e133_disasm_or_runtime": "0x50c8c863",
+      "e133_runtime": "0x6108c883",
+      "e133_main_file_offset": "0xc8c863",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_dispatch",
+      "kind": "code",
+      "e143_disasm_or_runtime": "0x510c2a2e",
+      "e133_disasm_or_runtime": "0x50c7b4f5",
+      "e133_runtime": "0x6107b515",
+      "e133_main_file_offset": "0xc7b4f5",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_event_map",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x614b5a14",
+      "e133_disasm_or_runtime": "0x615493e0",
+      "e133_runtime": "0x615493e0",
+      "e133_main_file_offset": "0x11493c0",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_message_names",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x6159a3a4",
+      "e133_disasm_or_runtime": "0x615f20b0",
+      "e133_runtime": "0x615f20b0",
+      "e133_main_file_offset": "0x11f2090",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    },
+    {
+      "role": "gui_state_names",
+      "kind": "data",
+      "e143_disasm_or_runtime": "0x61596fb8",
+      "e133_disasm_or_runtime": "0x615ef200",
+      "e133_runtime": "0x615ef200",
+      "e133_main_file_offset": "0x11ef1e0",
+      "evidence": "explicit PORTS.E133 entry; role taken from reference-model source",
+      "e133_bytes_verified_here": false
+    }
+  ],
+  "unresolved": [
+    "Actual E133 Delete and Fn raw matrix entries",
+    "Delete press/release/hold event IDs",
+    "E133 fixed-event path versus assignable-button path",
+    "Shooting and playback state handlers and their input tables",
+    "Original bytes and disassembly at every address lead",
+    "Runtime context and key-timer exclusion gates"
+  ]
+}
