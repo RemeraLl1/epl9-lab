@@ -1,0 +1,519 @@
+{
+  "schema": "epl9-gyro-snapshot-probe-v1",
+  "component_sha256": "1c942d2fb6b8830f0195a0be7464880838ddf08c5f038bad626aed8e72789678",
+  "reader_sha256": "013c0af69148cc34b74e2a8a46c4efba808c7575a19cd1c08b4f2ab3867712d5",
+  "source_sha256": "feb65da9984b8052fde486e01396362771ce4c908dd79ef3a953a5667a4af9f9",
+  "native_cases": 9,
+  "windows": 4,
+  "anchors": 10,
+  "cases": [
+    {
+      "initial_epoch": 10,
+      "initial_pending": 1,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 10,
+          "high": 0,
+          "pending": 1,
+          "epoch": 10,
+          "epoch_plus_pending": 11
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 10,
+          "high": 0,
+          "pending": 0,
+          "epoch": 10,
+          "epoch_plus_pending": 10
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 11,
+          "high": 0,
+          "pending": 0,
+          "epoch": 11,
+          "epoch_plus_pending": 11
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 11,
+          "high": 0,
+          "pending": 0,
+          "epoch": 11,
+          "epoch_plus_pending": 11
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b"
+      ]
+    },
+    {
+      "initial_epoch": 10,
+      "initial_pending": 2,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 10,
+          "high": 0,
+          "pending": 2,
+          "epoch": 10,
+          "epoch_plus_pending": 12
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 10,
+          "high": 0,
+          "pending": 1,
+          "epoch": 10,
+          "epoch_plus_pending": 11
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 11,
+          "high": 0,
+          "pending": 1,
+          "epoch": 11,
+          "epoch_plus_pending": 12
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 11,
+          "high": 0,
+          "pending": 1,
+          "epoch": 11,
+          "epoch_plus_pending": 12
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b"
+      ]
+    },
+    {
+      "initial_epoch": 10,
+      "initial_pending": 255,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 10,
+          "high": 0,
+          "pending": 255,
+          "epoch": 10,
+          "epoch_plus_pending": 265
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 10,
+          "high": 0,
+          "pending": 254,
+          "epoch": 10,
+          "epoch_plus_pending": 264
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 11,
+          "high": 0,
+          "pending": 254,
+          "epoch": 11,
+          "epoch_plus_pending": 265
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 11,
+          "high": 0,
+          "pending": 254,
+          "epoch": 11,
+          "epoch_plus_pending": 265
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b"
+      ]
+    },
+    {
+      "initial_epoch": 4294967295,
+      "initial_pending": 1,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 1,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967296
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 0,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967295
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 0,
+          "pending": 0,
+          "epoch": 0,
+          "epoch_plus_pending": 0
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 1,
+          "pending": 0,
+          "epoch": 4294967296,
+          "epoch_plus_pending": 4294967296
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "initial_epoch": 4294967295,
+      "initial_pending": 2,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 2,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967297
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 1,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967296
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 0,
+          "pending": 1,
+          "epoch": 0,
+          "epoch_plus_pending": 1
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 1,
+          "pending": 1,
+          "epoch": 4294967296,
+          "epoch_plus_pending": 4294967297
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "initial_epoch": 4294967295,
+      "initial_pending": 255,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 255,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967550
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 0,
+          "pending": 254,
+          "epoch": 4294967295,
+          "epoch_plus_pending": 4294967549
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 0,
+          "pending": 254,
+          "epoch": 0,
+          "epoch_plus_pending": 254
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 1,
+          "pending": 254,
+          "epoch": 4294967296,
+          "epoch_plus_pending": 4294967550
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "initial_epoch": 281474976710655,
+      "initial_pending": 1,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 1,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710656
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 0,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710655
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 65535,
+          "pending": 0,
+          "epoch": 281470681743360,
+          "epoch_plus_pending": 281470681743360
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 0,
+          "pending": 0,
+          "epoch": 0,
+          "epoch_plus_pending": 0
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "initial_epoch": 281474976710655,
+      "initial_pending": 2,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 2,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710657
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 1,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710656
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 65535,
+          "pending": 1,
+          "epoch": 281470681743360,
+          "epoch_plus_pending": 281470681743361
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 0,
+          "pending": 1,
+          "epoch": 0,
+          "epoch_plus_pending": 1
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    },
+    {
+      "initial_epoch": 281474976710655,
+      "initial_pending": 255,
+      "observations": [
+        {
+          "label": "before drain",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 255,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710910
+        },
+        {
+          "label": "after pending decrement, before tick function",
+          "low": 4294967295,
+          "high": 65535,
+          "pending": 254,
+          "epoch": 281474976710655,
+          "epoch_plus_pending": 281474976710909
+        },
+        {
+          "label": "after low store, before possible high carry",
+          "low": 0,
+          "high": 65535,
+          "pending": 254,
+          "epoch": 281470681743360,
+          "epoch_plus_pending": 281470681743614
+        },
+        {
+          "label": "after counter arithmetic",
+          "low": 0,
+          "high": 0,
+          "pending": 254,
+          "epoch": 0,
+          "epoch_plus_pending": 254
+        }
+      ],
+      "trace": [
+        "0x4001d385",
+        "0x4001d388",
+        "0x4001d38a",
+        "0x4001d38c",
+        "0x4001e472",
+        "0x4001e475",
+        "0x4001e476",
+        "0x4001e479",
+        "0x4001e47b",
+        "0x4001e47d",
+        "0x4001e480",
+        "0x4001e481"
+      ]
+    }
+  ],
+  "host_read_protocol_counterexamples": [
+    {
+      "name": "two identical complete reads during drain gap",
+      "first": {
+        "label": "after pending decrement, before tick function",
+        "low": 10,
+        "high": 0,
+        "pending": 0,
+        "epoch": 10,
+        "epoch_plus_pending": 10
+      },
+      "second": {
+        "label": "after pending decrement, before tick function",
+        "low": 10,
+        "high": 0,
+        "pending": 0,
+        "epoch": 10,
+        "epoch_plus_pending": 10
+      },
+      "stable": true,
+      "counter_total_preserved": false
+    },
+    {
+      "name": "high-low-high during low-store carry gap",
+      "first_high": 0,
+      "low": 0,
+      "second_high": 0,
+      "stable_high": true,
+      "observed_epoch": 0,
+      "before_epoch": 4294967295,
+      "after_epoch": 4294967296
+    }
+  ],
+  "critical_section_static_facts": {
+    "tick_enter": "0x4001e46d -> 0x4001d418",
+    "tick_exit": "0x4001e486 -> 0x4001d42c",
+    "saved_psw_destination": "caller-provided a0",
+    "mask_semantics_and_reader_preemption_qualified": false
+  },
+  "limitations": [
+    "each fragment independently entered; call boundary bridged explicitly",
+    "observations at every instruction are adversarial, not proved interrupt schedules",
+    "PSW helpers verified statically, not executed or modeled",
+    "atomicity of individual bus reads is not qualified",
+    "phase, pending hardware IRQ and absolute clock frequency not modeled",
+    "no measured camera race, timestamp algorithm, gyro sample or exposure join"
+  ],
+  "firmware_changed": false,
+  "camera_accessed": false
+}
