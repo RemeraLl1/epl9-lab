@@ -70,3 +70,53 @@ brightness/contrast. It advertises a renderer ZIP in its own isolated
 workspace. Reading that message does not retrieve the ZIP or numerical
 parameters into this repository. Thus the 31-slot fixtures remain synthetic;
 no claim is made that all V6/Astra R3 recipes are integrated into firmware.
+
+## Follow-up: native HSL setters and both upload destinations
+
+The additional `scripts/epl9_descriptor_hsl_reader_probe.py` runs the native
+HSL setter `6079e50e` and gamma setter `6079d7a0`, then the bounded late reader
+from `6074151f` to `6074178d`. The source is a synthetic recipe descriptor;
+the configuration pointers are produced by native setters, not guessed.
+
+The run executes **10,214 reader instructions**, with **1,536 descriptor
+reads**. All copied output agrees with an independently reconstructed
+halfword-to-word/block-copy oracle. A premature HSL-byte overwrite after
+configuration changes the HSL output; the negative control also matches the
+changed-source oracle. The final source read in this tested branch is a
+halfword at descriptor+`0xc4e`, not the gamma loop's final sample.
+
+Native optional table `config+3164` is null in this fixture and its independent
+copy branch is explicitly skipped by a modeled caller flag. The test does not
+qualify that table's lifetime, the external bookkeeping calls, a successful
+physical ISP run, or asynchronous completion.
+
+Static call operands establish two destinations for the same reader:
+
+| Call site | Destination loaded into a0 | Gate |
+|---|---|---|
+| `6074060d` | `9f00a400` | flag 8 |
+| `6074062f` | `9f00d000` | flag 262144 |
+
+These are hardware-address-space destinations; describing them as two ISP
+banks is an interpretation, not measured hardware documentation. The parent
+routine starts at `60740530`. A direct call at `6073f801` connects it to the
+existing processing-start path (`6073f74f`). Thus this consumer is downstream
+of preparation, rather than evidence that returning the configuration helper
+ends ownership. A byte scan found no literal pointer to `607414a9`, but that
+cannot exclude computed calls or aliases.
+
+The owner/task audit remains open: the existing task31/task2015 and ISEQ
+construct/execute/drain/destroy sequences must be connected to **this exact
+configuration and all its aliases**, including both upload paths, retry and
+cancellation paths. Neither a copy-loop return nor a synthetic hardware-status
+notification establishes that contract. Keep the session-owned arena and
+refuse native slot reuse until that identity/lifetime link is proven.
+
+```sh
+python scripts/epl9_descriptor_hsl_reader_probe.py \
+  --main /private/main.bin --reader /path/to/mn103-reader \
+  --output local/hsl-reader-result.json
+```
+
+This source-only extension does not change the frozen candidate or introduce
+SD/Delete hooks. It reads the private stock input and distributes no OEM bytes.
