@@ -149,3 +149,9 @@ The next integration requirements are now separate and explicit:
 
 No native hook is enabled by these tests. All static/direct-call scans remain
 incomplete for computed dispatch and all runtime aliases.
+
+The [parameter-owner follow-up](epl9-parameter-owner-lifetime.md) now qualifies
+native three-slot initialization/selection, parameter borrowing into job+12320,
+publication waiting while borrowed, and the job+12316 cache-destruction alias.
+It distinguishes parameter publication lifetime from retained descriptor/cache
+lifetime; it does not enable native eviction or change the frozen candidate.
