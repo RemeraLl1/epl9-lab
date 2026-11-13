@@ -82,3 +82,37 @@ The probe verifies exact stock and reader provenance, decodes original
 instructions at runtime, and emits scalar results only. Native bytes/listings
 remain private local inputs. It has no camera, SD, firmware-write or OEM
 redistribution operation.
+
+## Connected invalidation follow-up: reuse the existing private-context route
+
+The existing SD processing prototype already avoids changing parameter-owner
++20: `sd_pipeline_color` forces COLOR/tone rebuilding in its private context
+(`flags | 0x10000002`), then installs selected HSL/gamma. Ordinary-mode exit
+recognizes the previous recipe gamma and forces a stock rebuild. Thus finding
+a native token increment is **not a prerequisite for that existing design**.
+It remains relevant to a future optimization that skips redundant rebuilds.
+
+`scripts/epl9_sd_late_transition_probe.py` now connects this actual authored
+hook to the later native reader, rather than merely comparing configuration
+bytes. Six transitions **T1, T1, T2, T2, stock, stock** each match independently
+configured output through the late gamma, **tone** and HSL copies. Each late
+copy executes 11,497 native instructions. Repeats match; T1/T2 differ; exit
+matches the forced-stock oracle. The parameter owner is read-only in the
+fixture and its token is untouched. No hook code was changed.
+
+The fixture uses two deliberately synthetic embedded descriptors with a null
+HLS-manager root, not the 31 artistic V6 recipes and not physical SD loading.
+The optional config+3164 branch is excluded explicitly. The existing hook,
+state module and one COLOR jump are built only as private interpreter inputs;
+no installable image is created. No modeled image-completion success is used.
+
+This closes a useful **bounded invalidation-to-late-copy** check for the
+session-resident design. It does not close cross-job leases, SD reload, all
+optional consumers, or native descriptor eviction. Session retention is still
+required; a changing host generation is not a substitute.
+
+```sh
+python scripts/epl9_sd_late_transition_probe.py \
+  --main /private/main.bin --reader /path/to/mn103-reader \
+  --output local/sd-late-transitions
+```
