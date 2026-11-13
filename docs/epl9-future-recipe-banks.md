@@ -3,6 +3,14 @@
 The frozen native-source-v1 Gold/Portra candidate is unchanged. This branch
 adds no firmware hooks, patch bytes, native addresses or files for flashing.
 
+## Release split clarified on 2026-11-13
+
+All 31 recipes belong to the built-in V2 replacement for ART. SD/Delete is a
+later additional library, not where those 31 recipes must live. See
+[the V2 release scope and native coverage result](epl9-embedded31-v2.md). The
+31-record bank format limit is per bank, not a global limit across embedded
+and additional card recipes.
+
 ## What exists
 
 `scripts/epl9_recipe_banks.py` implements a bounded **host reference** for banks
