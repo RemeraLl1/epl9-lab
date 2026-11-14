@@ -20,7 +20,10 @@ WINDOWS=((0x604383c1,0x6043848d),(0x604113a1,0x60411401),
  (0x6043e341,0x6043e3b4),(0x6043e76a,0x6043e79e),
  (0x60445069,0x604450ad),(0x60410bc3,0x60410c2d),
  (0x60438037,0x604380ad),(0x60438121,0x604381c9),
- (0x604384ea,0x60438501),(0x60411d4f,0x60411d9c),(0x60416cc0,0x60416cfe))
+ (0x604384ea,0x60438501),(0x60411d4f,0x60411d9c),(0x60416cc0,0x60416cfe),
+ (0x6043c371,0x6043c380),(0x6043c390,0x6043c3b8),(0x6043c4fa,0x6043c510),(0x6043d63b,0x6043d713),(0x6043e325,0x6043e341),
+ (0x6043e62b,0x6043e64d),(0x6043eb2a,0x6043eb72),
+ (0x60693cd3,0x60693cfd),(0x60743621,0x60743845),(0x607d26a0,0x607d27b0))
 
 def probe(main,reader):
     image=main.read_bytes()
@@ -37,15 +40,21 @@ def probe(main,reader):
                 Region(0x8ff00004,bytearray(12),True),Region(0x21000000,bytearray(1024),True),
                 Region(bank,bytearray(256),True),
                 Region(0xa2abae2c,bytearray(0x310),True),Region(0xa2abb948,bytearray(4),True),Region(QUEUE,bytearray(452),True),
-                Region(DATA,bytearray(16),True),Region(0x22000000,bytearray(512),True)]),dict(sp=SP,d0=0,a0=0x6043e341,a1=QUEUE),psw=0x800)
+                Region(DATA,bytearray(16),True),
+                Region(0xa2abc6c8,bytearray(32772),True),Region(0xa2ace6cc,bytearray(4),True),
+                Region(0x23000000,bytearray(24000),True),Region(0x24000000,bytearray(8),True),
+                Region(0x25000000,bytearray(512),True),Region(0x22000000,bytearray(512),True)]),dict(sp=SP,d0=0,a0=0x6043e341,a1=QUEUE),psw=0x800)
             m.memory.write(0x8050,sender,4)
             m.memory.write(0x8ff00004+sender*4,0x21000000,4)
             m.memory.write(0x21000000+28,0x21000200,4)
             m.memory.write(0x21000000+16,0x21000300,4)
             for i in range(slot):m.memory.write(bank+i*8,0x10000004,4)
             # A declared pending ART raw-write record, same layout as queue probe.
-            for offset,value,size in ((0,1,2),(2,0x9481,2),(4,0,2),(8,DATA,4),(12,120,4),(448,1,2)):
+            for offset,value,size in ((0,1,2),(2,0x9481,2),(4,0,2),(8,DATA,4),(12,120,4),(448,2,2)):
                 m.memory.write(QUEUE+offset,value,size)
+            # A second queued raw write activates variant 1/2; no UI selection claim.
+            for offset,value,size in ((0,1,2),(2,0x44c1,2),(4,0,2),(8,DATA+1,4),(12,sender,4)):
+                m.memory.write(QUEUE+28+offset,value,size)
             result=m.run(m.enter(0x604383c1,END,0xf0,40),[0x60438486])
             token=(sender<<16)|slot
             if result['status']!='stop' or result['pc']!=0x60438486 or m.r['d3']!=token:
@@ -99,14 +108,33 @@ def probe(main,reader):
             result=m.run(0x604385ba,[0x6043859d])
             if result['status']!='stop' or result['pc']!=0x6043859d:
                 raise ValueError('receiver differs: '+str(result))
-            if m.memory.read(DATA,1)!=120 or m.memory.read(QUEUE+450,2)!=1 or m.memory.read(bank+slot*8,4)!=0:
+            if m.memory.read(DATA,1)!=120 or m.memory.read(QUEUE+450,2)!=2 or m.memory.read(bank+slot*8,4)!=0:
                 raise ValueError('receiver mutation differs')
+            # Register the actual storage descriptors without replacing queue-produced bytes.
+            for source,key,buffer in ((0x6049a5cc,0x9481,DATA),(0x60477ca0,0x44c1,DATA+1)):
+                m.r.update(sp=SP,a0=source,a1=buffer,d0=0xa2abc6cc)
+                result=m.run(m.enter(0x6043d697,END,0xf0,44),[0x6043d713])
+                if result['status']!='stop':raise ValueError('storage registration differs: '+str(result))
+            m.r.update(sp=SP,d3=0x23000000)
+            result=m.run(0x60693cd3,[0x60693cfd])
+            if (result['status']!='stop' or m.memory.read(0x23000000+22955,1)!=120 or
+                    m.memory.read(0x23000000+23688,1)!=sender):
+                raise ValueError('configuration assembly differs: '+str(result))
+            # Full producer for a declared non-override owner operation, not preview classification.
+            m.memory.write(0x25000000+152,0x23000000,4)
+            m.memory.write(0x25000000+72,0x1003,2)
+            m.r.update(sp=SP,a0=0x25000000,a1=0x24000000)
+            result=m.run(m.enter(0x607d26a0,END,0xf0,32),[END])
+            header=bytes(m.memory.read(0x24000000+i,1) for i in range(4))
+            if result['status']!='stop' or header!=bytes((1,sender,120,0)):
+                raise ValueError('full header producer differs: '+str(result))
             rows.append(dict(sender=sender,target=0,slot=slot,token=hex(token),bank=hex(bank),
-                dispatch_instructions=dispatched,rtos_init_transport_and_write_instructions=len(m.trace)-dispatched,
+                dispatch_instructions=dispatched,post_dispatch_native_instructions=len(m.trace)-dispatched,
                 rtos_ring_wrap=pos==32,transport_ring_wrap=transport_pos==31,
                 transport_bank=hex(transport),interrupt_signal_mask=hex(signal),
-                raw_mode_readback=120,slot_released=True))
-    return dict(schema='epl9-art-mailbox-probe-v3',reader_provenance=provenance,controls=rows,
+                raw_mode_readback=120,active_variant=sender,header=header.hex(),
+                processing_key=hex((1<<24)|(sender<<16)|120),slot_released=True))
+    return dict(schema='epl9-art-mailbox-probe-v4',reader_provenance=provenance,controls=rows,
         publish_boundary='0x60438486 before unlock helper 0x60411489',
         receiver_boundary='0x604385ba after RTOS receive 0x60416bf7',
         receive_token_explicitly_supplied=False,transport_entry_token_explicitly_supplied=True,intercontext_ring_native=True,
@@ -114,7 +142,8 @@ def probe(main,reader):
         rtos_ring_initialized_natively=True,rtos_ring_backing_memory="caller-supplied fixture",
         stock_allocator_executed=False,stage_invocation_explicit=True,pending_storage_record='declared fixture',
         interrupt_delivery_emulated=False,scheduler_emulated=False,
-        full_ui_to_processing_proven=False,install_ready=False)
+        queued_data_to_header_native=True,full_ui_to_processing_proven=False,
+        preview_capture_parity_proven=False,hardware_rendering_tested=False,install_ready=False)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)

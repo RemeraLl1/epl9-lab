@@ -573,3 +573,30 @@ The native decoder also labels the earlier descriptor multiplication instruction
 ROM descriptor directly. Runtime handle creation and heap allocation remain
 unproven. This is connected data-path evidence, not a complete scheduler or
 UI-to-rendering run. Frozen firmware remains unchanged.
+
+### Queue-produced ART fields through native header (probe v4, 2026-11-14)
+
+The same machine now joins queued raw writes to configuration reads and header
+production. A declared second pending record activates variant 1 or 2 in
+storage `44c1:0`, alongside mode 120 in `9481:0`. The actual worker drains both
+records. Native descriptor registration points at those resulting RAM buffers;
+there is no copy of their values into the configuration fixture. The native
+assembler slice `60693cd3..60693cfd` reads the registered storage via `6043e62b`
+and writes configuration offsets 23688 and 22955. The full `607d26a0` producer
+then runs to its return, including formatter `60743621`, for declared owner
+operation `1003`, submode 0 and owner field+272 zero.
+
+Six scenarios pass with final headers `01017800` / `01027800`, processing keys
+`01010078` / `01020078`. Thus queued bytes, native storage reads, the selected
+configuration fields and producer output are linked within one memory space.
+Variant selection and initial pending records remain declared inputs: this is
+not yet a continuous UI commit, notification and render path.
+
+The producer's previously unexecuted tail adds another reason not to infer
+preview/video parity: operation `2001` plus config+23680 value 14 overrides the
+header to group 2 / variant 0 / identifier 12. Owner+272 value 3 instead calls
+`607d4e65`, with further conditional overrides. These branches were inspected,
+not executed by the non-override controls; their application-mode meanings and
+physical pipeline effects are not established. The entire configuration
+assembler and downstream rendering/job lifecycle are also outside this probe.
+No camera execution, safe installation or preview/capture parity is claimed.
