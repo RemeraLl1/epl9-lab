@@ -1,0 +1,371 @@
+{
+  "main_sha256": "8e39c335d54fd8ddea189db82fe708159f43f9995bba42c2cd47dd22b8814267",
+  "reader_sha256": "013c0af69148cc34b74e2a8a46c4efba808c7575a19cd1c08b4f2ab3867712d5",
+  "source_sha256": "b48f3c587f4c33932e8d9b35fbaf6a22c2cc0e8d5402919f5fa6c010c890ece7",
+  "static_anchor_count": 13,
+  "mode_cases": [
+    {
+      "mode": "0x101",
+      "stop": {
+        "status": "external_call",
+        "pc": 1615044218,
+        "target": 1614812358,
+        "instructions": 14
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x800",
+        "a0": "0x411fb000",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "call",
+          "pc": 1615466290,
+          "target": 1615044210
+        }
+      ]
+    },
+    {
+      "mode": "0x102",
+      "stop": {
+        "status": "stop",
+        "pc": 1879060480,
+        "instructions": 15
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x102",
+        "a0": "0x411fb000",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "ret",
+          "pc": 1615466376,
+          "target": 1879060480
+        }
+      ]
+    },
+    {
+      "mode": "0x103",
+      "stop": {
+        "status": "external_call",
+        "pc": 1615044218,
+        "target": 1614812358,
+        "instructions": 15
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x800",
+        "a0": "0x411fb000",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "call",
+          "pc": 1615466290,
+          "target": 1615044210
+        }
+      ]
+    },
+    {
+      "mode": "0x104",
+      "stop": {
+        "status": "stop",
+        "pc": 1879060480,
+        "instructions": 21
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x104",
+        "a0": "0x60456cb0",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "call",
+          "pc": 1615466330,
+          "target": 1615044260
+        },
+        {
+          "op": "modeled_call",
+          "target": 1614815866,
+          "pc": 1615044269,
+          "model": "diagnostic-only model",
+          "no_device_io": true
+        },
+        {
+          "op": "ret",
+          "pc": 1615044277,
+          "target": 1615466337
+        },
+        {
+          "op": "ret",
+          "pc": 1615466376,
+          "target": 1879060480
+        }
+      ]
+    },
+    {
+      "mode": "0x105",
+      "stop": {
+        "status": "stop",
+        "pc": 1879060480,
+        "instructions": 23
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x105",
+        "a0": "0x60456cb0",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "call",
+          "pc": 1615466340,
+          "target": 1615044280
+        },
+        {
+          "op": "modeled_call",
+          "target": 1614815866,
+          "pc": 1615044289,
+          "model": "diagnostic-only model",
+          "no_device_io": true
+        },
+        {
+          "op": "ret",
+          "pc": 1615044297,
+          "target": 1615466347
+        },
+        {
+          "op": "ret",
+          "pc": 1615466376,
+          "target": 1879060480
+        }
+      ]
+    },
+    {
+      "mode": "0x106",
+      "stop": {
+        "status": "stop",
+        "pc": 1879060480,
+        "instructions": 25
+      },
+      "registers": {
+        "d0": "0x0",
+        "d1": "0x106",
+        "a0": "0x60456cb0",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "call",
+          "pc": 1615466350,
+          "target": 1615044300
+        },
+        {
+          "op": "modeled_call",
+          "target": 1614815866,
+          "pc": 1615044309,
+          "model": "diagnostic-only model",
+          "no_device_io": true
+        },
+        {
+          "op": "ret",
+          "pc": 1615044317,
+          "target": 1615466357
+        },
+        {
+          "op": "ret",
+          "pc": 1615466376,
+          "target": 1879060480
+        }
+      ]
+    },
+    {
+      "mode": "0x107",
+      "stop": {
+        "status": "stop",
+        "pc": 1879060480,
+        "instructions": 21
+      },
+      "registers": {
+        "d0": "0x3109",
+        "d1": "0x107",
+        "a0": "0x60457a8c",
+        "a1": "0xa0f1b000"
+      },
+      "events": [
+        {
+          "op": "modeled_call",
+          "target": 1614815325,
+          "pc": 1615466365,
+          "model": "diagnostic-only model",
+          "no_device_io": true
+        },
+        {
+          "op": "ret",
+          "pc": 1615466376,
+          "target": 1879060480
+        }
+      ]
+    }
+  ],
+  "maintenance_gate_cases": [
+    {
+      "status_nibble": 0,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 1,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 2,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 3,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 4,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 5,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 6,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 7,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 8,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 9,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 10,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 11,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 12,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 13,
+      "maintenance": false,
+      "stop": {
+        "status": "stop",
+        "pc": 1614809805,
+        "instructions": 3
+      }
+    },
+    {
+      "status_nibble": 14,
+      "maintenance": true,
+      "stop": {
+        "status": "external_call",
+        "pc": 1614809800,
+        "target": 1614809008,
+        "instructions": 5
+      }
+    },
+    {
+      "status_nibble": 15,
+      "maintenance": true,
+      "stop": {
+        "status": "external_call",
+        "pc": 1614809800,
+        "target": 1614809008,
+        "instructions": 5
+      }
+    }
+  ],
+  "limits": [
+    "Synthetic register/stack fixtures, not full native boot or hardware",
+    "Maintenance callee not executed; it is an explicit external stop",
+    "Diagnostics explicitly modeled; no storage success injected",
+    "No camera, transport, read, write, or installation performed"
+  ],
+  "read_only_qualified": false,
+  "install_ready": false
+}
