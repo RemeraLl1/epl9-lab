@@ -470,3 +470,42 @@ mailbox/scheduler path. The producer's earlier lock acquisition is still outside
 the queue serialization slice, and consumer invocation remains explicit. Thus
 this result does not convert the queue probe into full asynchronous firmware
 emulation or prove notification completion. Frozen firmware remains unchanged.
+
+### Cross-context callback mailbox (native slices, 2026-11-14)
+
+`scripts/epl9_art_mailbox_probe.py` advances beyond the PSW helper without a
+successful-lock stub. On the pinned private stock main image it executes
+`604383c1` through `60438486`, stopping **before** unlock helper `60411489`.
+For target context 0, sender 1 selects callback bank `a2abb744`, sender 2 selects
+`a2abb844`. Each bank has 32 eight-byte entries: callback pointer and argument.
+Dispatch scans for a zero callback, stores `6043e341` and queue argument
+`a2ad2710`, and forms token `(sender << 16) | slot`. Native selector callback is
+`604384ea`. This is callback publication, not proof of asynchronous delivery.
+
+The context-0 receiver's post-receive slice `604385ba..604385e4` decodes the high
+16 token bits as sender and low 16 as slot, selects the same bank, calls the
+stored callback with its stored argument, then clears the callback pointer.
+Six executable controls cover senders 1/2 and slots 0/7/31. Each executes this
+receiver slice and the actual queued storage callback `6043e341` / writer
+`6043e76a`, reads back raw mode 120, advances queue tail to 1, and releases its
+mailbox slot. Dispatch uses 99–318 native instructions; receive/write uses
+76–77. Earlier occupied slots are fixtures, not executed callbacks.
+
+Reproduce locally with the exact private stock image and validated GNU reader:
+
+```sh
+python scripts/epl9_art_mailbox_probe.py --main /private/main.bin --reader /private/mn103-reader
+```
+
+**Explicit gap:** the test supplies a pending storage record and transfers the
+produced token to the receiver's stack manually. The current selector is also
+explicitly switched to 0. It does not fake execution of the missing interval.
+Unlock `60411489` calls additional kernel helpers `60418889`, `60415995`, and
+`60418900`. Dispatcher then calls `60437feb`; callback `604384ea` passes a runtime
+handle from `a2abb948` to `60411ca6`. The worker obtains that handle through
+`60431fd5` and waits via `60416bf7`. Those RTOS creation/wait/wake and interrupt
+paths require grounded scheduler/control-state work, not merely an empty bank.
+Their successful lifecycle is not demonstrated here. This narrows the ART
+transport gap to explicit boundaries but is not a UI-to-processing end-to-end
+proof, preview/capture equivalence, installation readiness or safety evidence.
+Frozen Gold/Portra and SD/Delete are unchanged; no OEM image is published.
