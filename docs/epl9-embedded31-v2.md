@@ -70,3 +70,68 @@ Four parser tests passed; the exact-stock inventory produced 19/12/19 counts.
 No camera, SD, native instruction execution or physical update was performed by
 this inventory. The existing private candidate and stock-return files were not
 modified.
+
+## 2026-11-14: 31 distinct UI choices located separately
+
+The previous worklist-table warning remains correct, but it must **not** be read
+as evidence that a new 31-position UI has to be invented. A new bounded audit
+cross-checks three different stock main tables:
+
+| Table | Address interval (end exclusive) | Record size | Records |
+|---|---|---:|---:|
+| Named ART choices | `615724d8..6157264c` | 12 | 31 |
+| Choice decomposition | `6155d37c..6155d5e8` | 20 | 31 |
+| Variant property mapping | `6155d648..6155d8d0` | 24 | 27 |
+
+The first two have exactly the same 31 unique selection values **in the same
+order**. The third covers 27 of them, matching base mode, variant and choice
+resource. The remaining four are single-type choices: Soft Focus `9`, Light
+Tone `b`, Gentle Sepia `10`, and Instant Film `3f`.
+
+The 16 groups represented are Pop Art (2), Soft Focus (1), Pale & Light Color
+(2), Light Tone (1), Grainy Film (2), Pin Hole (3), Diorama (2), Cross Process
+(2), Gentle Sepia (1), Dramatic Tone (2), Key Line (2), Watercolor (2), Vintage
+(3), Partial Color (3), Bleach Bypass (2), Instant Film (1): **31 UI records**.
+English label identities were inspected in exact stock OSD through the pinned
+Caduceus decoder already described in `epl9-watercolor-icons.md`; no OSD strings
+or artwork are bundled in the new script.
+
+### Native setter evidence, not just a row count
+
+Static GNU decoding of `61169ccc..61169d60` shows the existing UI commit path:
+
+- `61169cd3` loads table `6155d648`.
+- `61169cdf..61169ce4` compares the selected value against each row's first word.
+- On a match, `61169cf5..61169cfd` loads row +16 (base mode) for the first
+  settings dispatch, whose property ID comes from the UI object's field +84.
+- `61169d08..61169d17` loads row +8 (variant property ID), row +4 (variant), and
+  makes the second settings dispatch.
+- `61169d38..61169d3d` advances by 24 and stops after 27 rows.
+- The fallback `61169d43..61169d5e` writes the selected value directly when no
+  variant row matched.
+
+For Watercolor I/II, rows are UI `1301/1302`, base mode `13`, variant `1/2`,
+variant property `1d4`. These are distinct from processing keys
+`01010078/01020078`. Do **not** substitute the UI key as a worklist key.
+The two virtual property dispatches have not yet been followed into the capture
+job producer. Other runtime mode restrictions can still affect visible choices.
+
+### Consequence for V2
+
+There is now a concrete existing **31-record UI surface** to target rather than
+an invented 31-row extension of a 19-key hash table. The next integration step
+is to join base-mode plus variant settings to the processing-key producer and
+validate preview/capture consumers. This audit does not bind any V6 recipe,
+install a menu patch, or assert all 31 choices are active on hardware.
+`processing_key` and `embedded_recipe` deliberately remain null in its output.
+
+```sh
+python -m unittest discover -s scripts -p 'test_epl9_art_ui_inventory.py' -v
+python scripts/epl9_art_ui_inventory.py --main local/private/main.bin
+```
+
+Six synthetic parser/reconciliation checks passed and the exact-stock audit
+passed with 31/27/4. This is static metadata and instruction inspection, not
+native instruction execution, camera testing, or full firmware qualification.
+The frozen candidate, stock-return, SD/Delete code and proprietary images were
+not changed.
