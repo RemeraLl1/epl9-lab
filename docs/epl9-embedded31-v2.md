@@ -600,3 +600,32 @@ not executed by the non-override controls; their application-mode meanings and
 physical pipeline effects are not established. The entire configuration
 assembler and downstream rendering/job lifecycle are also outside this probe.
 No camera execution, safe installation or preview/capture parity is claimed.
+
+### Executed producer override matrix (2026-11-14)
+
+`scripts/epl9_art_override_probe.py` executes the full producer, helper
+`607d4e65`, and its nested native classifier `607ca446`. All 62 controls pass:
+raw modes 100–124 with owner+272 equal to 0/3, plus override-precedence controls
+for modes 112/120, operations 1003/2001/2006, submode 2 and config+23680 equal 14.
+
+The ROM classifier table at `609095a8` returns 1 or 2 for every mode 100–124
+**except 112**, where it returns zero. Mode 120 returns 2. Helper `607d4e65`
+converts either positive result to true. Consequently owner+272 equal to 3
+changes a mode-120 ART header to `00000200`, regardless of variant; it can
+override the earlier `02000c00` header produced by operation 2001 / config14.
+For mode112, that predicate is false and the later config14 path instead yields
+`02000c00`. These are executed distinctions, not inferred render behavior.
+
+Outside the ART range, static helper inspection also finds predicates for raw
+modes 8/9/11/12 with operation/alternate-field conditions. Those inputs are not
+part of this matrix and should not be treated as tested. The classifier values
+1/2 have no demonstrated labels such as preview/still/video.
+
+**What remains unknown:** no evidence here identifies owner+272 value3 or the
+operation identifiers as actual user-facing preview, JPEG capture or movie
+recording states. Prior owner-binding work supplied these fields as fixtures,
+not observed live camera values. Therefore the result is specifically that
+ART processing keys are conditional, not that recipes definitely work or fail
+in video. The next useful evidence is native writers of owner+272 and operation
++72 traced from real startup/job selection, or a camera trace of those values.
+Frozen V1, original OEM images and installation instructions remain unchanged.
