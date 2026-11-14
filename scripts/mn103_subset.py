@@ -79,7 +79,7 @@ def parse_listing(listing, image, base):
 
 
 class Machine:
-    def __init__(self, code, memory, registers=None):
+    def __init__(self, code, memory, registers=None, *, psw=None):
         self.code, self.memory = code, memory
         self.r = {r: 0 for r in ['d0', 'd1', 'd2', 'd3', 'a0', 'a1', 'a2', 'a3', 'sp', 'mdr', 'mdrq']}
         for name, value in (registers or {}).items():
@@ -87,8 +87,38 @@ class Machine:
                 raise ValueError(f'unknown register {name}')
             self.r[name] = value & MASK
         self.n = self.z = self.c = self.v = False
+        self.psw_control = None
+        if psw is not None:
+            self.write_psw(psw)
         self.loop = None
         self.trace = []
+
+    def read_psw(self):
+        """Opt-in register semantics only; never implies interrupt delivery."""
+        if self.psw_control is None:
+            raise Fault('PSW support requires explicit initial state')
+        return self.psw_control | int(self.z) | (int(self.n)<<1) | (int(self.c)<<2) | (int(self.v)<<3)
+
+    def write_psw(self, value):
+        value &= MASK
+        self.psw_control = value & ~15
+        self.z,self.n,self.c,self.v = (bool(value & (1<<bit)) for bit in range(4))
+
+    def psw_instruction(self, raw, op, args):
+        """Four GNU igen forms only; PSW logical ops do not recalculate NZCV."""
+        current=self.read_psw()
+        registers=('d0','d1','d2','d3')
+        if op=='mov' and len(args)==2:
+            if args[0]=='psw' and args[1] in registers and raw==bytes((0xf2,0xe4+registers.index(args[1]))):
+                self.write(args[1],current);return
+            if args[1]=='psw' and args[0] in registers and raw==bytes((0xf2,0xf3+4*registers.index(args[0]))):
+                self.write_psw(self.read(args[0]));return
+        if op in ('and','or') and len(args)==2 and args[1]=='psw':
+            if len(raw)==4 and raw[:2]==bytes((0xfa,0xfc if op=='and' else 0xfd)):
+                immediate=int.from_bytes(raw[2:],'little')
+                if self.read(args[0])==immediate:
+                    self.write_psw(current & immediate if op=='and' else current | immediate);return
+        raise Fault('unsupported PSW encoding')
 
     def atom(self, value):
         return self.r[value] if value in self.r else int(value, 0)
@@ -141,7 +171,9 @@ class Machine:
             self.trace.append(pc)
             nxt = pc + len(raw)
             try:
-                if op in ('mov', 'movbu', 'movhu', 'movb', 'movh'):
+                if 'psw' in args:
+                    self.psw_instruction(raw,op,args)
+                elif op in ('mov', 'movbu', 'movhu', 'movb', 'movh'):
                     size = 1 if op in ('movbu', 'movb') else 2 if op in ('movhu', 'movh') else 4
                     value = self.read(args[0], size)
                     if op in ('movb', 'movh') and not args[1].startswith('('):

@@ -428,3 +428,45 @@ Ordinary/wrapped writes, full-queue rejection and cross-context stop passed on
 exact stock code. No called functions in the executed slices are modeled.
 The remaining integration boundary is now explicit: native synchronization and
 cross-context dispatch, not a missing ART recipe or guessed header format.
+
+## 2026-11-14: qualified opt-in PSW register semantics
+
+The PSW instruction boundary can be advanced using an authoritative semantic
+reference, without inventing interrupt delivery. `mn103_subset.Machine` now
+accepts explicit `psw=...` initialization; existing callers without it still
+reject PSW instructions. Only four exact encoding forms are admitted:
+`mov PSW,Dn`, `mov Dn,PSW`, `and imm16,PSW`, and `or imm16,PSW`.
+PSW NZCV bits remain tied to the subset's arithmetic flags. In particular PSW
+AND/OR modify the word directly; they do **not** perform the ordinary logical
+instruction's NZCV recomputation. Interrupt delivery, privilege enforcement,
+asynchronous scheduling and a complete CPU model are not implemented.
+
+Semantics were checked against the same pinned GNU simulator revision used by
+the existing subset:
+
+- [GNU mn10300.igen](https://gnu.googlesource.com/binutils-gdb/+/87ffb882e0f4d73401a0746177ffabb8e8bbe4ac/sim/mn10300/mn10300.igen),
+  move forms at lines120–143, PSW AND at2348–2360, OR at2424–2436;
+  decoded-source SHA256 `355754c61879dc24bf6128bbba5a7931355731000e8cb213082b9b9cd4df0129`.
+- [GNU mn10300-sim.h](https://gnu.googlesource.com/binutils-gdb/+/87ffb882e0f4d73401a0746177ffabb8e8bbe4ac/sim/mn10300/mn10300-sim.h),
+  NZCV masks1/2/4/8 and interrupt-enable bit11;
+  SHA256 `9ba3ea7e3ec929b2235a8859c35711208b7ad8dd52b7543dc1d844757be4874a`.
+
+Six focused PSW tests cover move read/restore, flag preservation, direct logical
+semantics, ordinary arithmetic preservation of control bits, wrong encoding and
+opt-in rejection. All 49 MN103-layer tests passed. These are implementation
+controls, not a claim of independent silicon validation.
+
+### Native context helper now completes
+
+Queue probe v2 executes the previously blocked `604113a1`, including native
+`6041894c`/`60418975` PSW save/mask/restore, with declared context-control RAM.
+The helper sets context byte+2 and the expected control bit, restores the PSW
+control bits, then returns to dispatcher address `604383fd`. A busy-context
+control returns -25 and does not set the success flag. No lock-success return is
+stubbed. The existing native queue producer/consumer controls continue to pass.
+
+The next boundary is **after this helper**, in the cross-context dispatch and
+mailbox/scheduler path. The producer's earlier lock acquisition is still outside
+the queue serialization slice, and consumer invocation remains explicit. Thus
+this result does not convert the queue probe into full asynchronous firmware
+emulation or prove notification completion. Frozen firmware remains unchanged.

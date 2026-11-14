@@ -18,7 +18,7 @@ DATA=0x20000000
 END=0x10000000
 WINDOWS=((0x6043e3e4,0x6043e448),(0x6043e341,0x6043e3b4),
  (0x6043e76a,0x6043e79e),(0x60445069,0x604450ad),(0x604383c1,0x604383fd),
- (0x604113a1,0x60411401),(0x6041894c,0x60418950))
+ (0x604113a1,0x60411401),(0x6041894c,0x60418980))
 
 
 def probe(main,reader):
@@ -32,10 +32,11 @@ def probe(main,reader):
         m=CallMachine(code,Memory([Region(BASE,image),Region(0x8050,bytearray(4),True),
             Region(SP-8192,bytearray(16384),True),Region(QUEUE,bytearray(452),True),
             Region(DATA,bytearray(16),True),Region(0x8ff00004,bytearray(12),True),
-            Region(0x21000000,bytearray(1024),True)]),dict(sp=SP,a2=0x9481))
+            Region(0x21000000,bytearray(1024),True)]),dict(sp=SP,a2=0x9481),psw=0x800)
         m.memory.write(0x8050,selector,4)
         m.memory.write(0x8ff00004+selector*4,0x21000000,4)
         m.memory.write(0x21000000+28,0x21000200,4)
+        m.memory.write(0x21000000+16,0x21000300,4)
         m.memory.write(QUEUE+448,head,2);m.memory.write(QUEUE+450,tail,2)
         # Actual producer-frame inputs at the post-lock boundary.
         for offset,value,size in ((24,1,2),(20,DATA,4),(48,0,2),(52,0,2),
@@ -65,14 +66,22 @@ def probe(main,reader):
     full_head=m.memory.read(QUEUE+448,2)
     # Different target/current contexts enter the unresolved locking path.
     m=machine(0,0);m.r.update(d0=0,a0=0x6043e341,a1=QUEUE)
-    dispatch=m.run(m.enter(0x604383c1,END,0xf0,40),[0x6041894e])
-    if dispatch['status']!='stop' or dispatch['pc']!=0x6041894e:
+    dispatch=m.run(m.enter(0x604383c1,END,0xf0,40),[0x604383fd])
+    if dispatch['status']!='stop' or dispatch['pc']!=0x604383fd:
         raise ValueError('cross-context boundary differs: '+str(dispatch))
-    return dict(schema='epl9-art-queue-probe-v1',reader_provenance=provenance,controls=rows,
+    if (m.memory.read(0x21000202,1)!=1 or m.memory.read(0x21000300,1)!=4 or
+            m.read_psw()&~15 != 0x800):raise ValueError('native kernel helper effects differ')
+    rejected=machine(0,0);rejected.memory.write(0x21000200,1,1)
+    result=rejected.run(rejected.enter(0x604113a1,END,0x20,12),[END])
+    if result['status']!='stop' or rejected.r['d0']!=0xffffffe7 or rejected.memory.read(0x21000202,1):
+        raise ValueError('busy-context rejection differs')
+    return dict(schema='epl9-art-queue-probe-v2' ,reader_provenance=provenance,controls=rows,
         full_queue_branch=dict(payload_untouched=True,observed_head_after_branch=full_head,
             recovery_after_full_not_executed=True),
         cross_context_dispatch_boundary=hex(dispatch['pc']),
-        boundary_instruction='mov psw,d0',context_control_blocks='declared fixtures',
+        psw_register_operations_executed=True,native_context_helper_completed=True,
+        busy_context_returns_minus25=True,context_control_blocks='declared fixtures',
+        interrupt_delivery_emulated=False,
         producer_locking_executed=False,consumer_explicitly_invoked=True,
         scheduler_emulated=False,notification_lifecycle_proven=False,install_ready=False)
 
