@@ -629,3 +629,33 @@ ART processing keys are conditional, not that recipes definitely work or fail
 in video. The next useful evidence is native writers of owner+272 and operation
 +72 traced from real startup/job selection, or a camera trace of those values.
 Frozen V1, original OEM images and installation instructions remain unchanged.
+
+### Native writers of owner field +272 (2026-11-14)
+
+Override probe v2 adds four writer-to-producer controls (66 total controls).
+Unlike the earlier matrix, these four do not write field+272 directly:
+
+- In `607cac48`, the native branch `607cace8..607cad29` initializes owner+272
+  to 1, then changes it to 3 when configuration halfword+22828 equals 2; it
+  also sets owner byte+164 to 1. Config values 0/2 yield, respectively,
+  mode120 headers `01027800` / `00000200` in the connected producer run.
+- In `607cafef`, the branch from `607cb011` writes owner+272=3 when the
+  halfword selector input is zero (`607cb01d`), or 1 otherwise (`607cb0c2`).
+  Selector controls 0/1 yield `00000200` / `01027800`. The rest of that function
+  also modifies configuration fields and is not executed in these slices.
+
+There are real callers: the owner preparation path calls `607cac48` at
+`607ce250`; `607cb1b6` calls `607cafef` with selector 0/1 according to a source
+record's low flag bit. Another caller at `607cae2e` explicitly passes selector
+1 after adjusting its record counts and config+22828. These are native callsite
+observations, not proof of a complete caller execution. Configuration assembler
+`606937a4` populates config+22828 from an earlier halfword source; its ultimate
+user-facing setting has not been resolved.
+
+This is more specific than a hypothetical owner fixture: real firmware writers
+can choose both the ART-preserving and ART-replacing paths. It still does not
+justify naming those paths video or preview. The scan also found many unrelated
+objects/stack records with offset72; they are not counted as owner-operation
+writers without pointer provenance. The actual creation/source of this owner's
+operation+72 remains unresolved. No named preview/capture/video conclusion,
+full job startup, physical result or safety claim follows from these controls.
