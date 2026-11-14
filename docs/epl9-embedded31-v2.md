@@ -332,3 +332,54 @@ python scripts/epl9_art_base_mode_probe.py --main local/private/main.bin \
 All three exact-stock controls passed. No frozen candidate or OEM image was
 changed or published. This is useful executable reverse-engineering evidence,
 not a new installable firmware build.
+
+## 2026-11-14: native RAM registration and raw write/read, service boundary
+
+`epl9_art_storage_probe.py` advances past the previous raw-write boundary without
+inventing successful service calls. It executes native descriptor-registration
+fragments from `6043d697` using three actual stock record headers:
+
+| Storage | Stock descriptor | Elements | Purpose in this investigation |
+|---|---|---:|---|
+| `9481` | `6049a5cc` | 1 | Raw processing mode |
+| `44c1` | `60477ca0` | 13 | Active and saved ART variants |
+| `8b54` | `604955d8` | 1630 | Property-associated metadata writes |
+
+The initializer writes real index entries at `a2abc6cc + (storage_id>>4)*8`.
+Its output data pointers refer to explicitly declared zero-filled RAM buffers.
+The probe stops each initializer fragment before it advances into the next
+unrelated descriptor: **this is not the complete service/startup sequence or a
+copy of the camera's persistent settings**.
+
+With explicitly declared service-mode0, write-lock0 and lazy-cache-init0,
+actual instructions of raw writer `6069cbd9` complete, including metadata,
+storage resolution, and byte writes. Actual storage reader `6043e62b` returns:
+
+- property6f=120 → storage9481[0]=120;
+- property1d4=2 → storage44c1[8]=2;
+- property16a=2 → storage44c1[0]=2.
+
+No helper calls are modeled. This demonstrates direct **RAM** mutation/readback
+under the stated state, not live camera settings, NVRAM persistence, or a complete
+UI callback chain.
+
+### Why this is not reported as complete running-service validation
+
+A contrast with nonzero service state at `8050` takes a different real branch:
+writer `6043e702` calls `6043e3b4` instead of direct writer `6043e76a`. The probe
+requires an explicit external-call stop there. Static inspection shows the
+service path invokes state/locking helpers, updates a 16-entry ring at
+`a2ad2710`, and dispatches a callback through `604383c1`; its lock/scheduler and
+startup state have not been qualified. Substituting a success return or forcing
+mode0 would conceal the exact missing behavior. Full initialization itself
+also invokes these service helpers and depends on previously populated settings
+buffers. There is no missing stock-image blocker, but live service emulation
+is a separate required next step for continuous writes/notifications.
+
+```sh
+python scripts/epl9_art_storage_probe.py --main local/private/main.bin \
+  --reader local/mn103-tooling/mn103-reader
+```
+
+Three native write/read controls and the service-enabled stopping contrast
+passed. No new installable image is produced; frozen artifacts are untouched.
