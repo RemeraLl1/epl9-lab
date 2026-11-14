@@ -289,3 +289,46 @@ The probe passed against the exact stock image. The remaining base-mode
 conversion (UI19 versus processing120), complete callback lifecycle, and
 preview/capture output still need investigation. This result narrows the gap;
 it does not make V2 install-ready or change the frozen firmware.
+
+## 2026-11-14: UI19 → processing120 conversion executed
+
+The base-mode gap is now narrowed to the real storage/notification boundary.
+Property `6f` is a **composite setting**, not a scalar identity conversion.
+Its conversion descriptor at `608a33f8` has type6, record size64, data length1600
+(25 records), value data at `608925c8`, and logical labels at `60885bd0`.
+Logical UI label19 is record index20, address `60892ac8`. Its first raw value is
+120. Adjacent logical labels are not safely convertible with a fixed offset.
+
+New `epl9_art_base_mode_probe.py` executes, with no modeled calls:
+
+1. Stock callback-registry builder (311 descriptors).
+2. Stock conversion-registry builder `606a5932` (1200 descriptors).
+3. Property setter `6069cc82`, with declared property6f and logical UI value19.
+4. Native conversion via `606a5251` and its table lookup helpers.
+5. Compound-property dispatch through `6069d4eb` and `6069ce1d`.
+
+Execution stops at `6069ce3f`, immediately before its call to raw property
+writer `6069cbd9`, with **d0=6f, d1=120**. There are 826 executed instructions
+in this setter path, excluding registry construction. Controls UI18→119 and
+UI8→100 also passed (814 and 694 instructions respectively). All intervening
+called functions on these paths were actual loaded instructions, not success
+stubs. Registers/stack are declared fixtures, not a captured camera session.
+
+The prior storage inventory connects raw property6f to `(9481,0)`; the capture
+configuration assembler reads that storage into offset 22955; the header probe
+shows mode120 and variants1/2 produce Watercolor worklist keys. These pieces now
+have a concrete conversion bridge. **Still not claimed:** raw storage write,
+notification completion, whole UI-object commit, complete capture producer,
+TruePic output, or full preview/capture parity. The mutation boundary is
+intentional: uninitialized storage/service state is not replaced with pretend
+success. The separate variant activation probe retains its explicit declared
+getter-return boundary.
+
+```sh
+python scripts/epl9_art_base_mode_probe.py --main local/private/main.bin \
+  --reader local/mn103-tooling/mn103-reader
+```
+
+All three exact-stock controls passed. No frozen candidate or OEM image was
+changed or published. This is useful executable reverse-engineering evidence,
+not a new installable firmware build.
