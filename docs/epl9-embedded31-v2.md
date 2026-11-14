@@ -659,3 +659,37 @@ objects/stack records with offset72; they are not counted as owner-operation
 writers without pointer provenance. The actual creation/source of this owner's
 operation+72 remains unresolved. No named preview/capture/video conclusion,
 full job startup, physical result or safety claim follows from these controls.
+
+### Configuration source narrowed; mode naming remains blocked (2026-11-14)
+
+The source of config+22828 is now traced one step earlier: it copies
+config+22824 at `6069379e..606937a4`. The latter is derived at
+`606936b9..606936fd`: config+22916 value4 selects 2, value3 selects 1; otherwise
+storage8231:0 value1 selects 5, or selects zero. Config+22916 itself is populated
+from storage8141 (index0) at `60693673..60693689`. The primary property map
+associates property0a with 8141:0 and property16 with 8231:0. These identifiers
+are not yet tied to verified UI labels.
+
+Two new connected native controls execute the value3/value4 derivation,
+the copy into +22828, the owner writer, and the complete producer. They yield
+owner+272=1 / header `01027800`, and owner+272=3 / header `00000200`, respectively.
+The probe now passes 68 controls. Entry config+22916 is a declared input; the
+intervening unrelated assembler section is skipped, not modeled as successful.
+The alternative storage8231 branch was inspected but not executed here.
+
+At this boundary more unlabelled numeric branches do not answer the user's
+photo/video question. What is missing is authenticated semantic provenance:
+which UI choice writes property0a, and which owner creation request supplies
+operation+72. Field+272 is therefore **not established as a video flag**.
+No source evidence found in this pass justifies that shortcut.
+
+Practical follow-up without flashing experimental firmware: on stock firmware,
+record the same fixed scene under native Watercolor I/II in live view, still
+JPEG, and an available movie mode; record the exact dial mode, photo quality,
+movie quality and whether the camera permits ART there. That checks actual
+stock behavior but cannot establish internal field values or custom-patch
+parity. A conclusive internal test needs a real owner/config trace (operation72,
+submode86, owner272, config22916/22824/22828/22955/23688) or fully grounded native
+creation from identified UI inputs. Do not infer these values from appearance
+alone or install an instrumented firmware on the main camera merely for this
+question. Frozen firmware is still untouched.
