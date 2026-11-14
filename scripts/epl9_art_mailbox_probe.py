@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import struct
 from epl9_art_queue_probe import BASE, MAIN_SHA, SP, QUEUE, DATA, END
 from mn103_subset import Memory, Region, parse_listing
 from mn103_calls import CallMachine
@@ -18,7 +19,8 @@ WINDOWS=((0x604383c1,0x6043848d),(0x604113a1,0x60411401),
  (0x6041894c,0x60418980),(0x604385ba,0x604385f4),
  (0x6043e341,0x6043e3b4),(0x6043e76a,0x6043e79e),
  (0x60445069,0x604450ad),(0x60410bc3,0x60410c2d),
- (0x60411d4f,0x60411d9c),(0x60416cc0,0x60416cfe))
+ (0x60438037,0x604380ad),(0x60438121,0x604381c9),
+ (0x604384ea,0x60438501),(0x60411d4f,0x60411d9c),(0x60416cc0,0x60416cfe))
 
 def probe(main,reader):
     image=main.read_bytes()
@@ -33,7 +35,8 @@ def probe(main,reader):
             m=CallMachine(code,Memory([Region(BASE,image),
                 Region(SP-8192,bytearray(16384),True),Region(0x8050,bytearray(4),True),
                 Region(0x8ff00004,bytearray(12),True),Region(0x21000000,bytearray(1024),True),
-                Region(bank,bytearray(256),True),Region(QUEUE,bytearray(452),True),
+                Region(bank,bytearray(256),True),
+                Region(0xa2abae2c,bytearray(0x310),True),Region(0xa2abb948,bytearray(4),True),Region(QUEUE,bytearray(452),True),
                 Region(DATA,bytearray(16),True),Region(0x22000000,bytearray(512),True)]),dict(sp=SP,d0=0,a0=0x6043e341,a1=QUEUE),psw=0x800)
             m.memory.write(0x8050,sender,4)
             m.memory.write(0x8ff00004+sender*4,0x21000000,4)
@@ -62,7 +65,24 @@ def probe(main,reader):
             pos=32 if slot==31 else 0
             m.memory.write(obj+32,buffer+pos*4,4)
             m.memory.write(obj+36,buffer+pos*4,4)
-            m.r.update(sp=SP,d2=obj);m.memory.write(SP+4,token,4)
+            m.memory.write(0xa2abb948,1,4) # declared RTOS handle, not allocated
+            # Load the real sender/target transport descriptor from ROM.
+            headp,tailp,transport,signal=struct.unpack_from('<4I',image,0x604560ec+sender*16-BASE)
+            transport_pos=31 if slot==31 else 0
+            m.memory.write(headp,transport_pos,1);m.memory.write(tailp,transport_pos,1)
+            m.r.update(sp=SP,a3=headp,a2=tailp)
+            for off,value in ((4,transport),(12,0x604384ea),(16,token)):
+                m.memory.write(SP+off,value,4)
+            result=m.run(0x60438037,[0x604380ad])
+            if result['status']!='stop' or m.memory.read(headp,1)!=(transport_pos+1)%32:
+                raise ValueError('inter-context producer differs: '+str(result))
+            # No fake MMIO: stop before interrupt signalling, invoke receiver explicitly.
+            m.r['sp']=SP;m.memory.write(0x8050,0,4)
+            result=m.run(m.enter(0x60438121 if sender==1 else 0x60438175,END,0x20,8),[0x604384fa])
+            delivered=m.r['d1']
+            if result['status']!='stop' or delivered!=token or m.r['d0']!=1:
+                raise ValueError('inter-context callback differs: '+str(result))
+            m.r.update(sp=SP,d2=obj);m.memory.write(SP+4,delivered,4)
             result=m.run(0x60411d4f,[0x60411d9c])
             if result['status']!='stop' or m.memory.read(obj+44,4)!=32:
                 raise ValueError('RTOS enqueue differs: '+str(result))
@@ -83,12 +103,14 @@ def probe(main,reader):
                 raise ValueError('receiver mutation differs')
             rows.append(dict(sender=sender,target=0,slot=slot,token=hex(token),bank=hex(bank),
                 dispatch_instructions=dispatched,rtos_init_transport_and_write_instructions=len(m.trace)-dispatched,
-                rtos_ring_wrap=pos==32,
+                rtos_ring_wrap=pos==32,transport_ring_wrap=transport_pos==31,
+                transport_bank=hex(transport),interrupt_signal_mask=hex(signal),
                 raw_mode_readback=120,slot_released=True))
-    return dict(schema='epl9-art-mailbox-probe-v2',reader_provenance=provenance,controls=rows,
+    return dict(schema='epl9-art-mailbox-probe-v3',reader_provenance=provenance,controls=rows,
         publish_boundary='0x60438486 before unlock helper 0x60411489',
         receiver_boundary='0x604385ba after RTOS receive 0x60416bf7',
-        receive_token_explicitly_supplied=False,transport_entry_token_explicitly_supplied=True,
+        receive_token_explicitly_supplied=False,transport_entry_token_explicitly_supplied=True,intercontext_ring_native=True,
+        interrupt_signal_executed=False,intercontext_consumer_completion_proven=False,
         rtos_ring_initialized_natively=True,rtos_ring_backing_memory="caller-supplied fixture",
         stock_allocator_executed=False,stage_invocation_explicit=True,pending_storage_record='declared fixture',
         interrupt_delivery_emulated=False,scheduler_emulated=False,

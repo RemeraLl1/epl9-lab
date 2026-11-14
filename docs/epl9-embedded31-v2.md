@@ -540,3 +540,36 @@ empty-queue waiting and wakeup of an existing waiter instead require kernel
 scheduler paths (`6041442d`, `60414508`, `60414482`). These are not replaced by
 success stubs. Full startup, allocation, scheduling, notifications and camera
 behavior remain outside the evidence. No frozen firmware changed.
+
+### Intermediate transport ring (probe v3, 2026-11-14)
+
+The same executable probe now follows the intermediate cross-context ring
+rather than copying the dispatch token directly to the RTOS send entry.
+It loads the actual ROM descriptor at `604560ec + target*48 + sender*16`.
+For target 0 / sender 1 the descriptor gives head/tail `a2abb12e/f`, ring
+`a2abaf2c`, signal mask `0x10`; sender 2 gives head/tail `a2abb130/1`, ring
+`a2abb02c`, signal mask `0x20`. Each transport ring has 32 entries of callback
+and argument, distinct from both the callback bank and the RTOS token ring.
+
+Native sender slice `60438037..604380ad` checks space, writes callback
+`604384ea` and the dispatch token, and advances its head modulo 32. It stops
+before reading interrupt state or writing the signalling register. Explicit
+receiver invocation at `60438121` / `60438175` then reads that stored callback
+and argument and calls the actual wrapper `604384ea`. At `604384fa`, its native
+registers contain runtime-handle fixture 1 and the token fetched from transport
+RAM. The subsequent RTOS send/receive and ART callback slices use that result
+in the same machine and memory. All six controls pass; final-slot controls
+exercise both transport producer wrap and RTOS ring wrap.
+
+The remaining gaps are smaller but important: entering the sender after its
+lock, calling its receiver instead of delivering a hardware interrupt, and
+bridging the wrapper's send call to the post-validation RTOS slice. The
+transport consumer is stopped inside its callback; its post-callback tail
+advance has **not** executed in this probe. No pending task is magically resumed.
+The three ROM signalling-register pointers are `99200408`, `99300408`, and
+`99b00408`; merely mapping these as RAM would not prove interrupt behavior.
+The native decoder also labels the earlier descriptor multiplication instruction
+`udfu01`; this probe does not invent CPU semantics for it, and uses the verified
+ROM descriptor directly. Runtime handle creation and heap allocation remain
+unproven. This is connected data-path evidence, not a complete scheduler or
+UI-to-rendering run. Frozen firmware remains unchanged.
