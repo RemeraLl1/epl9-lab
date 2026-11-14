@@ -1,7 +1,8 @@
 """Execute native mailbox publish/receive slices; never synthesize delivery.
 
 The scheduler, unlock helper and RTOS mailbox receive are deliberate boundaries.
-The receive slice is invoked explicitly with the token produced by dispatch.
+Stages are explicitly invoked; native RTOS ring slices carry the token to the
+worker stack. Allocation, wakeup and context switching are not emulated.
 """
 import argparse
 import hashlib
@@ -16,7 +17,8 @@ from mn103_tooling import reader_provenance
 WINDOWS=((0x604383c1,0x6043848d),(0x604113a1,0x60411401),
  (0x6041894c,0x60418980),(0x604385ba,0x604385f4),
  (0x6043e341,0x6043e3b4),(0x6043e76a,0x6043e79e),
- (0x60445069,0x604450ad))
+ (0x60445069,0x604450ad),(0x60410bc3,0x60410c2d),
+ (0x60411d4f,0x60411d9c),(0x60416cc0,0x60416cfe))
 
 def probe(main,reader):
     image=main.read_bytes()
@@ -32,7 +34,7 @@ def probe(main,reader):
                 Region(SP-8192,bytearray(16384),True),Region(0x8050,bytearray(4),True),
                 Region(0x8ff00004,bytearray(12),True),Region(0x21000000,bytearray(1024),True),
                 Region(bank,bytearray(256),True),Region(QUEUE,bytearray(452),True),
-                Region(DATA,bytearray(16),True)]),dict(sp=SP,d0=0,a0=0x6043e341,a1=QUEUE),psw=0x800)
+                Region(DATA,bytearray(16),True),Region(0x22000000,bytearray(512),True)]),dict(sp=SP,d0=0,a0=0x6043e341,a1=QUEUE),psw=0x800)
             m.memory.write(0x8050,sender,4)
             m.memory.write(0x8ff00004+sender*4,0x21000000,4)
             m.memory.write(0x21000000+28,0x21000200,4)
@@ -48,21 +50,47 @@ def probe(main,reader):
             if m.memory.read(bank+slot*8,4)!=0x6043e341 or m.memory.read(bank+slot*8+4,4)!=QUEUE:
                 raise ValueError('published mailbox differs')
             dispatched=len(m.trace)
-            # Do not execute/fake unlock, scheduling or mailbox receive. Supply
-            # its prospective token at the observed post-receive stack position.
-            m.r['sp']=SP;m.memory.write(SP+4,token,4);m.memory.write(0x8050,0,4)
+            # Native RTOS ring initializer, with caller-provided backing storage.
+            # Stock worker passes NULL: its allocator remains outside this slice.
+            obj=0x22000000;buffer=obj+128
+            m.memory.write(obj+24,33,4);m.memory.write(obj+28,buffer,4)
+            m.r.update(sp=SP,a0=obj)
+            result=m.run(m.enter(0x60410bc3,END,0xb0,16),[END])
+            if result['status']!='stop' or m.r['d0']!=0 or m.memory.read(obj+44,4)!=33:
+                raise ValueError('RTOS ring initialization differs: '+str(result))
+            # Choose the final ring position in one control to execute wrap.
+            pos=32 if slot==31 else 0
+            m.memory.write(obj+32,buffer+pos*4,4)
+            m.memory.write(obj+36,buffer+pos*4,4)
+            m.r.update(sp=SP,d2=obj);m.memory.write(SP+4,token,4)
+            result=m.run(0x60411d4f,[0x60411d9c])
+            if result['status']!='stop' or m.memory.read(obj+44,4)!=32:
+                raise ValueError('RTOS enqueue differs: '+str(result))
+            # Native receive writes directly to the worker's token stack slot.
+            # Scheduling/context handover is still explicit, not emulated.
+            m.memory.write(SP+4,0,4);m.memory.write(SP-64+20,SP+4,4)
+            m.r.update(sp=SP-64,d2=obj);m.memory.write(0x8050,0,4)
+            result=m.run(0x60416cc0,[0x60416db5])
+            if (result['status']!='stop' or m.memory.read(SP+4,4)!=token or
+                    m.memory.read(obj+44,4)!=33 or
+                    m.memory.read(obj+36,4)!=buffer+((pos+1)%33)*4):
+                raise ValueError('RTOS dequeue differs: '+str(result))
+            m.r["sp"]=SP
             result=m.run(0x604385ba,[0x6043859d])
             if result['status']!='stop' or result['pc']!=0x6043859d:
                 raise ValueError('receiver differs: '+str(result))
             if m.memory.read(DATA,1)!=120 or m.memory.read(QUEUE+450,2)!=1 or m.memory.read(bank+slot*8,4)!=0:
                 raise ValueError('receiver mutation differs')
             rows.append(dict(sender=sender,target=0,slot=slot,token=hex(token),bank=hex(bank),
-                dispatch_instructions=dispatched,receive_and_write_instructions=len(m.trace)-dispatched,
+                dispatch_instructions=dispatched,rtos_init_transport_and_write_instructions=len(m.trace)-dispatched,
+                rtos_ring_wrap=pos==32,
                 raw_mode_readback=120,slot_released=True))
-    return dict(schema='epl9-art-mailbox-probe-v1',reader_provenance=provenance,controls=rows,
+    return dict(schema='epl9-art-mailbox-probe-v2',reader_provenance=provenance,controls=rows,
         publish_boundary='0x60438486 before unlock helper 0x60411489',
         receiver_boundary='0x604385ba after RTOS receive 0x60416bf7',
-        receive_token_explicitly_supplied=True,pending_storage_record='declared fixture',
+        receive_token_explicitly_supplied=False,transport_entry_token_explicitly_supplied=True,
+        rtos_ring_initialized_natively=True,rtos_ring_backing_memory="caller-supplied fixture",
+        stock_allocator_executed=False,stage_invocation_explicit=True,pending_storage_record='declared fixture',
         interrupt_delivery_emulated=False,scheduler_emulated=False,
         full_ui_to_processing_proven=False,install_ready=False)
 

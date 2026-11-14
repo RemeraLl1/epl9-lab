@@ -509,3 +509,34 @@ Their successful lifecycle is not demonstrated here. This narrows the ART
 transport gap to explicit boundaries but is not a UI-to-processing end-to-end
 proof, preview/capture equivalence, installation readiness or safety evidence.
 Frozen Gold/Portra and SD/Delete are unchanged; no OEM image is published.
+
+### Native RTOS ring transport (probe v2, 2026-11-14)
+
+The mailbox probe now also executes the native data-queue initializer
+`60410bc3`, send slice `60411d4f..60411d9c`, and nonblocking-data receive slice
+`60416cc0..60416db5`. It no longer injects the token directly into the worker's
+receive slot: the send instructions store it in the RTOS ring, and receive
+instructions fetch it and write the worker output pointer. The subsequent
+worker callback still writes raw ART mode 120 and releases the callback slot.
+All six controls pass, including last-entry wrap for both sender contexts.
+
+Object layout derived from these instructions: configuration at +20, capacity
++24, backing buffer +28, write cursor +32, read cursor +36, last-entry address
++40, free-entry count +44; sender and receiver wait-list heads are +4 and +12.
+The real worker requests capacity 33 through `60431fd5` -> `60410137`.
+Creation obtains an object from `60415177`, copies the configuration and calls
+`60410bc3`. Stock passes a NULL backing pointer, causing allocation through
+`6041600d`. Probe v2 instead exercises the initializer's supported non-NULL
+backing-buffer path with declared RAM. It does **not** claim that the actual
+stock heap allocation or handle-creation lifecycle ran successfully.
+
+This is a useful reduction, not elimination, of the transport gap. The token
+is still supplied at the send slice's input and stages are invoked explicitly.
+Dispatch first traverses another cross-context transport (`60437feb`), whose
+queue-selection table is at `604560ec` and whose lock/interrupt handling has
+not been executed here. Callback `604384ea` then uses runtime handle
+`a2abb948` to call the RTOS send function. The queued-data path is covered;
+empty-queue waiting and wakeup of an existing waiter instead require kernel
+scheduler paths (`6041442d`, `60414508`, `60414482`). These are not replaced by
+success stubs. Full startup, allocation, scheduling, notifications and camera
+behavior remain outside the evidence. No frozen firmware changed.
