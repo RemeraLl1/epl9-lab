@@ -204,3 +204,48 @@ native code, and a wrong stock image before reader execution. Together with the
 remaining join. Preview/capture parity, all 31 per-choice processing bindings,
 physical rendering and V2 install readiness remain unproven. Frozen V1 and
 stock-return artifacts, SD/Delete behavior, and recipe coefficients are unchanged.
+
+## 2026-11-14: backing properties and the active-variant gap
+
+A further exact-stock inventory connects the 12 variant properties used by the
+27 non-singleton UI rows to one shared storage family. Native helper
+`606ba478..606ba4ca` indexes a primary table `608aca18` with property ID *4
+for IDs 0..1619; its first u16 is the backing storage ID. Helper
+`606ba68f..606ba6a8` reads the second u16 as element index. Generic setter
+`606ba3a6` uses both before calling storage writer `6043e702` at `606ba3f2`.
+
+All 12 variant properties resolve to storage `44c1`, but **different elements**:
+`16b/16c/16d/16e/16f/170/171/1d4/253/294/296/5ad` map to indices
+`1/2/3/4/5/6/7/8/9/10/11/12`. In particular Watercolor property `1d4`
+is `(44c1,8)`, **not `(44c1,0)`**. Property `6f` maps to `(9481,0)`;
+its identity as the specific UI object's base-mode property is still a candidate.
+
+The capture-configuration assembly fragment gives the other end:
+
+- `60693cd3..60693ce2` calls reader `6043e62b` with storage `44c1`, index 0,
+  then writes its returned byte into configuration offset 23688.
+- `60693ce6..60693cfb` calls that reader with storage `9481`, index 0,
+  then writes its returned byte into offset 22955.
+- Reader `6043e62b` forwards the index to `6043eb2a`; the latter indexes the
+  returned storage buffer. Thus index 0 is not silently reinterpreted as 8
+  by this inspected reader path.
+
+This is a useful constraint, not a completed link: changing the saved Watercolor
+variant alone is insufficient evidence that the current capture variant changes.
+We must find the activation/copy/notification path from saved slot 8 to active
+slot 0, and the base-mode conversion to processing mode 120. Property mutation
+`6069d4eb` can dispatch per-property callbacks via runtime registry `6261f3e8`,
+then notification helpers; those dynamic bindings have not been reconstructed.
+No absent callbacks were stubbed or treated as no-ops.
+
+```sh
+python -m unittest discover -s scripts -p 'test_epl9_art_property_inventory.py' -v
+python scripts/epl9_art_property_inventory.py --main local/private/main.bin
+```
+
+Four parser/guard tests and the stock 12-slot audit passed. This addition is
+static evidence, distinct from the preceding native header probe. The original
+stock image is available locally; further reverse engineering is **not blocked
+by a missing image or missing recipe coefficients**. Completing 31 actual film
+recipes still separately requires the authored coefficients and per-choice
+processing bindings. No firmware artifacts or frozen release inputs changed.
