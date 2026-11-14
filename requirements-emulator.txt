@@ -1,0 +1,3 @@
+# Source-only virtual updater/UI tests and offline UI comparison; no RAW decoder.
+-r requirements.txt
+numpy==2.3.5
