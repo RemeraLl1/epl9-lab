@@ -135,3 +135,72 @@ passed with 31/27/4. This is static metadata and instruction inspection, not
 native instruction execution, camera testing, or full firmware qualification.
 The frozen candidate, stock-return, SD/Delete code and proprietary images were
 not changed.
+
+## 2026-11-14: native ART header producer, with an explicit missing join
+
+The next step now has **bounded native execution**, not only static table
+inspection. `scripts/epl9_art_header_probe.py` runs stock instructions from
+`607d26a0` through `607d2756`, including the actual call/return of formatter
+`60743621`. It uses the existing GNU-decoded MN103 subset and declared synthetic
+RAM; there are no replacement-call models or TruePic stubs.
+
+### What is demonstrated
+
+For a declared owner `A`, the producer reads configuration pointer `C=A[152]`:
+
+- `C+22955`: one-byte processing mode, copied into the formatter's first u16.
+- `C+22926`: alternate u16 mode. Its ART branch is not used for mode >=100.
+- `C+23688`: ART variant, used when mode >=100; zero becomes one.
+- The formatter writes four bytes: group `1`, variant, u16 mode (little endian).
+  Thus declared processing mode 120 and variant 1/2 produce `01017800` /
+  `01027800`, corresponding to worklist keys `01010078` / `01020078`.
+  The processing key notation is **not** the raw little-endian u32 of the bytes.
+
+There is an important real branch after that call: owner operation (`A+72`)
+`2001` or `2006`, together with submode (`A+86`) `2`, overwrites the header with
+`00000200` (group 0, variant 0, identifier 2). The probe exercises both override
+and non-override branches. It stops **before `607d2756`**: later producer code
+contains further conditions. This is not a claim of final header preservation
+for all capture operations.
+
+20 executed controls passed: modes 100/120/255 with variants 0/1/2/3, and mode
+120 variants 1/2 with operations 2001/2006 and submodes 0/2. Values 100 and 255
+are boundary controls, **not a claim that these are usable camera modes**.
+Every control executed one native formatter call and zero modeled calls.
+
+### Static connection to the job producer
+
+Separately inspected native callers provide a concrete next trace route:
+
+1. `607ce515`, call at `607ce549`, sends its output buffer +8 to `607d26a0`.
+2. `607d38d5`, call at `607d3904`, fills a 32-byte local parameter buffer via
+   `607ce515`; call at `607d390e` passes it to job constructor `6074df04`.
+3. Existing job audits describe the copied header and downstream worklist
+   selector. This new probe does **not** execute the whole constructor or these
+   caller functions, and does not identify all preview/video consumers.
+
+The UI setter's two virtual dispatches have also been statically traced through
+settings object getter `60b64310`, vtable `60e2d0ec`, first-slot function
+`60b651b7`, underlying setter `60b91f18`, and native property path
+`6069ba76` → `6069cc82`. This is a search route, not a completed semantic join.
+**Still missing:** proof that UI base mode `13` and variant property `1d4`
+actually write the producer configuration fields as mode 120 and variant 1/2.
+Consequently the UI inventory keeps `processing_key=null`. No cross-join is
+silently filled using matching labels or expected Watercolor values.
+
+### Reproduce
+
+```sh
+python -m unittest discover -s scripts -p 'test_epl9_art_header_probe.py' -v
+python scripts/epl9_art_header_probe.py --main local/private/main.bin \
+  --reader local/mn103-tooling/mn103-reader
+```
+
+The reader must pass existing provenance verification and the image must match
+the exact stock main hash listed above. Output contains summarized observations,
+not OEM code or images. The four contract tests reject invalid domains, missing
+native code, and a wrong stock image before reader execution. Together with the
+20 stock controls this advances the UI→job investigation without inventing the
+remaining join. Preview/capture parity, all 31 per-choice processing bindings,
+physical rendering and V2 install readiness remain unproven. Frozen V1 and
+stock-return artifacts, SD/Delete behavior, and recipe coefficients are unchanged.
