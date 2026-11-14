@@ -351,7 +351,7 @@ The probe stops each initializer fragment before it advances into the next
 unrelated descriptor: **this is not the complete service/startup sequence or a
 copy of the camera's persistent settings**.
 
-With explicitly declared service-mode0, write-lock0 and lazy-cache-init0,
+With explicitly declared context-selector0, write-lock0 and lazy-cache-init0,
 actual instructions of raw writer `6069cbd9` complete, including metadata,
 storage resolution, and byte writes. Actual storage reader `6043e62b` returns:
 
@@ -363,9 +363,9 @@ No helper calls are modeled. This demonstrates direct **RAM** mutation/readback
 under the stated state, not live camera settings, NVRAM persistence, or a complete
 UI callback chain.
 
-### Why this is not reported as complete running-service validation
+### Why this is not reported as complete cross-context validation
 
-A contrast with nonzero service state at `8050` takes a different real branch:
+A contrast with context selector1 at `8050` takes a different real branch:
 writer `6043e702` calls `6043e3b4` instead of direct writer `6043e76a`. The probe
 requires an explicit external-call stop there. Static inspection shows the
 service path invokes state/locking helpers, updates a 16-entry ring at
@@ -381,5 +381,50 @@ python scripts/epl9_art_storage_probe.py --main local/private/main.bin \
   --reader local/mn103-tooling/mn103-reader
 ```
 
-Three native write/read controls and the service-enabled stopping contrast
+Three native write/read controls and the cross-context stopping contrast
 passed. No new installable image is produced; frozen artifacts are untouched.
+
+## 2026-11-14: queued native write and the cross-context boundary
+
+**Terminology correction:** `8050` must not be called a boolean service-mode
+flag. Dispatcher `604383c1` compares its requested context with this selector:
+matching contexts call the callback directly, differing contexts choose separate
+queues. Observed branches distinguish0/1/2. The previous0/1 experiments remain
+valid but do not prove that a service was switched off/on. Script output names
+and the preceding section now use context selector.
+
+The new `epl9_art_queue_probe.py` executes the actual producer serialization
+fragment `6043e3e4..6043e448` and consumer `6043e341`. Its scope is deliberately
+split: producer inputs are declared at the **post-lock** boundary; the consumer
+is then explicitly invoked, not claimed to have run through a scheduler.
+
+Verified native behavior for operation1 (single-value write):
+
+- Queue base `a2ad2710`,16 records ×28 bytes; head/tail at +448/+450.
+- Producer records operation, storage ID, element index, destination pointer and
+  value. It does not yet mutate the destination.
+- Consumer dispatches operation1 to real writer `6043e76a`, writes120 into the
+  declared mode buffer and advances the tail to the head.
+- Both ordinary slot0→1 and wraparound slot15→0 pass.
+- Full-queue contrast takes the rejection branch without writing a payload or
+  destination. The head has already wrapped before that branch; subsequent
+  error/recovery behavior is deliberately not inferred or silently repaired.
+
+Executing dispatcher `604383c1` with target context0 and current context1
+now executes helper `604113a1` using declared context-control RAM, then stops
+at `6041894e` (`mov psw,d0`). The following code modifies the processor status
+word and interrupt state. Those CPU/kernel semantics are not qualified by this
+probe; no successful lock or callback is fabricated. Static routing passes consumer `6043e341` to this dispatcher from
+`6043e456..6043e45e`. This establishes the queued payload→native consumer→RAM
+write link, **not cross-context scheduling, lock correctness, notification
+completion or durable persistence**.
+
+```sh
+python scripts/epl9_art_queue_probe.py --main local/private/main.bin \
+  --reader local/mn103-tooling/mn103-reader
+```
+
+Ordinary/wrapped writes, full-queue rejection and cross-context stop passed on
+exact stock code. No called functions in the executed slices are modeled.
+The remaining integration boundary is now explicit: native synchronization and
+cross-context dispatch, not a missing ART recipe or guessed header format.

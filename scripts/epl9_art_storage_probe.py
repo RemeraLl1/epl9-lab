@@ -1,8 +1,8 @@
 """Native RAM registration/write/read controls, not service startup or persistence.
 
 Three stock record descriptors are registered by native initializer fragments.
-RAM buffers and non-service state are declared fixtures; no service calls are
-modeled. A running-service contrast must stop, not pretend to complete.
+RAM buffers and context state are declared fixtures; no service calls are
+modeled. A cross-context contrast must stop, not pretend to complete.
 """
 import argparse
 import hashlib
@@ -63,16 +63,16 @@ def probe(main,reader):
         if result['status']!='stop' or m.r['d0']!=value:raise ValueError('native readback differs')
         controls.append(dict(property_id=hex(prop),value=value,storage_id=hex(key),index=index,
             native_write_instructions=write_count,native_readback=value))
-    # Nonzero service mode must hit a real unresolved service function.
+    # Nonzero current context must hit the real cross-context queue function.
     m.memory.write(0x8050,1,4);m.r.update(sp=SP,d0=0x6f,d1=119)
     contrast=m.run(m.enter(0x6069cbd9,END,0xc0,12),[END])
     if contrast['status']!='external_call' or contrast['target']!=0x6043e3b4:
-        raise ValueError('running-service boundary differs: '+str(contrast))
+        raise ValueError('cross-context boundary differs: '+str(contrast))
     if m.models or any(e['op']=='modeled_call' for e in m.events):raise ValueError('unexpected model')
     return dict(schema='epl9-art-storage-probe-v1',reader_provenance=provenance,
         registrations=registrations,controls=controls,
-        service_enabled_contrast=dict(status=contrast['status'],target=hex(contrast['target'])),
-        declared_state=dict(service_mode=0,write_lock=0,lazy_cache_initialization=0),
+        context_1_contrast=dict(status=contrast['status'],target=hex(contrast['target'])),
+        declared_state=dict(context_selector=0,write_lock=0,lazy_cache_initialization=0),
         service_startup_executed=False,persistent_write_proven=False,
         notification_lifecycle_executed=False,install_ready=False)
 
