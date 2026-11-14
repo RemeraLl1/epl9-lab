@@ -249,3 +249,43 @@ stock image is available locally; further reverse engineering is **not blocked
 by a missing image or missing recipe coefficients**. Completing 31 actual film
 recipes still separately requires the authored coefficients and per-choice
 processing bindings. No firmware artifacts or frozen release inputs changed.
+
+## 2026-11-14: saved-to-active activation route located
+
+The previous active-slot question now has a concrete native route. A new probe
+executes the actual registry builder `6069d798..6069d7ea`: it hashes 311 stock
+60-byte descriptors starting at `60813a24` into declared RAM at `6261f3e8`.
+Executing native lookup `6069d7ed` for property `1d4` returns descriptor
+`60816c88`, whose +24 post-change callback is `606a1ae1`. This is no longer an
+invented callback binding, although actual camera startup invoking the builder
+has not been demonstrated.
+
+The callback reads current UI mode through `6069cc01`, compares it to decimal
+19 (`13` hex), and only on a match calls `606a3f37` with mode19 and context0.
+That routine calls `606a38bf`, whose native jump table `6083cd2c` sends mode19
+to `606a3d0b`. This branch reads saved variant property `1d4` through
+`6069e27c`; its returned value goes into local +4, then output +32 at
+`606a3ee3..606a3eea`. Caller `606a3f37` passes that output value to setter
+`6069e295` with destination property `16a`. Its native dispatch resolves to
+`6069cc7d`, the ordinary property setter. The previously audited backing table
+maps **source1d4→44c1:8 and destination16a→44c1:0**.
+
+`epl9_art_activation_probe.py` executes the registry construction and lookup,
+plus bounded dataflow slices for variants1 and2 and a non-Watercolor callback
+control. The slices verify the actual jump-table choice, source getter
+arguments, variant retention/output offset, destination setter arguments, and
+indirect setter target. They explicitly supply the declared getter return at
+that boundary; they **do not execute storage reads/writes or claim a continuous
+end-to-end mutation**. No called native function is replaced by a software
+model. Other color/effect properties processed between these slices are not
+implicitly assumed to succeed.
+
+```sh
+python scripts/epl9_art_activation_probe.py --main local/private/main.bin \
+  --reader local/mn103-tooling/mn103-reader
+```
+
+The probe passed against the exact stock image. The remaining base-mode
+conversion (UI19 versus processing120), complete callback lifecycle, and
+preview/capture output still need investigation. This result narrows the gap;
+it does not make V2 install-ready or change the frozen firmware.
