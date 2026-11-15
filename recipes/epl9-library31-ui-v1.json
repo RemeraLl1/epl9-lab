@@ -1,0 +1,295 @@
+{
+  "schema": "epl9-library31-ui-v1",
+  "status": "recovered-design-order-not-native-binding",
+  "order_source": "Original numbered 31-recipe conversation roster, followed by explicit V6 replacements at positions 10 and 17. Later V6 menu file has not been recovered.",
+  "group_status": "historical-only; Astra grouping requires later menu file",
+  "recipes": [
+    {
+      "position": 1,
+      "id": "gold-200",
+      "title": "Gold 200",
+      "badge": "G200",
+      "historical_group": "Основные",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 2,
+      "id": "portra-400",
+      "title": "Portra 400",
+      "badge": "P400",
+      "historical_group": "Основные",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 3,
+      "id": "superia-400",
+      "title": "Superia 400",
+      "badge": "S400",
+      "historical_group": "Основные",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 4,
+      "id": "ektar-100",
+      "title": "Ektar 100",
+      "badge": "E100",
+      "historical_group": "Основные",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 5,
+      "id": "kodachrome-64",
+      "title": "Kodachrome 64",
+      "badge": "K64",
+      "historical_group": "Основные",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 6,
+      "id": "tri-x",
+      "title": "Tri-X",
+      "badge": "TRIX",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 7,
+      "id": "vision3-500t",
+      "title": "Vision3 500T",
+      "badge": "V500",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false,
+      "v6_intent": "ordinary night/evening; numeric V6 source not yet recovered"
+    },
+    {
+      "position": 8,
+      "id": "double-x",
+      "title": "Double-X",
+      "badge": "DBLX",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 9,
+      "id": "hp5",
+      "title": "HP5",
+      "badge": "HP5",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 10,
+      "id": "neon-city",
+      "title": "Neon City",
+      "badge": "NEON",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false,
+      "replaces": "vision3-250d"
+    },
+    {
+      "position": 11,
+      "id": "ultramax-400",
+      "title": "Ultramax 400",
+      "badge": "U400",
+      "historical_group": "Город",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 12,
+      "id": "pro-400h",
+      "title": "Pro 400H",
+      "badge": "400H",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 13,
+      "id": "portra-160",
+      "title": "Portra 160",
+      "badge": "P160",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 14,
+      "id": "portra-800",
+      "title": "Portra 800",
+      "badge": "P800",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 15,
+      "id": "c200",
+      "title": "C200",
+      "badge": "C200",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 16,
+      "id": "colorplus-200",
+      "title": "ColorPlus 200",
+      "badge": "CP20",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 17,
+      "id": "astra",
+      "title": "Astra",
+      "badge": "ASTR",
+      "historical_group": "Люди",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false,
+      "replaces": "pro-image-100",
+      "group_requires_review": true,
+      "thematic_tags": [
+        "astro",
+        "night"
+      ]
+    },
+    {
+      "position": 18,
+      "id": "velvia-50",
+      "title": "Velvia 50",
+      "badge": "V50",
+      "historical_group": "Пейзажи",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 19,
+      "id": "provia-100f",
+      "title": "Provia 100F",
+      "badge": "100F",
+      "historical_group": "Пейзажи",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 20,
+      "id": "agfa-ultra-100",
+      "title": "Agfa Ultra 100",
+      "badge": "AU10",
+      "historical_group": "Пейзажи",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 21,
+      "id": "agfa-vista-200",
+      "title": "Agfa Vista 200",
+      "badge": "AV20",
+      "historical_group": "Пейзажи",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 22,
+      "id": "instax",
+      "title": "Instax",
+      "badge": "INST",
+      "historical_group": "Особый характер",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 23,
+      "id": "polaroid-sx70",
+      "title": "Polaroid SX-70",
+      "badge": "SX70",
+      "historical_group": "Особый характер",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 24,
+      "id": "lomo-cn100",
+      "title": "Lomo CN100",
+      "badge": "L100",
+      "historical_group": "Особый характер",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 25,
+      "id": "lomo-cn400",
+      "title": "Lomo CN400",
+      "badge": "L400",
+      "historical_group": "Особый характер",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 26,
+      "id": "lomo-cn800",
+      "title": "Lomo CN800",
+      "badge": "L800",
+      "historical_group": "Особый характер",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 27,
+      "id": "xp2-warm",
+      "title": "XP2 Warm",
+      "badge": "XP2W",
+      "historical_group": "Эксперименты",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 28,
+      "id": "bleach-250d",
+      "title": "Bleach 250D",
+      "badge": "B250",
+      "historical_group": "Эксперименты",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 29,
+      "id": "bleach-500t",
+      "title": "Bleach 500T",
+      "badge": "B500",
+      "historical_group": "Эксперименты",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 30,
+      "id": "purple",
+      "title": "Purple",
+      "badge": "PURP",
+      "historical_group": "Эксперименты",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    },
+    {
+      "position": 31,
+      "id": "turquoise",
+      "title": "Turquoise",
+      "badge": "TURQ",
+      "historical_group": "Эксперименты",
+      "native_art_id": null,
+      "native_recipe_parameters_present": false
+    }
+  ]
+}

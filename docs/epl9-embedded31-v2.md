@@ -693,3 +693,39 @@ submode86, owner272, config22916/22824/22828/22955/23688) or fully grounded nati
 creation from identified UI inputs. Do not infer these values from appearance
 alone or install an instrumented firmware on the main camera merely for this
 question. Frozen firmware is still untouched.
+
+## 2026-11-15: recovered ordering and complete authored badge set
+
+The original numbered 31-look roster and the explicit V6 replacements were
+recovered from the recipe-development conversation. Gold 200 and Portra 400
+remain positions 1 and 2. **Position 10 becomes Neon City instead of Vision3
+250D; position 17 becomes Astra instead of Pro Image 100.** Vision3 500T remains
+position 7, with V6's ordinary-night/evening intent; Lomo CN800 remains position
+26. These are authoring positions, **not stock ART identifiers**.
+
+`recipes/epl9-library31-ui-v1.json` records this sequence without inventing
+native numerical parameters. Historical groups are retained as provenance;
+the later V6 menu file has not been recovered, so Astra's final group is
+explicitly unresolved rather than silently moving it or declaring it a portrait
+look. The V6 renderer ZIP and Astra R3 numeric source are still missing.
+
+All 31 looks now have original monochrome cassette badges using the same visual
+language as Gold/Portra. [View the complete asset sheet](../assets/film-menu/library31/contact-sheet.png).
+The two existing badge pixel hashes are unchanged. The new [asset manifest](../assets/film-menu/library31/manifest.json)
+contains stable recipe IDs, dimensions/encoding sizes and pixel hashes, with
+native resource IDs null. The generator does not read/write firmware or include
+Olympus assets. Abstract palette indices are not a camera palette qualification.
+
+```sh
+python scripts/epl9_library_icons.py --out local/library31-assets
+python -m unittest discover -s scripts -p 'test_epl9_library_icons.py' -v
+python -m unittest discover -s scripts -p 'test_epl9_film_icons.py' -v
+```
+
+Local result: 5 new tests and 6 existing encoder tests pass. Independent pinned
+OSD decoding round-trips every badge in both RLE formats at 44×32, 22×16 and
+88×64 (186 combinations). The contact sheet was visually inspected. None of
+this proves native resource capacities, screen palette binding, processing
+routing or camera rendering. It is a usable asset/source increment, **not the
+requested complete 31-look firmware**. The frozen two-look package is untouched;
+no Actions job or camera installation is part of this update.
