@@ -1,0 +1,382 @@
+{
+  "schema": "epl9-library31-assets-v1",
+  "assets": [
+    {
+      "id": "gold-200",
+      "position": 1,
+      "badge": "G200",
+      "svg": "gold-200.svg",
+      "pixel_sha256": "a17f62606fec9aa9c6e2bd945a9e7289788007f85a17a9c972c9fb957d6ff044",
+      "rle_bytes_at_44x32": {
+        "1": 231,
+        "11": 418
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "portra-400",
+      "position": 2,
+      "badge": "P400",
+      "svg": "portra-400.svg",
+      "pixel_sha256": "3022dc645bf99fe328669b0dc3d12a8ce25157593ff5f5b6e6c75f2392d9bf8b",
+      "rle_bytes_at_44x32": {
+        "1": 232,
+        "11": 418
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "superia-400",
+      "position": 3,
+      "badge": "S400",
+      "svg": "superia-400.svg",
+      "pixel_sha256": "67d119e42482c85723a9404ff36379e3662006c85b1f0da37f471452e5506058",
+      "rle_bytes_at_44x32": {
+        "1": 230,
+        "11": 412
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "ektar-100",
+      "position": 4,
+      "badge": "E100",
+      "svg": "ektar-100.svg",
+      "pixel_sha256": "41443b5e1f9e5b1a2621c9bce6bfa3db554cc5efc16c53dfd39dabf1e10a67e6",
+      "rle_bytes_at_44x32": {
+        "1": 228,
+        "11": 406
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "kodachrome-64",
+      "position": 5,
+      "badge": "K64",
+      "svg": "kodachrome-64.svg",
+      "pixel_sha256": "5626f2f43c405dbd92f88d1244fbe4b72453d5d4d251547a8c05a0c25cf673bb",
+      "rle_bytes_at_44x32": {
+        "1": 224,
+        "11": 383
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "tri-x",
+      "position": 6,
+      "badge": "TRIX",
+      "svg": "tri-x.svg",
+      "pixel_sha256": "b14130ec8434d7a62f81529e09f22eddc3918676808020baa1ac378e6279468a",
+      "rle_bytes_at_44x32": {
+        "1": 229,
+        "11": 409
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "vision3-500t",
+      "position": 7,
+      "badge": "V500",
+      "svg": "vision3-500t.svg",
+      "pixel_sha256": "1f66fe37f89cad6e729ef9b6e769cecb876670fbc9e526905f653cfddf1f21ca",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 425
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "double-x",
+      "position": 8,
+      "badge": "DBLX",
+      "svg": "double-x.svg",
+      "pixel_sha256": "73e02dd5620b156832177de785c9af99d0956ed69245613071d0d87d2009b63d",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 422
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "hp5",
+      "position": 9,
+      "badge": "HP5",
+      "svg": "hp5.svg",
+      "pixel_sha256": "6e34509350bf27fa9c74e94321b7c7c66b329bed1dac4bf554ac514968b8a6b2",
+      "rle_bytes_at_44x32": {
+        "1": 224,
+        "11": 377
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "neon-city",
+      "position": 10,
+      "badge": "NEON",
+      "svg": "neon-city.svg",
+      "pixel_sha256": "8badc954184408954b38c74f5a0461265b9abdb87a11f057784acaec63d0d04c",
+      "rle_bytes_at_44x32": {
+        "1": 239,
+        "11": 441
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "ultramax-400",
+      "position": 11,
+      "badge": "U400",
+      "svg": "ultramax-400.svg",
+      "pixel_sha256": "de42e7c2c3b6f99a0dcc4c612bd45857fde535bc568568f8746587b42524443d",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 431
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "pro-400h",
+      "position": 12,
+      "badge": "400H",
+      "svg": "pro-400h.svg",
+      "pixel_sha256": "b25eb47b5b012049d7263f36bcc79c608fd1bdb9b8f94939ef58d52f95ac5277",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 431
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "portra-160",
+      "position": 13,
+      "badge": "P160",
+      "svg": "portra-160.svg",
+      "pixel_sha256": "478381ba47b79afabc8fde0b257e68731a6fca8c1c20963e02b0566c231c327a",
+      "rle_bytes_at_44x32": {
+        "1": 227,
+        "11": 402
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "portra-800",
+      "position": 14,
+      "badge": "P800",
+      "svg": "portra-800.svg",
+      "pixel_sha256": "dd4806ec2fac9530fb545f0f67c8ac0c627271f3506c4bd65708235abf786d1c",
+      "rle_bytes_at_44x32": {
+        "1": 233,
+        "11": 425
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "c200",
+      "position": 15,
+      "badge": "C200",
+      "svg": "c200.svg",
+      "pixel_sha256": "67a6bb86118857b0eb5817655d5513bf37ca655e34deebf33db00997d2c20585",
+      "rle_bytes_at_44x32": {
+        "1": 230,
+        "11": 409
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "colorplus-200",
+      "position": 16,
+      "badge": "CP20",
+      "svg": "colorplus-200.svg",
+      "pixel_sha256": "1e6a634509ef1bdca35c725a78668bd81c8663894a81a7f012e398e79a22c251",
+      "rle_bytes_at_44x32": {
+        "1": 229,
+        "11": 399
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "astra",
+      "position": 17,
+      "badge": "ASTR",
+      "svg": "astra.svg",
+      "pixel_sha256": "8da1c2401a1a8ad1b4775654bf437ad93d9e5ff46b72464b1d4605c6e540746c",
+      "rle_bytes_at_44x32": {
+        "1": 228,
+        "11": 406
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "velvia-50",
+      "position": 18,
+      "badge": "V50",
+      "svg": "velvia-50.svg",
+      "pixel_sha256": "7a4d4e61994a5e7f8e383e537b6ffd8ddbb656e9e14b1e69997580102a7fffc0",
+      "rle_bytes_at_44x32": {
+        "1": 225,
+        "11": 386
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "provia-100f",
+      "position": 19,
+      "badge": "100F",
+      "svg": "provia-100f.svg",
+      "pixel_sha256": "c38c12dd777e98113b2cac5aa758cf7ab29a81142a289facd19d1397eef5cc9a",
+      "rle_bytes_at_44x32": {
+        "1": 228,
+        "11": 406
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "agfa-ultra-100",
+      "position": 20,
+      "badge": "AU10",
+      "svg": "agfa-ultra-100.svg",
+      "pixel_sha256": "adc2d14fa1b46da6d8eaa8cbf977d1dc7844411911a99a40e03bcf9c1aacde7d",
+      "rle_bytes_at_44x32": {
+        "1": 232,
+        "11": 425
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "agfa-vista-200",
+      "position": 21,
+      "badge": "AV20",
+      "svg": "agfa-vista-200.svg",
+      "pixel_sha256": "c3d6f568d0f2a9557f39e01dbcfa262ddd46014ae6205d782cd4161d700c3623",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 428
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "instax",
+      "position": 22,
+      "badge": "INST",
+      "svg": "instax.svg",
+      "pixel_sha256": "776bda48f3b4b2ae3bd925d54b7aa96a9a5d7dc2d77f2e539c12b84b4f3e45cb",
+      "rle_bytes_at_44x32": {
+        "1": 227,
+        "11": 399
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "polaroid-sx70",
+      "position": 23,
+      "badge": "SX70",
+      "svg": "polaroid-sx70.svg",
+      "pixel_sha256": "c57e8b506ff49d9bbb574443f2bd69bbe036cec550ce0f74d0ee0c2b0b80be71",
+      "rle_bytes_at_44x32": {
+        "1": 231,
+        "11": 409
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "lomo-cn100",
+      "position": 24,
+      "badge": "L100",
+      "svg": "lomo-cn100.svg",
+      "pixel_sha256": "dee7f70394737c07e861b5e760588c9575a369fe49528efa14ef02b31dda7aa7",
+      "rle_bytes_at_44x32": {
+        "1": 229,
+        "11": 406
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "lomo-cn400",
+      "position": 25,
+      "badge": "L400",
+      "svg": "lomo-cn400.svg",
+      "pixel_sha256": "14cf02368ee9b0afca820c34393d3009b36760f301b31ea6ccc4fa347e33b22e",
+      "rle_bytes_at_44x32": {
+        "1": 231,
+        "11": 412
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "lomo-cn800",
+      "position": 26,
+      "badge": "L800",
+      "svg": "lomo-cn800.svg",
+      "pixel_sha256": "5eda3386d5bc59f14bcc56454319e8cdcf6e51c015d37af6fc92ce0db357da83",
+      "rle_bytes_at_44x32": {
+        "1": 233,
+        "11": 418
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "xp2-warm",
+      "position": 27,
+      "badge": "XP2W",
+      "svg": "xp2-warm.svg",
+      "pixel_sha256": "713dcfaa61da81f3df387454eb73bb6b313b2bed9f87cb14a252757558f08067",
+      "rle_bytes_at_44x32": {
+        "1": 236,
+        "11": 431
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "bleach-250d",
+      "position": 28,
+      "badge": "B250",
+      "svg": "bleach-250d.svg",
+      "pixel_sha256": "ede7e7fb294984693f55bd4ba279cf89ebb99bc4e8f3aa69380b321bf01b773a",
+      "rle_bytes_at_44x32": {
+        "1": 229,
+        "11": 406
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "bleach-500t",
+      "position": 29,
+      "badge": "B500",
+      "svg": "bleach-500t.svg",
+      "pixel_sha256": "cf948e6191c20de0d8b4d0e558b020e766c9dffe08abcdfb737445028430556e",
+      "rle_bytes_at_44x32": {
+        "1": 232,
+        "11": 418
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "purple",
+      "position": 30,
+      "badge": "PURP",
+      "svg": "purple.svg",
+      "pixel_sha256": "8504a173f83304e51f57641d2e550eb3f56c5219156efdb3d7b5d32c38cae2f2",
+      "rle_bytes_at_44x32": {
+        "1": 233,
+        "11": 422
+      },
+      "native_resource_id": null
+    },
+    {
+      "id": "turquoise",
+      "position": 31,
+      "badge": "TURQ",
+      "svg": "turquoise.svg",
+      "pixel_sha256": "d48e6f46228c4ebbc2ecb08803843b68987af14f2a8c2f8d4b419a436a123fc8",
+      "rle_bytes_at_44x32": {
+        "1": 234,
+        "11": 431
+      },
+      "native_resource_id": null
+    }
+  ],
+  "source_catalog_sha256": "2e7d85f886d45af66d8fe62b5e58f136b3135d19892c5d02a866f0d52c61a1fd",
+  "firmware_modified": false,
+  "install_ready": false,
+  "native_palette_and_resource_binding_proven": false,
+  "order_is_native_art_id": false
+}
